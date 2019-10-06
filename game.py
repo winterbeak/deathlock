@@ -1,3 +1,6 @@
+import sound
+
+import random
 import pygame
 # import sys
 
@@ -124,15 +127,26 @@ class Player:
     MIDDLE_HEART = graphics.AnimColumn("heart_middle", 2, 2)
     LEFT_HEART = graphics.AnimColumn("heart_left", 2, 2)
     RIGHT_HEART = graphics.flip_column(LEFT_HEART)
-    MIDDLE_HEART.set_delays((74, 11))
-    LEFT_HEART.set_delays((74, 11))
-    RIGHT_HEART.set_delays((74, 11))
+    MIDDLE_HEART.set_delays((64, 13))
+    LEFT_HEART.set_delays((64, 13))
+    RIGHT_HEART.set_delays((64, 13))
 
     HEART_SHEET = graphics.AnimSheet((MIDDLE_HEART, LEFT_HEART, RIGHT_HEART))
 
     MIDDLE_HEART_X = (const.SCRN_W - MIDDLE_HEART.frame_w) // 2
     HEART_X = [MIDDLE_HEART_X, MIDDLE_HEART_X - 50, MIDDLE_HEART_X + 50]
     HEART_Y = -3
+
+    RUN_SOUNDS = sound.load_numbers("run%i", 5)
+    RUN_SOUND_DELAY = 5
+
+    REVIVE_SOUNDS = sound.load_numbers("revive%i", 3)
+
+    HIT_SOUNDS = sound.load_numbers("hit%i", 3)
+
+    ROOM_CHANGE_SOUNDS = sound.load_numbers("room_change%i", 1)
+
+    # JUMP_SOUNDS = sound.load_numbers("jump%i", 1)
 
     def __init__(self, x, y, extend_x=0, extend_y=0):
         self.health = self.MAX_HEALTH
@@ -173,6 +187,8 @@ class Player:
         self.heart_sprites = [graphics.AnimInstance(self.HEART_SHEET) for _ in range(self.MAX_HEALTH)]
         for sprite in range(1, self.MAX_HEALTH):
             self.heart_sprites[sprite].set_anim(sprite)
+
+        self.run_sound_frame = self.RUN_SOUND_DELAY
 
     def draw(self, surf, cam):
         self.sprite.update()
@@ -414,6 +430,7 @@ class Player:
         self.tumble = True
         self.change_health(-1)
         self.invuln_frames = self.INVULN_LENGTH
+        self.HIT_SOUNDS.play_random()
         main_cam.shake(6, 1)
 
     def check_ground(self, screen_edge):
@@ -502,6 +519,7 @@ while True:
         if player.grounded and not player.dead:
             player.grounded = False
             player.y_vel = -player.JUMP_SPEED
+            # player.JUMP_SOUNDS.play_random(0.15)
 
     # Moving left & right
     if not player.dead:
@@ -545,7 +563,7 @@ while True:
                 if player.ext_x_vel < 0:
                     player.ext_x_vel = 0
 
-            # Graphics
+            # Graphics and sounds
             if player.grounded:
                 player.sprite.set_anim(player.RUN_LEFT_ID)
 
@@ -553,6 +571,15 @@ while True:
                 player.facing = const.LEFT
 
             player.update_wall_push(const.LEFT)
+
+            # Plays running sound
+            if player.sprite.anim != player.WALL_PUSH_LEFT_ID:
+                if player.grounded:
+                    if player.run_sound_frame < player.RUN_SOUND_DELAY:
+                        player.run_sound_frame += 1
+                    else:
+                        player.run_sound_frame = 0
+                        player.RUN_SOUNDS.play_random(random.random() / 4 + 0.75)
 
         elif (pygame.K_RIGHT in events.keys.held_keys or
                 pygame.K_d in events.keys.held_keys):
@@ -572,8 +599,18 @@ while True:
 
             player.update_wall_push(const.RIGHT)
 
+            if player.sprite.anim != player.WALL_PUSH_RIGHT_ID:
+                if player.grounded:
+                    if player.run_sound_frame < player.RUN_SOUND_DELAY:
+                        player.run_sound_frame += 1
+                    else:
+                        player.run_sound_frame = 0
+                        player.RUN_SOUNDS.play_random(random.random() / 2 + 0.5)
+
         # Decelerate when you stop moving
         else:
+            player.run_sound_frame = player.RUN_SOUND_DELAY
+
             if player.grounded:
                 if player.facing == const.LEFT:
                     player.sprite.set_anim(player.IDLE_LEFT_ID)
@@ -636,6 +673,7 @@ while True:
 
     # Resetting level
     if events.keys.pressed_key == pygame.K_r:
+        player.REVIVE_SOUNDS.play_random(0.15)
         player.set_health(player.MAX_HEALTH)
         player.tumble = False
         player.goto(player.respawn_x, player.respawn_y)
@@ -657,6 +695,7 @@ while True:
         level.change_room(player.offscreen_direction)
 
         player.set_checkpoint()
+        player.ROOM_CHANGE_SOUNDS.play_random(0.15)
 
     player.update_hearts()
 

@@ -110,7 +110,12 @@ class AnimInstance:
 
         self.frame_delay = 0
 
+        self.changed_frame = False
+
     def update(self):
+        if self.changed_frame:
+            self.changed_frame = False
+
         if self.frame_delay < self.spritesheet.anim_delays[self.anim][self.frame]:
             self.frame_delay += 1
         else:
@@ -124,6 +129,7 @@ class AnimInstance:
         self.frame += 1
         if self.frame >= self.spritesheet.frame_counts[self.anim]:
             self.frame = 0
+        self.changed_frame = True
 
     def set_anim(self, anim):
         if anim != self.anim:
