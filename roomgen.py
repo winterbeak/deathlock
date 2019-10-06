@@ -38,7 +38,7 @@ def fallway_disturbance():
     room.change_point(16, 21, grid.SPIKE_EMIT_LEFT)
 
     room.change_rect(9, 0, 7, 1, grid.CHECKPOINT_ZONE[0])
-    room.add_checkpoint(12, 2)
+    room.add_checkpoint(12, 10)
 
     return room
 
@@ -58,7 +58,7 @@ def fallway_disturbance_2():
     room.change_rect(8, 12, 9, 1, grid.SPIKE_EMIT_DOWN)  # Platform
 
     room.change_rect(9, 0, 7, 1, grid.CHECKPOINT_ZONE[0])
-    room.add_checkpoint(12, 2)
+    room.add_checkpoint(12, 10)
 
     return room
 
@@ -72,7 +72,7 @@ def lets_go_left():
     room.change_point(2, 20, grid.SPIKE_EMIT_UP)
 
     room.change_rect(9, 0, 7, 1, grid.CHECKPOINT_ZONE[0])
-    room.add_checkpoint(12, 2)
+    room.add_checkpoint(12, 18)
 
     return room
 

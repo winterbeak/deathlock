@@ -32,7 +32,7 @@ def flip_column(column):
 
     frame_count = column.frame_count
 
-    new_column = SpriteColumn("null_sprite", frame_count, 1)
+    new_column = AnimColumn("null_sprite", frame_count, 1)
     new_column.surface = flipped
     new_column.frame_w = column.frame_w
     new_column.frame_h = column.frame_h
@@ -41,7 +41,7 @@ def flip_column(column):
     return new_column
 
 
-class SpriteColumn:
+class AnimColumn:
     def __init__(self, path, frame_count, multiplier=1):
         self.surface = load_image(path, multiplier)
         self.frame_count = frame_count

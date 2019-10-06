@@ -8,7 +8,7 @@ DEBUG_FPS = 5
 # COLORS
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-RED = (255, 0, 0)
+RED = (255, 15, 15)
 GREEN = (0, 254, 0)
 BLUE = (0, 0, 255)
 CYAN = (0, 255, 255)

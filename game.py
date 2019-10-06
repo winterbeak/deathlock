@@ -44,37 +44,37 @@ class Player:
     WIDTH = 20
     HEIGHT = 20
 
-    RUN_LEFT = graphics.SpriteColumn("run", 6, 2)
+    RUN_LEFT = graphics.AnimColumn("run", 6, 2)
     RUN_LEFT.set_delay(4)
     RUN_LEFT_ID = 0
     RUN_RIGHT = graphics.flip_column(RUN_LEFT)
     RUN_RIGHT_ID = 1
 
-    IDLE_LEFT = graphics.SpriteColumn("idle", 4, 2)
+    IDLE_LEFT = graphics.AnimColumn("idle", 4, 2)
     IDLE_LEFT.set_delays((60, 10, 45, 10))
     IDLE_LEFT_ID = 2
     IDLE_RIGHT = graphics.flip_column(IDLE_LEFT)
     IDLE_RIGHT_ID = 3
 
-    TUMBLE_LEFT = graphics.SpriteColumn("tumble", 6, 2)
+    TUMBLE_LEFT = graphics.AnimColumn("tumble", 6, 2)
     TUMBLE_LEFT.set_delay(4)
     TUMBLE_LEFT_ID = 4
     TUMBLE_RIGHT = graphics.flip_column(TUMBLE_LEFT)
     TUMBLE_RIGHT_ID = 5
 
-    DEAD_LEFT = graphics.SpriteColumn("dead", 1, 2)
+    DEAD_LEFT = graphics.AnimColumn("dead", 1, 2)
     DEAD_LEFT.set_delay(0xbeef)
     DEAD_LEFT_ID = 6
     DEAD_RIGHT = graphics.flip_column(DEAD_LEFT)
     DEAD_RIGHT_ID = 7
 
-    WALL_PUSH_LEFT = graphics.SpriteColumn("wall_push", 1, 2)
+    WALL_PUSH_LEFT = graphics.AnimColumn("wall_push", 1, 2)
     WALL_PUSH_LEFT.set_delay(0xbeef)
     WALL_PUSH_LEFT_ID = 8
     WALL_PUSH_RIGHT = graphics.flip_column(WALL_PUSH_LEFT)
     WALL_PUSH_RIGHT_ID = 9
 
-    JUMP_LEFT = graphics.SpriteColumn("jump", 6, 2)
+    JUMP_LEFT = graphics.AnimColumn("jump", 6, 2)
     JUMP_LEFT.set_delay(0xbeef)
     JUMP_LEFT_ID = 10
     JUMP_RIGHT = graphics.flip_column(JUMP_LEFT)
@@ -86,6 +86,19 @@ class Player:
                                     DEAD_LEFT, DEAD_RIGHT,
                                     WALL_PUSH_LEFT, WALL_PUSH_RIGHT,
                                     JUMP_LEFT, JUMP_RIGHT))
+
+    MIDDLE_HEART = graphics.AnimColumn("heart_middle", 2, 2)
+    LEFT_HEART = graphics.AnimColumn("heart_left", 2, 2)
+    RIGHT_HEART = graphics.flip_column(LEFT_HEART)
+    MIDDLE_HEART.set_delays((60, 13))
+    LEFT_HEART.set_delays((60, 13))
+    RIGHT_HEART.set_delays((60, 13))
+
+    HEART_SHEET = graphics.AnimSheet((MIDDLE_HEART, LEFT_HEART, RIGHT_HEART))
+
+    MIDDLE_HEART_X = (const.SCRN_W - MIDDLE_HEART.frame_w) // 2
+    HEART_X = [MIDDLE_HEART_X, MIDDLE_HEART_X - 50, MIDDLE_HEART_X + 50]
+    HEART_Y = -3
 
     def __init__(self, x, y, extend_x=0, extend_y=0):
         self.health = self.MAX_HEALTH
@@ -122,6 +135,10 @@ class Player:
 
         self.sprite = graphics.AnimInstance(self.ANIMSHEET)
         self.facing = const.LEFT
+
+        self.heart_sprites = [graphics.AnimInstance(self.HEART_SHEET) for _ in range(self.MAX_HEALTH)]
+        for sprite in range(1, self.MAX_HEALTH):
+            self.heart_sprites[sprite].set_anim(sprite)
 
     def draw(self, surf, cam):
         self.sprite.update()
@@ -352,12 +369,14 @@ class Player:
             if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
                 self.sprite.set_anim(self.WALL_PUSH_RIGHT_ID)
 
-    def draw_health(self, surf):
-        for pip in range(self.health):
-            x = pip * (self.WIDTH + self.HEALTH_SPACING) + 10
-            y = 10
+    def update_hearts(self):
+        for heart in self.heart_sprites:
+            heart.update()
 
-            pygame.draw.rect(surf, const.CYAN, (x, y, self.WIDTH, self.HEIGHT))
+    def draw_hearts(self, surf):
+        for heart in range(self.health):
+            sprite = self.heart_sprites[heart]
+            sprite.draw_frame(surf, self.HEART_X[heart], self.HEART_Y)
 
     def get_hit(self):
         self.hitstun = True
@@ -403,16 +422,16 @@ level = grid.Level(5, 20)
 
 START_COL = 3
 START_ROW = 3
-DEBUG_START_COL = START_COL - 1
-DEBUG_START_ROW = START_ROW + 5
+DEBUG_START_COL = START_COL
+DEBUG_START_ROW = START_ROW
 level.active_column = DEBUG_START_COL
 level.active_row = DEBUG_START_ROW
 
-PLAYER_START_X = (DEBUG_START_COL + 1)* grid.Room.PIXEL_W - 25
+PLAYER_START_X = DEBUG_START_COL * grid.Room.PIXEL_W + (grid.Room.PIXEL_W // 2 - Player.WIDTH // 2)
 PLAYER_START_Y = DEBUG_START_ROW * grid.Room.PIXEL_H
 
 player = Player(PLAYER_START_X, PLAYER_START_Y)
-player.dead = True
+player.set_health(0)
 
 level.add_room(roomgen.intro_fallway(), START_COL, START_ROW)
 level.add_room(roomgen.intro_fallway(), START_COL, START_ROW + 1)
@@ -446,6 +465,26 @@ while True:
 
     # Moving left & right
     if not player.hitstun and not player.dead:
+        # Jumping animation
+        if not player.grounded:
+            if player.facing == const.LEFT:
+                player.sprite.set_anim(player.JUMP_LEFT_ID)
+            else:
+                player.sprite.set_anim(player.JUMP_RIGHT_ID)
+
+            if player.y_vel < -player.JUMP_SPEED + 2.5:
+                player.sprite.frame = 0
+            elif player.y_vel < -player.JUMP_SPEED + 5:
+                player.sprite.frame = 1
+            elif player.y_vel < -player.JUMP_SPEED + 7.5:
+                player.sprite.frame = 2
+            elif player.y_vel < 0:
+                player.sprite.frame = 3
+            elif player.y_vel < 2.5:
+                player.sprite.frame = 4
+            else:
+                player.sprite.frame = 5
+
         if (pygame.K_LEFT in events.keys.held_keys or
                 pygame.K_a in events.keys.held_keys):
             player.x_vel += -player.MOVE_ACC
@@ -456,7 +495,8 @@ while True:
                     player.ext_x_vel = 0
 
             # Graphics
-            player.sprite.set_anim(player.RUN_LEFT_ID)
+            if player.grounded:
+                player.sprite.set_anim(player.RUN_LEFT_ID)
             player.facing = const.LEFT
 
             player.update_wall_push(const.LEFT)
@@ -471,17 +511,19 @@ while True:
                     player.ext_x_vel = 0
 
             # Graphics
-            player.sprite.set_anim(player.RUN_RIGHT_ID)
+            if player.grounded:
+                player.sprite.set_anim(player.RUN_RIGHT_ID)
             player.facing = const.RIGHT
 
             player.update_wall_push(const.RIGHT)
 
         # Decelerate when you stop moving
         else:
-            if player.facing == const.LEFT:
-                player.sprite.set_anim(player.IDLE_LEFT_ID)
-            elif player.facing == const.RIGHT:
-                player.sprite.set_anim(player.IDLE_RIGHT_ID)
+            if player.grounded:
+                if player.facing == const.LEFT:
+                    player.sprite.set_anim(player.IDLE_LEFT_ID)
+                elif player.facing == const.RIGHT:
+                    player.sprite.set_anim(player.IDLE_RIGHT_ID)
 
             if player.x_vel < 0:
                 player.x_vel += player.MOVE_DEC
@@ -502,26 +544,6 @@ while True:
                 player.ext_x_vel -= player.EXT_DEC
                 if player.ext_x_vel < 0:
                     player.ext_x_vel = 0
-
-        # Jumping animation
-        if not player.grounded:
-            if player.facing == const.LEFT:
-                player.sprite.set_anim(player.JUMP_LEFT_ID)
-            else:
-                player.sprite.set_anim(player.JUMP_RIGHT_ID)
-
-            if player.y_vel < -player.JUMP_SPEED + 2.5:
-                player.sprite.frame = 0
-            elif player.y_vel < -player.JUMP_SPEED + 5:
-                player.sprite.frame = 1
-            elif player.y_vel < -player.JUMP_SPEED + 7.5:
-                player.sprite.frame = 2
-            elif player.y_vel < 0:
-                player.sprite.frame = 3
-            elif player.y_vel < 2.5:
-                player.sprite.frame = 4
-            else:
-                player.sprite.frame = 5
 
     elif player.dead and player.grounded:
         player.x_vel = 0
@@ -561,15 +583,18 @@ while True:
 
         player.set_checkpoint()
 
+    player.update_hearts()
+
     # Drawing everything
     spikes.draw(post_surf, main_cam)
     level.draw(post_surf, main_cam)
     player.draw(post_surf, main_cam)
-    player.draw_health(post_surf)
 
     # Deathlock border
     if not player.dead:
         pygame.draw.rect(post_surf, const.RED, (0, 0, const.SCRN_W, const.SCRN_H), 5)
+
+    player.draw_hearts(post_surf)
 
     # debug.debug(clock.get_fps())
 
