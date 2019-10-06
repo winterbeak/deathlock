@@ -1,4 +1,6 @@
 import pygame
+
+import graphics
 import constants as const
 
 TILE_W = 20
@@ -18,6 +20,12 @@ SPIKE_RIGHT = 9
 SPIKE_DOWN = 10
 CHECKPOINT_ZONE = [11, 12, 13]
 MAX_CHECKPOINTS = 3
+
+
+spike_box_left = graphics.load_image("punch_box", 2)
+spike_box_up = pygame.transform.rotate(spike_box_left, -90)
+spike_box_right = pygame.transform.rotate(spike_box_left, 180)
+spike_box_down = pygame.transform.rotate(spike_box_left, 90)
 
 
 def col_at(x):
@@ -184,24 +192,16 @@ class Room:
                     pygame.draw.rect(surf, const.BLACK, rect)
 
                 elif self.tile_at(rel_col, rel_row) == SPIKE_EMIT_LEFT:
-                    pygame.draw.rect(surf, const.BLACK, rect)
-                    emit_rect = (x, y + 2, 2, TILE_H - 4)
-                    pygame.draw.rect(surf, const.RED, emit_rect)
+                    surf.blit(spike_box_left, (x, y))
 
                 elif self.tile_at(rel_col, rel_row) == SPIKE_EMIT_UP:
-                    pygame.draw.rect(surf, const.BLACK, rect)
-                    emit_rect = (x + 2, y, TILE_W - 4, 2)
-                    pygame.draw.rect(surf, const.RED, emit_rect)
+                    surf.blit(spike_box_up, (x, y))
 
                 elif self.tile_at(rel_col, rel_row) == SPIKE_EMIT_RIGHT:
-                    pygame.draw.rect(surf, const.BLACK, rect)
-                    emit_rect = (x + TILE_W - 2, y + 2, 2, TILE_H - 4)
-                    pygame.draw.rect(surf, const.RED, emit_rect)
+                    surf.blit(spike_box_right, (x, y))
 
                 elif self.tile_at(rel_col, rel_row) == SPIKE_EMIT_DOWN:
-                    pygame.draw.rect(surf, const.BLACK, rect)
-                    emit_rect = (x + 2, y + TILE_H - 2, TILE_W - 4, 2)
-                    pygame.draw.rect(surf, const.RED, emit_rect)
+                    surf.blit(spike_box_down, (x, y))
 
                 elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[0]:
                     pygame.draw.rect(surf, const.LIGHT_BLUE, rect)

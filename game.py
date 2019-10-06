@@ -20,6 +20,33 @@ post_surf = pygame.display.set_mode((const.SCRN_W, const.SCRN_H))
 clock = pygame.time.Clock()
 
 
+def init_background():
+    surf = pygame.Surface((const.SCRN_W + grid.TILE_W * 2,
+                           const.SCRN_H + grid.TILE_H * 2))
+    width = grid.TILE_W
+    height = grid.TILE_H
+    for row in range(surf.get_height() // height):
+        for col in range(surf.get_width() // width):
+            x = col * width
+            y = row * height
+
+            if (col + row) % 2 == 0:
+                pygame.draw.rect(surf, const.BACKGROUND_GREY, (x, y, width, height))
+            else:
+                pygame.draw.rect(surf, const.WHITE, (x, y, width, height))
+
+    return surf
+
+
+def draw_background(surf, cam):
+    x = -(cam.x % (grid.TILE_W * 2)) - 10
+    y = -(cam.y % (grid.TILE_H * 2)) - 10
+    surf.blit(background, (x, y))
+
+
+background = init_background()
+
+
 def screen_update(fps):
     pygame.display.flip()
     post_surf.fill(const.WHITE)
@@ -97,9 +124,9 @@ class Player:
     MIDDLE_HEART = graphics.AnimColumn("heart_middle", 2, 2)
     LEFT_HEART = graphics.AnimColumn("heart_left", 2, 2)
     RIGHT_HEART = graphics.flip_column(LEFT_HEART)
-    MIDDLE_HEART.set_delays((60, 13))
-    LEFT_HEART.set_delays((60, 13))
-    RIGHT_HEART.set_delays((60, 13))
+    MIDDLE_HEART.set_delays((74, 11))
+    LEFT_HEART.set_delays((74, 11))
+    RIGHT_HEART.set_delays((74, 11))
 
     HEART_SHEET = graphics.AnimSheet((MIDDLE_HEART, LEFT_HEART, RIGHT_HEART))
 
@@ -387,6 +414,7 @@ class Player:
         self.tumble = True
         self.change_health(-1)
         self.invuln_frames = self.INVULN_LENGTH
+        main_cam.shake(6, 1)
 
     def check_ground(self, screen_edge):
         x1 = self.x
@@ -463,8 +491,8 @@ level.add_room(roomgen.crossing_rooms(), START_COL + 2, START_ROW + 9)
 player.set_checkpoint()
 
 main_cam = camera.Camera()
-main_cam.x = level.active_column * grid.Room.PIXEL_W
-main_cam.y = level.active_row * grid.Room.PIXEL_H
+main_cam.base_x = level.active_column * grid.Room.PIXEL_W
+main_cam.base_y = level.active_row * grid.Room.PIXEL_H
 
 while True:
     events.update()
@@ -620,8 +648,8 @@ while True:
     main_cam.update()
     # Resets the camera in case it decenters
     if main_cam.last_slide_frame:
-        main_cam.x = level.active_column * grid.Room.PIXEL_W
-        main_cam.y = level.active_row * grid.Room.PIXEL_H
+        main_cam.base_x = level.active_column * grid.Room.PIXEL_W
+        main_cam.base_y = level.active_row * grid.Room.PIXEL_H
         main_cam.last_slide_frame = False
 
     if player.offscreen_direction != 0:
@@ -633,6 +661,7 @@ while True:
     player.update_hearts()
 
     # Drawing everything
+    draw_background(post_surf, main_cam)
     spikes.draw(post_surf, main_cam)
     level.draw(post_surf, main_cam)
     player.draw(post_surf, main_cam)

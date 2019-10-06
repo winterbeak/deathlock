@@ -1,8 +1,18 @@
-import constants as const
 import pygame
+
+import constants as const
+import graphics
+
 import grid
 
+
 spikes = []
+
+spike_left = graphics.load_image("punch", 2)
+spike_left.set_colorkey(const.TRANSPARENT)
+spike_right = pygame.transform.flip(spike_left, True, False)
+spike_up = pygame.transform.rotate(spike_right, 90)
+spike_down = pygame.transform.rotate(spike_right, -90)
 
 
 def add(col, row, direction):
@@ -23,9 +33,9 @@ def update():
 
 
 class Spike:
-    OUT_LENGTH = 5
+    OUT_LENGTH = 3
     WAIT_LENGTH = 30
-    IN_LENGTH = 15
+    IN_LENGTH = 10
 
     OUT_LAST = OUT_LENGTH
     WAIT_LAST = OUT_LAST + WAIT_LENGTH
@@ -63,19 +73,22 @@ class Spike:
             x = (self.base_x + grid.TILE_W - self.outness) - camera.x
             y = self.base_y - camera.y
 
+            surf.blit(spike_left, (x, y))
+
         elif self.direction == const.UP:
             x = self.base_x - camera.x
             y = (self.base_y + grid.TILE_H - self.outness) - camera.y
+
+            surf.blit(spike_up, (x, y))
 
         elif self.direction == const.RIGHT:
             x = (self.base_x - grid.TILE_W + self.outness) - camera.x
             y = self.base_y - camera.y
 
+            surf.blit(spike_right, (x, y))
+
         elif self.direction == const.DOWN:
             x = self.base_x - camera.x
             y = (self.base_y - grid.TILE_H + self.outness) - camera.y
 
-        else:
-            return
-
-        pygame.draw.rect(surf, const.RED, (x, y, grid.TILE_W, grid.TILE_H))
+            surf.blit(spike_down, (x, y))

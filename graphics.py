@@ -3,6 +3,9 @@ import constants as const
 import os
 import copy
 
+pygame.init()
+pygame.display.set_mode((const.SCRN_W, const.SCRN_H))
+
 
 def pathify(string):
     return os.path.join("images", string + ".png")
