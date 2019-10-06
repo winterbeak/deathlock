@@ -1,8 +1,8 @@
 import pygame
 import constants as const
 
-TILE_W = 25
-TILE_H = 25
+TILE_W = 20
+TILE_H = 20
 
 # TILE TYPES
 VOID = 0
@@ -16,6 +16,8 @@ SPIKE_LEFT = 7
 SPIKE_UP = 8
 SPIKE_RIGHT = 9
 SPIKE_DOWN = 10
+CHECKPOINT_ZONE = [11, 12, 13]
+MAX_CHECKPOINTS = 3
 
 
 def col_at(x):
@@ -50,23 +52,27 @@ def y_of(row, direction=const.UP):
 
 class Room:
     """the grid where all the tiles on a single screen are placed"""
-    WIDTH = 20  # the amount of tiles across the room
-    HEIGHT = 20
+    WIDTH = 25  # the amount of tiles across the room
+    HEIGHT = 25
     PIXEL_W = WIDTH * TILE_W
     PIXEL_H = HEIGHT * TILE_H
 
-    def __init__(self, column, row):
-        self.column = column
-        self.row = row
-        self.leftmost_tile = column * self.WIDTH
-        self.topmost_tile = row * self.HEIGHT
+    def __init__(self):
+        # These values are all default values.
+        # Only once the room is added to a level will they be set.
+        self.column = 0
+        self.row = 0
+        self.leftmost_tile = 0
+        self.topmost_tile = 0
         self.rightmost_tile = self.leftmost_tile + self.WIDTH - 1
         self.bottommost_tile = self.topmost_tile + self.HEIGHT - 1
 
-        self.x = column * self.PIXEL_W
-        self.y = row * self.PIXEL_H
+        self.x = 0
+        self.y = 0
 
         self.grid = [[EMPTY for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
+
+        self.checkpoints = []
 
     def out_of_bounds(self, rel_col, rel_row):
         """returns whether or not a tile is outside of the grid"""
@@ -77,7 +83,7 @@ class Room:
         return True
 
     def change_point(self, rel_col, rel_row, kind):
-        """changes a rectangle of tiles
+        """changes a single tile
 
         the tiles changed are relative to the current room,
         not the entire level
@@ -108,6 +114,11 @@ class Room:
             for row in range(rel_row, rel_row + h):
                 self.change_point(col, row, kind)
 
+    def add_checkpoint(self, rel_col, rel_row):
+        """note: the checkpoint will stay relative until
+        the room is added to a level"""
+        self.checkpoints.append([rel_col, rel_row])
+
     def tile_at(self, rel_col, rel_row):
         """returns the tile type at a certain position
         all tiles out of bounds return VOID"""
@@ -125,6 +136,13 @@ class Room:
         if tile == SPIKE_RIGHT:
             return True
         if tile == SPIKE_DOWN:
+            return True
+
+        return False
+
+    def is_checkpoint_zone(self, rel_col, rel_row):
+        tile = self.tile_at(rel_col, rel_row)
+        if tile in CHECKPOINT_ZONE:
             return True
 
         return False
@@ -147,6 +165,9 @@ class Room:
         if tile == SPIKE_DOWN:
             return False
 
+        if tile in CHECKPOINT_ZONE:
+            return False
+
         return True
 
     def draw(self, surf, camera):
@@ -160,34 +181,43 @@ class Room:
                 rect = (x, y, TILE_W, TILE_H)
 
                 if self.tile_at(rel_col, rel_row) == WALL:
-                    pygame.draw.rect(surf, const.WHITE, rect)
+                    pygame.draw.rect(surf, const.BLACK, rect)
 
                 elif self.tile_at(rel_col, rel_row) == SPIKE_EMIT_LEFT:
-                    pygame.draw.rect(surf, const.WHITE, rect)
+                    pygame.draw.rect(surf, const.BLACK, rect)
                     emit_rect = (x, y + 2, 2, TILE_H - 4)
                     pygame.draw.rect(surf, const.RED, emit_rect)
 
                 elif self.tile_at(rel_col, rel_row) == SPIKE_EMIT_UP:
-                    pygame.draw.rect(surf, const.WHITE, rect)
+                    pygame.draw.rect(surf, const.BLACK, rect)
                     emit_rect = (x + 2, y, TILE_W - 4, 2)
                     pygame.draw.rect(surf, const.RED, emit_rect)
 
                 elif self.tile_at(rel_col, rel_row) == SPIKE_EMIT_RIGHT:
-                    pygame.draw.rect(surf, const.WHITE, rect)
+                    pygame.draw.rect(surf, const.BLACK, rect)
                     emit_rect = (x + TILE_W - 2, y + 2, 2, TILE_H - 4)
                     pygame.draw.rect(surf, const.RED, emit_rect)
 
                 elif self.tile_at(rel_col, rel_row) == SPIKE_EMIT_DOWN:
-                    pygame.draw.rect(surf, const.WHITE, rect)
+                    pygame.draw.rect(surf, const.BLACK, rect)
                     emit_rect = (x + 2, y + TILE_H - 2, TILE_W - 4, 2)
                     pygame.draw.rect(surf, const.RED, emit_rect)
+
+                elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[0]:
+                    pygame.draw.rect(surf, const.LIGHT_BLUE, rect)
+
+                elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[1]:
+                    pygame.draw.rect(surf, const.LIGHT_GREEN, rect)
+
+                elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[2]:
+                    pygame.draw.rect(surf, const.LIGHT_MAGENTA, rect)
 
 
 class Level:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.room_grid = [[Room(x, y) for y in range(height)] for x in range(width)]
+        self.room_grid = [[Room() for _ in range(height)] for _ in range(width)]
         self.active_row = 0
         self.active_column = 0
         self.previous_row = 0
@@ -301,7 +331,21 @@ class Level:
         else:
             print("Passed an invalid direction to change_room()!")
 
-    def add_room(self, room):
+    def add_room(self, room, column, row):
+        room.column = column
+        room.row = row
+        room.leftmost_tile = column * room.WIDTH
+        room.topmost_tile = row * room.HEIGHT
+        room.rightmost_tile = room.leftmost_tile + room.WIDTH - 1
+        room.bottommost_tile = room.topmost_tile + room.HEIGHT - 1
+
+        room.x = column * room.PIXEL_W
+        room.y = row * room.PIXEL_H
+
+        for checkpoint in room.checkpoints:
+            checkpoint[0] += room.leftmost_tile
+            checkpoint[1] += room.topmost_tile
+
         self.room_grid[room.column][room.row] = room
 
     def current_center_x(self):

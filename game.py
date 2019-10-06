@@ -5,9 +5,11 @@ import constants as const
 import events
 import debug
 
+import graphics
 import camera
 import grid
 
+import roomgen
 import spikes
 
 
@@ -20,7 +22,7 @@ clock = pygame.time.Clock()
 
 def screen_update(fps):
     pygame.display.flip()
-    post_surf.fill(const.BLACK)
+    post_surf.fill(const.WHITE)
     clock.tick(fps)
 
 
@@ -39,31 +41,75 @@ class Player:
 
     HEALTH_SPACING = 5
 
-    def __init__(self, x, y, w, h, extend_x=0, extend_y=0):
+    WIDTH = 20
+    HEIGHT = 20
+
+    RUN_LEFT = graphics.SpriteColumn("run", 6, 2)
+    RUN_LEFT.set_delay(4)
+    RUN_LEFT_ID = 0
+    RUN_RIGHT = graphics.flip_column(RUN_LEFT)
+    RUN_RIGHT_ID = 1
+
+    IDLE_LEFT = graphics.SpriteColumn("idle", 4, 2)
+    IDLE_LEFT.set_delays((60, 10, 45, 10))
+    IDLE_LEFT_ID = 2
+    IDLE_RIGHT = graphics.flip_column(IDLE_LEFT)
+    IDLE_RIGHT_ID = 3
+
+    TUMBLE_LEFT = graphics.SpriteColumn("tumble", 6, 2)
+    TUMBLE_LEFT.set_delay(4)
+    TUMBLE_LEFT_ID = 4
+    TUMBLE_RIGHT = graphics.flip_column(TUMBLE_LEFT)
+    TUMBLE_RIGHT_ID = 5
+
+    DEAD_LEFT = graphics.SpriteColumn("dead", 1, 2)
+    DEAD_LEFT.set_delay(0xbeef)
+    DEAD_LEFT_ID = 6
+    DEAD_RIGHT = graphics.flip_column(DEAD_LEFT)
+    DEAD_RIGHT_ID = 7
+
+    WALL_PUSH_LEFT = graphics.SpriteColumn("wall_push", 1, 2)
+    WALL_PUSH_LEFT.set_delay(0xbeef)
+    WALL_PUSH_LEFT_ID = 8
+    WALL_PUSH_RIGHT = graphics.flip_column(WALL_PUSH_LEFT)
+    WALL_PUSH_RIGHT_ID = 9
+
+    JUMP_LEFT = graphics.SpriteColumn("jump", 6, 2)
+    JUMP_LEFT.set_delay(0xbeef)
+    JUMP_LEFT_ID = 10
+    JUMP_RIGHT = graphics.flip_column(JUMP_LEFT)
+    JUMP_RIGHT_ID = 11
+
+    ANIMSHEET = graphics.AnimSheet((RUN_LEFT, RUN_RIGHT,
+                                    IDLE_LEFT, IDLE_RIGHT,
+                                    TUMBLE_LEFT, TUMBLE_RIGHT,
+                                    DEAD_LEFT, DEAD_RIGHT,
+                                    WALL_PUSH_LEFT, WALL_PUSH_RIGHT,
+                                    JUMP_LEFT, JUMP_RIGHT))
+
+    def __init__(self, x, y, extend_x=0, extend_y=0):
         self.health = self.MAX_HEALTH
         self.dead = False
         self.offscreen_direction = 0
 
         self.x = x
         self.y = y
-        self.x_vel = 0
-        self.y_vel = 0
-        self.x_acc = 0
-        self.y_acc = 0
+        self.x_vel = 0.0
+        self.y_vel = 0.0
+        self.x_acc = 0.0
+        self.y_acc = 0.0
 
         # external velocities - caused by non-player forces
-        self.ext_x_vel = 0
+        self.ext_x_vel = 0.0
 
         self.x_dir = 0
         self.y_dir = 0
 
-        self.w = w
-        self.h = h
         self.extend_x = extend_x
         self.extend_y = extend_y
-        self.gridbox = pygame.Rect(x, y, w, h)
+        self.gridbox = pygame.Rect(x, y, self.WIDTH, self.HEIGHT)
         self.hitbox = pygame.Rect(x - extend_x, y - extend_y,
-                                  w + extend_x * 2, h + extend_y * 2)
+                                  self.WIDTH + extend_x * 2, self.HEIGHT + extend_y * 2)
 
         self.grounded = False
         self.level = level  # reference to the level layout
@@ -71,19 +117,22 @@ class Player:
         self.hitstun = False
         self.invuln_frames = 0
 
+        self.respawn_x = 0.0
+        self.respawn_y = 0.0
+
+        self.sprite = graphics.AnimInstance(self.ANIMSHEET)
+        self.facing = const.LEFT
+
     def draw(self, surf, cam):
+        self.sprite.update()
+
         x = self.gridbox.x - cam.x
         y = self.gridbox.y - cam.y
-        w = self.gridbox.w
-        h = self.gridbox.h
-        if self.dead:
-            pygame.draw.rect(surf, const.RED, (x, y, w, h))
-        else:
-            pygame.draw.rect(surf, const.CYAN, (x, y, w, h))
+        self.sprite.draw_frame(surf, x, y)
 
     def check_offscreen(self):
-        center_x = self.x + (self.w // 2)
-        center_y = self.y + (self.h // 2)
+        center_x = self.x + (self.WIDTH // 2)
+        center_y = self.y + (self.HEIGHT // 2)
 
         grid_left = grid.Room.PIXEL_W * level.active_column
         grid_right = grid_left + grid.Room.PIXEL_W
@@ -191,7 +240,7 @@ class Player:
     def snap_x(self, col, side=const.LEFT):
         """snaps you to either the left side or right side of a tile"""
         if side == const.LEFT:
-            self.goto(grid.x_of(col, const.LEFT) - self.w, self.y)
+            self.goto(grid.x_of(col, const.LEFT) - self.WIDTH, self.y)
             self.stop_x()
 
         elif side == const.RIGHT:
@@ -201,7 +250,7 @@ class Player:
     def snap_y(self, row, side=const.TOP):
         """snaps you to either the top or bottom of a tile"""
         if side == const.TOP:
-            self.goto(self.x, grid.y_of(row, const.TOP) - self.h)
+            self.goto(self.x, grid.y_of(row, const.TOP) - self.HEIGHT)
             self.stop_y()
 
         elif side == const.BOTTOM:
@@ -232,9 +281,9 @@ class Player:
                 dir_y = 0
 
             left_x = self.x
-            right_x = left_x + self.w - 1
+            right_x = left_x + self.WIDTH - 1
             top_y = int(self.y + (diff_y * (step / self.CHECK_STEPS)))
-            bottom_y = top_y + self.h - 1
+            bottom_y = top_y + self.HEIGHT - 1
 
             if dir_y == const.UP:
                 if self.level.collide_horiz(left_x, right_x, top_y, void_solid):
@@ -244,25 +293,29 @@ class Player:
                     self.snap_y(grid.row_at(bottom_y), const.TOP)
 
             left_x = int(self.x + (diff_x * (step / 4)))
-            right_x = left_x + self.w - 1
+            right_x = left_x + self.WIDTH - 1
             top_y = self.y
-            bottom_y = top_y + self.h - 1
+            bottom_y = top_y + self.HEIGHT - 1
 
             if dir_x == const.LEFT:
                 if self.level.collide_vert(left_x, top_y, bottom_y, void_solid):
                     self.snap_x(grid.col_at(left_x), const.RIGHT)
+
             elif dir_x == const.RIGHT:
                 if self.level.collide_vert(right_x, top_y, bottom_y, void_solid):
                     self.snap_x(grid.col_at(right_x), const.LEFT)
 
             if not self.dead and not self.invuln_frames:
-                center_col = grid.col_at(self.x + (self.w // 2))
-                center_row = grid.row_at(self.y + (self.h // 2))
+                center_col = grid.col_at(self.x + (self.WIDTH // 2))
+                center_row = grid.row_at(self.y + (self.HEIGHT // 2))
                 tile = self.level.tile_at(center_col, center_row)
                 if tile == grid.SPIKE_LEFT:
                     self.get_hit()
                     spikes.add(center_col, center_row, const.LEFT)
-                    self.ext_x_vel = -8
+                    self.ext_x_vel = -7
+
+                    if self.x_vel > 0:
+                        self.x_vel = 0
 
                 elif tile == grid.SPIKE_UP:
                     self.get_hit()
@@ -272,7 +325,10 @@ class Player:
                 elif tile == grid.SPIKE_RIGHT:
                     self.get_hit()
                     spikes.add(center_col, center_row, const.RIGHT)
-                    self.ext_x_vel = 8
+                    self.ext_x_vel = 7
+
+                    if self.x_vel < 0:
+                        self.x_vel = 0
 
                 elif tile == grid.SPIKE_DOWN:
                     self.get_hit()
@@ -282,12 +338,26 @@ class Player:
             elif self.invuln_frames:
                 self.invuln_frames -= 1
 
+    def update_wall_push(self, direction):
+        top_y = self.y
+        bottom_y = top_y + self.HEIGHT - 1
+
+        if direction == const.LEFT:
+            x = self.x - 1
+            if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
+                self.sprite.set_anim(self.WALL_PUSH_LEFT_ID)
+
+        elif direction == const.RIGHT:
+            x = self.x + self.WIDTH
+            if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
+                self.sprite.set_anim(self.WALL_PUSH_RIGHT_ID)
+
     def draw_health(self, surf):
         for pip in range(self.health):
-            x = pip * (self.w + self.HEALTH_SPACING) + 10
+            x = pip * (self.WIDTH + self.HEALTH_SPACING) + 10
             y = 10
 
-            pygame.draw.rect(surf, const.CYAN, (x, y, self.w, self.h))
+            pygame.draw.rect(surf, const.CYAN, (x, y, self.WIDTH, self.HEIGHT))
 
     def get_hit(self):
         self.hitstun = True
@@ -296,41 +366,71 @@ class Player:
 
     def check_ground(self, screen_edge):
         x1 = self.x
-        x2 = x1 + self.w - 1
-        y = self.y + self.h
+        x2 = x1 + self.WIDTH - 1
+        y = self.y + self.HEIGHT
         if self.level.collide_horiz(x1, x2, y, screen_edge):
             self.grounded = True
         else:
             self.grounded = False
 
+    def set_checkpoint(self):
+        room = self.level.room_grid[self.level.active_column][self.level.active_row]
 
-level = grid.Level(3, 3)
+        center_col = grid.col_at(self.x + (self.WIDTH // 2))
+        center_row = grid.row_at(self.y + (self.HEIGHT // 2))
+        tile = self.level.tile_at(center_col, center_row)
 
-room_0 = grid.Room(1, 0)
-room_0.change_rect(0, 10, 20, 10, grid.WALL)
-room_0.change_rect(12, 10, 4, 1, grid.SPIKE_EMIT_UP)
-room_0.change_point(19, 9, grid.SPIKE_EMIT_LEFT)
-level.add_room(room_0)
+        if tile in grid.CHECKPOINT_ZONE:
+            checkpoint_num = grid.CHECKPOINT_ZONE.index(tile)
+            col, row = room.checkpoints[checkpoint_num]
 
-room_1 = grid.Room(2, 0)
-room_1.change_rect(0, 10, 11, 2, grid.WALL)
-room_1.change_rect(8, 6, 3, 1, grid.SPIKE_EMIT_DOWN)
-level.add_room(room_1)
+            x_offset = (grid.TILE_W - self.WIDTH) // 2  # centers the player on the tile
+            y_offset = (grid.TILE_H - self.HEIGHT) // 2
+            self.respawn_x = grid.x_of(col) + x_offset
+            self.respawn_y = grid.y_of(row) + y_offset
 
-room_2 = grid.Room(2, 2)
-room_2.change_rect(5, 10, 10, 3, grid.WALL)
-level.add_room(room_2)
+        else:
+            print("Player entered level without setting checkpoint!")
 
-room_3 = grid.Room(0, 0)
-room_3.change_rect(0, 10, 20, 1, grid.WALL)
-room_3.change_point(0, 7, grid.SPIKE_EMIT_RIGHT)
-room_3.change_point(5, 6, grid.SPIKE_EMIT_DOWN)
-level.add_room(room_3)
+            for y in range(-1, 2, 1):
+                for x in range(-1, 2, 1):
+                    print(self.level.tile_at(center_col + x, center_row + y), end=" ")
 
-level.active_row = 0
-level.active_column = 1
+                print()
 
-player = Player(750, 250, 25, 25, -2, -2)
+
+level = grid.Level(5, 20)
+
+START_COL = 3
+START_ROW = 3
+DEBUG_START_COL = START_COL - 1
+DEBUG_START_ROW = START_ROW + 5
+level.active_column = DEBUG_START_COL
+level.active_row = DEBUG_START_ROW
+
+PLAYER_START_X = (DEBUG_START_COL + 1)* grid.Room.PIXEL_W - 25
+PLAYER_START_Y = DEBUG_START_ROW * grid.Room.PIXEL_H
+
+player = Player(PLAYER_START_X, PLAYER_START_Y)
+player.dead = True
+
+level.add_room(roomgen.intro_fallway(), START_COL, START_ROW)
+level.add_room(roomgen.intro_fallway(), START_COL, START_ROW + 1)
+level.add_room(roomgen.intro_fallway(), START_COL, START_ROW + 2)
+level.add_room(roomgen.fallway_disturbance(), START_COL, START_ROW + 3)
+level.add_room(roomgen.fallway_disturbance_2(), START_COL, START_ROW + 4)
+
+level.add_room(roomgen.lets_go_left(), START_COL, START_ROW + 5)
+level.add_room(roomgen.triple_bounce(), START_COL - 1, START_ROW + 5)
+level.add_room(roomgen.ow_my_head(), START_COL - 2, START_ROW + 5)
+
+level.add_room(roomgen.far_enough(), START_COL - 2, START_ROW + 6)
+level.add_room(roomgen.too_far(), START_COL - 2, START_ROW + 7)
+level.add_room(roomgen.not_far_enough(), START_COL - 2, START_ROW + 8)
+
+
+player.set_checkpoint()
+
 main_cam = camera.Camera()
 main_cam.x = level.active_column * grid.Room.PIXEL_W
 main_cam.y = level.active_row * grid.Room.PIXEL_H
@@ -355,6 +455,12 @@ while True:
                 if player.ext_x_vel < 0:
                     player.ext_x_vel = 0
 
+            # Graphics
+            player.sprite.set_anim(player.RUN_LEFT_ID)
+            player.facing = const.LEFT
+
+            player.update_wall_push(const.LEFT)
+
         elif (pygame.K_RIGHT in events.keys.held_keys or
                 pygame.K_d in events.keys.held_keys):
             player.x_vel += player.MOVE_ACC
@@ -364,8 +470,19 @@ while True:
                 if player.ext_x_vel > 0:
                     player.ext_x_vel = 0
 
+            # Graphics
+            player.sprite.set_anim(player.RUN_RIGHT_ID)
+            player.facing = const.RIGHT
+
+            player.update_wall_push(const.RIGHT)
+
         # Decelerate when you stop moving
         else:
+            if player.facing == const.LEFT:
+                player.sprite.set_anim(player.IDLE_LEFT_ID)
+            elif player.facing == const.RIGHT:
+                player.sprite.set_anim(player.IDLE_RIGHT_ID)
+
             if player.x_vel < 0:
                 player.x_vel += player.MOVE_DEC
                 if player.x_vel > 0:
@@ -386,14 +503,44 @@ while True:
                 if player.ext_x_vel < 0:
                     player.ext_x_vel = 0
 
+        # Jumping animation
+        if not player.grounded:
+            if player.facing == const.LEFT:
+                player.sprite.set_anim(player.JUMP_LEFT_ID)
+            else:
+                player.sprite.set_anim(player.JUMP_RIGHT_ID)
+
+            if player.y_vel < -player.JUMP_SPEED + 2.5:
+                player.sprite.frame = 0
+            elif player.y_vel < -player.JUMP_SPEED + 5:
+                player.sprite.frame = 1
+            elif player.y_vel < -player.JUMP_SPEED + 7.5:
+                player.sprite.frame = 2
+            elif player.y_vel < 0:
+                player.sprite.frame = 3
+            elif player.y_vel < 2.5:
+                player.sprite.frame = 4
+            else:
+                player.sprite.frame = 5
+
     elif player.dead and player.grounded:
         player.x_vel = 0
         player.ext_x_vel = 0
+        if player.facing == const.LEFT:
+            player.sprite.set_anim(player.DEAD_LEFT_ID)
+        elif player.facing == const.RIGHT:
+            player.sprite.set_anim(player.DEAD_RIGHT_ID)
+
+    elif player.dead or player.hitstun:
+        if player.facing == const.LEFT:
+            player.sprite.set_anim(player.TUMBLE_LEFT_ID)
+        elif player.facing == const.RIGHT:
+            player.sprite.set_anim(player.TUMBLE_RIGHT_ID)
 
     # Resetting level
     if events.keys.pressed_key == pygame.K_r:
         player.set_health(player.MAX_HEALTH)
-        player.goto(level.current_center_x(), level.current_center_y() - 50)
+        player.goto(player.respawn_x, player.respawn_y)
         player.hitstun = False
         player.stop_x()
         player.stop_y()
@@ -412,6 +559,8 @@ while True:
         main_cam.slide(player.offscreen_direction)
         level.change_room(player.offscreen_direction)
 
+        player.set_checkpoint()
+
     # Drawing everything
     spikes.draw(post_surf, main_cam)
     level.draw(post_surf, main_cam)
@@ -422,10 +571,10 @@ while True:
     if not player.dead:
         pygame.draw.rect(post_surf, const.RED, (0, 0, const.SCRN_W, const.SCRN_H), 5)
 
-    #debug.debug(clock.get_fps())
+    # debug.debug(clock.get_fps())
 
-    #debug.debug(player.y_vel)
-    #debug.debug(player.health, player.dead)
+    # debug.debug(float(player.x_vel), float(player.ext_x_vel))
+    # debug.debug(player.health, player.dead)
 
     debug.draw(post_surf)
 
