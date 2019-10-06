@@ -62,28 +62,35 @@ class Player:
     TUMBLE_RIGHT = graphics.flip_column(TUMBLE_LEFT)
     TUMBLE_RIGHT_ID = 5
 
-    DEAD_LEFT = graphics.AnimColumn("dead", 1, 2)
-    DEAD_LEFT.set_delay(0xbeef)
-    DEAD_LEFT_ID = 6
-    DEAD_RIGHT = graphics.flip_column(DEAD_LEFT)
-    DEAD_RIGHT_ID = 7
+    DEAD_GROUNDED_LEFT = graphics.AnimColumn("dead_grounded", 1, 2)
+    DEAD_GROUNDED_LEFT.set_delay(0xbeef)
+    DEAD_GROUNDED_LEFT_ID = 6
+    DEAD_GROUNDED_RIGHT = graphics.flip_column(DEAD_GROUNDED_LEFT)
+    DEAD_GROUNDED_RIGHT_ID = 7
+
+    DEAD_FALL_LEFT = graphics.AnimColumn("dead_fall", 7, 2)
+    DEAD_FALL_LEFT.set_delay(0xbeef)
+    DEAD_FALL_LEFT_ID = 8
+    DEAD_FALL_RIGHT = graphics.flip_column(DEAD_FALL_LEFT)
+    DEAD_FALL_RIGHT_ID = 9
 
     WALL_PUSH_LEFT = graphics.AnimColumn("wall_push", 1, 2)
     WALL_PUSH_LEFT.set_delay(0xbeef)
-    WALL_PUSH_LEFT_ID = 8
+    WALL_PUSH_LEFT_ID = 10
     WALL_PUSH_RIGHT = graphics.flip_column(WALL_PUSH_LEFT)
-    WALL_PUSH_RIGHT_ID = 9
+    WALL_PUSH_RIGHT_ID = 11
 
     JUMP_LEFT = graphics.AnimColumn("jump", 6, 2)
     JUMP_LEFT.set_delay(0xbeef)
-    JUMP_LEFT_ID = 10
+    JUMP_LEFT_ID = 12
     JUMP_RIGHT = graphics.flip_column(JUMP_LEFT)
-    JUMP_RIGHT_ID = 11
+    JUMP_RIGHT_ID = 13
 
     ANIMSHEET = graphics.AnimSheet((RUN_LEFT, RUN_RIGHT,
                                     IDLE_LEFT, IDLE_RIGHT,
                                     TUMBLE_LEFT, TUMBLE_RIGHT,
-                                    DEAD_LEFT, DEAD_RIGHT,
+                                    DEAD_GROUNDED_LEFT, DEAD_GROUNDED_RIGHT,
+                                    DEAD_FALL_LEFT, DEAD_FALL_RIGHT,
                                     WALL_PUSH_LEFT, WALL_PUSH_RIGHT,
                                     JUMP_LEFT, JUMP_RIGHT))
 
@@ -127,7 +134,7 @@ class Player:
         self.grounded = False
         self.level = level  # reference to the level layout
 
-        self.hitstun = False
+        self.tumble = False
         self.invuln_frames = 0
 
         self.respawn_x = 0.0
@@ -169,9 +176,7 @@ class Player:
 
     def move(self, void_solid=True):
         """moves body based on velocity and acceleration"""
-        if self.grounded:
-            self.hitstun = False
-        else:
+        if not self.grounded:
             self.y_acc = const.GRAVITY
 
         if self.x_vel > self.MOVE_SPEED:
@@ -379,7 +384,7 @@ class Player:
             sprite.draw_frame(surf, self.HEART_X[heart], self.HEART_Y)
 
     def get_hit(self):
-        self.hitstun = True
+        self.tumble = True
         self.change_health(-1)
         self.invuln_frames = self.INVULN_LENGTH
 
@@ -418,16 +423,16 @@ class Player:
                 print()
 
 
-level = grid.Level(5, 20)
+level = grid.Level(10, 20)
 
 START_COL = 3
 START_ROW = 3
 DEBUG_START_COL = START_COL
-DEBUG_START_ROW = START_ROW
+DEBUG_START_ROW = START_ROW + 9
 level.active_column = DEBUG_START_COL
 level.active_row = DEBUG_START_ROW
 
-PLAYER_START_X = DEBUG_START_COL * grid.Room.PIXEL_W + (grid.Room.PIXEL_W // 2 - Player.WIDTH // 2)
+PLAYER_START_X = DEBUG_START_COL * grid.Room.PIXEL_W
 PLAYER_START_Y = DEBUG_START_ROW * grid.Room.PIXEL_H
 
 player = Player(PLAYER_START_X, PLAYER_START_Y)
@@ -444,8 +449,15 @@ level.add_room(roomgen.triple_bounce(), START_COL - 1, START_ROW + 5)
 level.add_room(roomgen.ow_my_head(), START_COL - 2, START_ROW + 5)
 
 level.add_room(roomgen.far_enough(), START_COL - 2, START_ROW + 6)
-level.add_room(roomgen.too_far(), START_COL - 2, START_ROW + 7)
+level.add_room(roomgen.spike_spike(), START_COL - 2, START_ROW + 7)
 level.add_room(roomgen.not_far_enough(), START_COL - 2, START_ROW + 8)
+
+level.add_room(roomgen.elbow(), START_COL - 2, START_ROW + 9)
+level.add_room(roomgen.ready_for_launch(), START_COL - 1, START_ROW + 9)
+level.add_room(roomgen.ready_for_landing(), START_COL, START_ROW + 9)
+
+level.add_room(roomgen.up_and_up_and_up(), START_COL + 1, START_ROW + 9)
+level.add_room(roomgen.crossing_rooms(), START_COL + 2, START_ROW + 9)
 
 
 player.set_checkpoint()
@@ -464,26 +476,37 @@ while True:
             player.y_vel = -player.JUMP_SPEED
 
     # Moving left & right
-    if not player.hitstun and not player.dead:
-        # Jumping animation
-        if not player.grounded:
-            if player.facing == const.LEFT:
-                player.sprite.set_anim(player.JUMP_LEFT_ID)
-            else:
-                player.sprite.set_anim(player.JUMP_RIGHT_ID)
+    if not player.dead:
 
-            if player.y_vel < -player.JUMP_SPEED + 2.5:
-                player.sprite.frame = 0
-            elif player.y_vel < -player.JUMP_SPEED + 5:
-                player.sprite.frame = 1
-            elif player.y_vel < -player.JUMP_SPEED + 7.5:
-                player.sprite.frame = 2
-            elif player.y_vel < 0:
-                player.sprite.frame = 3
-            elif player.y_vel < 2.5:
-                player.sprite.frame = 4
+        if not player.grounded:
+            if player.tumble:
+                if player.facing == const.LEFT:
+                    player.sprite.set_anim(player.TUMBLE_LEFT_ID)
+                else:
+                    player.sprite.set_anim(player.TUMBLE_RIGHT_ID)
+
+            # Jumping animation
             else:
-                player.sprite.frame = 5
+                if player.facing == const.LEFT:
+                    player.sprite.set_anim(player.JUMP_LEFT_ID)
+                else:
+                    player.sprite.set_anim(player.JUMP_RIGHT_ID)
+
+                if player.y_vel < -player.JUMP_SPEED + 2.5:
+                    player.sprite.frame = 0
+                elif player.y_vel < -player.JUMP_SPEED + 5:
+                    player.sprite.frame = 1
+                elif player.y_vel < -player.JUMP_SPEED + 7.5:
+                    player.sprite.frame = 2
+                elif player.y_vel < 0:
+                    player.sprite.frame = 3
+                elif player.y_vel < 2.5:
+                    player.sprite.frame = 4
+                else:
+                    player.sprite.frame = 5
+
+        else:
+            player.tumble = False
 
         if (pygame.K_LEFT in events.keys.held_keys or
                 pygame.K_a in events.keys.held_keys):
@@ -497,7 +520,9 @@ while True:
             # Graphics
             if player.grounded:
                 player.sprite.set_anim(player.RUN_LEFT_ID)
-            player.facing = const.LEFT
+
+            if not player.tumble:
+                player.facing = const.LEFT
 
             player.update_wall_push(const.LEFT)
 
@@ -513,7 +538,9 @@ while True:
             # Graphics
             if player.grounded:
                 player.sprite.set_anim(player.RUN_RIGHT_ID)
-            player.facing = const.RIGHT
+
+            if not player.tumble:
+                player.facing = const.RIGHT
 
             player.update_wall_push(const.RIGHT)
 
@@ -549,21 +576,41 @@ while True:
         player.x_vel = 0
         player.ext_x_vel = 0
         if player.facing == const.LEFT:
-            player.sprite.set_anim(player.DEAD_LEFT_ID)
+            player.sprite.set_anim(player.DEAD_GROUNDED_LEFT_ID)
         elif player.facing == const.RIGHT:
-            player.sprite.set_anim(player.DEAD_RIGHT_ID)
+            player.sprite.set_anim(player.DEAD_GROUNDED_RIGHT_ID)
 
-    elif player.dead or player.hitstun:
+    elif player.dead:
         if player.facing == const.LEFT:
-            player.sprite.set_anim(player.TUMBLE_LEFT_ID)
-        elif player.facing == const.RIGHT:
-            player.sprite.set_anim(player.TUMBLE_RIGHT_ID)
+            player.sprite.set_anim(player.DEAD_FALL_LEFT_ID)
+        else:
+            player.sprite.set_anim(player.DEAD_FALL_RIGHT_ID)
+
+        if player.y_vel < -player.JUMP_SPEED + 2.5:
+            player.sprite.frame = 0
+        elif player.y_vel < -player.JUMP_SPEED + 5:
+            player.sprite.frame = 1
+        elif player.y_vel < -player.JUMP_SPEED + 7.5:
+            player.sprite.frame = 2
+        elif player.y_vel < 0:
+            player.sprite.frame = 3
+        elif player.y_vel < 2.5:
+            player.sprite.frame = 4
+        else:
+            player.sprite.frame_delay += 1
+            if player.sprite.frame_delay > 1:
+                player.sprite.frame_delay = 0
+
+                if player.sprite.frame == 5:
+                    player.sprite.frame = 6
+                else:
+                    player.sprite.frame = 5
 
     # Resetting level
     if events.keys.pressed_key == pygame.K_r:
         player.set_health(player.MAX_HEALTH)
+        player.tumble = False
         player.goto(player.respawn_x, player.respawn_y)
-        player.hitstun = False
         player.stop_x()
         player.stop_y()
 
