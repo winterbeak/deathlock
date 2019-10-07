@@ -14,9 +14,12 @@ class Camera:
         self.x = 0.0
         self.y = 0.0
 
-        self.slide_direction = 0
-        self.slide_frame = self.SLIDE_LENGTH
-        self.slide_c = 0.0
+        self.slide_x_direction = 0
+        self.slide_y_direction = 0
+        self.slide_x_frame = self.SLIDE_LENGTH
+        self.slide_y_frame = self.SLIDE_LENGTH
+        self.slide_x_c = 0.0
+        self.slide_y_c = 0.0
 
         self.last_slide_frame = False
 
@@ -24,22 +27,36 @@ class Camera:
         self.shake_length = 0
         self.shake_intensity = 0
 
+        self.sliding = False
+
     def update(self):
-        if self.slide_frame < self.SLIDE_LENGTH:
-            self.slide_frame += 1
+        if self.last_slide_frame:
+            self.sliding = False
+            self.last_slide_frame = False
 
-            if self.slide_direction == const.LEFT:
-                self.base_x = -self.SLIDE_A * math.sin(self.SLIDE_K * self.slide_frame) + self.slide_c
-            elif self.slide_direction == const.RIGHT:
-                self.base_x = self.SLIDE_A * math.sin(self.SLIDE_K * self.slide_frame) + self.slide_c
+        if self.slide_x_frame < self.SLIDE_LENGTH:
+            self.slide_x_frame += 1
 
-            elif self.slide_direction == const.UP:
-                self.base_y = -self.SLIDE_A * math.sin(self.SLIDE_K * self.slide_frame) + self.slide_c
-            elif self.slide_direction == const.DOWN:
-                self.base_y = self.SLIDE_A * math.sin(self.SLIDE_K * self.slide_frame) + self.slide_c
+            if self.slide_x_direction == const.LEFT:
+                self.base_x = -self.SLIDE_A * math.sin(self.SLIDE_K * self.slide_x_frame) + self.slide_x_c
+            elif self.slide_x_direction == const.RIGHT:
+                self.base_x = self.SLIDE_A * math.sin(self.SLIDE_K * self.slide_x_frame) + self.slide_x_c
 
-            if self.slide_frame == self.SLIDE_LENGTH:
-                self.last_slide_frame = True
+            if self.slide_x_frame >= self.SLIDE_LENGTH:
+                if self.slide_y_frame >= self.SLIDE_LENGTH:
+                    self.last_slide_frame = True
+
+        if self.slide_y_frame < self.SLIDE_LENGTH:
+            self.slide_y_frame += 1
+
+            if self.slide_y_direction == const.UP:
+                self.base_y = -self.SLIDE_A * math.sin(self.SLIDE_K * self.slide_y_frame) + self.slide_y_c
+            elif self.slide_y_direction == const.DOWN:
+                self.base_y = self.SLIDE_A * math.sin(self.SLIDE_K * self.slide_y_frame) + self.slide_y_c
+
+            if self.slide_y_frame >= self.SLIDE_LENGTH:
+                if self.slide_x_frame >= self.SLIDE_LENGTH:
+                    self.last_slide_frame = True
 
         if self.shake_frame < self.shake_length:
             self.shake_frame += 1
@@ -50,12 +67,18 @@ class Camera:
             self.y = self.base_y
 
     def slide(self, direction):
-        self.slide_direction = direction
-        self.slide_frame = 0
+        self.sliding = True
+
         if direction == const.LEFT or direction == const.RIGHT:
-            self.slide_c = self.base_x
+            self.slide_x_direction = direction
+            self.slide_x_frame = 0
+            self.slide_x_c = self.base_x
+
         elif direction == const.UP or direction == const.DOWN:
-            self.slide_c = self.base_y
+            self.slide_y_direction = direction
+            self.slide_y_frame = 0
+            self.slide_y_c = self.base_y
+
         else:
             print("Invalid direction to camera.slide()!")
 

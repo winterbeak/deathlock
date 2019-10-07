@@ -227,7 +227,7 @@ class Level:
         self.bottommost_tile = height * Room.HEIGHT - 1
 
     def draw(self, surf, camera):
-        if camera.slide_frame < camera.SLIDE_LENGTH:
+        if camera.sliding:
             self.draw_room(surf, camera, self.previous_column, self.previous_row)
 
         self.draw_room(surf, camera, self.active_column, self.active_row)

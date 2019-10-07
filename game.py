@@ -19,6 +19,7 @@ import spikes
 # INITIALIZATION
 pygame.init()
 post_surf = pygame.display.set_mode((const.SCRN_W, const.SCRN_H))
+pygame.display.set_caption("deathlock")
 
 clock = pygame.time.Clock()
 
@@ -127,9 +128,9 @@ class Player:
     MIDDLE_HEART = graphics.AnimColumn("heart_middle", 2, 2)
     LEFT_HEART = graphics.AnimColumn("heart_left", 2, 2)
     RIGHT_HEART = graphics.flip_column(LEFT_HEART)
-    MIDDLE_HEART.set_delays((64, 13))
-    LEFT_HEART.set_delays((64, 13))
-    RIGHT_HEART.set_delays((64, 13))
+    MIDDLE_HEART.set_delays((62, 16))
+    LEFT_HEART.set_delays((62, 16))
+    RIGHT_HEART.set_delays((62, 16))
 
     HEART_SHEET = graphics.AnimSheet((MIDDLE_HEART, LEFT_HEART, RIGHT_HEART))
 
@@ -144,9 +145,11 @@ class Player:
 
     HIT_SOUNDS = sound.load_numbers("hit%i", 3)
 
-    ROOM_CHANGE_SOUNDS = sound.load_numbers("room_change%i", 1)
+    # ROOM_CHANGE_SOUNDS = sound.load_numbers("room_change%i", 1)
 
-    # JUMP_SOUNDS = sound.load_numbers("jump%i", 1)
+    JUMP_SOUNDS = sound.load_numbers("jump%i", 3)
+
+    LAND_SOUNDS = sound.load_numbers("land%i", 3)
 
     def __init__(self, x, y, extend_x=0, extend_y=0):
         self.health = self.MAX_HEALTH
@@ -438,6 +441,8 @@ class Player:
         x2 = x1 + self.WIDTH - 1
         y = self.y + self.HEIGHT
         if self.level.collide_horiz(x1, x2, y, screen_edge):
+            if not self.grounded:
+                self.LAND_SOUNDS.play_random(0.3)
             self.grounded = True
         else:
             self.grounded = False
@@ -472,13 +477,13 @@ level = grid.Level(10, 20)
 
 START_COL = 3
 START_ROW = 3
-DEBUG_START_COL = START_COL
-DEBUG_START_ROW = START_ROW + 9
+DEBUG_START_COL = START_COL + 1
+DEBUG_START_ROW = START_ROW + 8
 level.active_column = DEBUG_START_COL
 level.active_row = DEBUG_START_ROW
 
 PLAYER_START_X = DEBUG_START_COL * grid.Room.PIXEL_W
-PLAYER_START_Y = DEBUG_START_ROW * grid.Room.PIXEL_H
+PLAYER_START_Y = DEBUG_START_ROW * grid.Room.PIXEL_H + 25
 
 player = Player(PLAYER_START_X, PLAYER_START_Y)
 player.set_health(0)
@@ -504,6 +509,12 @@ level.add_room(roomgen.ready_for_landing(), START_COL, START_ROW + 9)
 level.add_room(roomgen.up_and_up_and_up(), START_COL + 1, START_ROW + 9)
 level.add_room(roomgen.crossing_rooms(), START_COL + 2, START_ROW + 9)
 
+level.add_room(roomgen.climber(), START_COL, START_ROW + 8)
+level.add_room(roomgen.uncrossable_chasm(), START_COL + 1, START_ROW + 8)
+level.add_room(roomgen.secret_ceiling(), START_COL + 1, START_ROW + 7)
+level.add_room(roomgen.stand_in_weird_places(), START_COL + 2, START_ROW + 8)
+level.add_room(roomgen.the_big_jump(), START_COL + 3, START_ROW + 8)
+level.add_room(roomgen.safety_net(), START_COL + 3, START_ROW + 9)
 
 player.set_checkpoint()
 
@@ -511,15 +522,17 @@ main_cam = camera.Camera()
 main_cam.base_x = level.active_column * grid.Room.PIXEL_W
 main_cam.base_y = level.active_row * grid.Room.PIXEL_H
 
+first_revive = True
+
 while True:
     events.update()
 
     # Jumping
-    if pygame.K_UP in events.keys.held_keys or pygame.K_w in events.keys.held_keys:
+    if pygame.K_p in events.keys.held_keys or pygame.K_z in events.keys.held_keys:
         if player.grounded and not player.dead:
             player.grounded = False
             player.y_vel = -player.JUMP_SPEED
-            # player.JUMP_SOUNDS.play_random(0.15)
+            player.JUMP_SOUNDS.play_random(0.3)
 
     # Moving left & right
     if not player.dead:
@@ -673,6 +686,12 @@ while True:
 
     # Resetting level
     if events.keys.pressed_key == pygame.K_r:
+        if first_revive:
+            first_revive = False
+            sound.play_music()
+            for sprite in player.heart_sprites:
+                sprite.frame = 0
+                sprite.frame_delay = 22
         player.REVIVE_SOUNDS.play_random(0.15)
         player.set_health(player.MAX_HEALTH)
         player.tumble = False
@@ -688,21 +707,30 @@ while True:
     if main_cam.last_slide_frame:
         main_cam.base_x = level.active_column * grid.Room.PIXEL_W
         main_cam.base_y = level.active_row * grid.Room.PIXEL_H
-        main_cam.last_slide_frame = False
 
     if player.offscreen_direction != 0:
         main_cam.slide(player.offscreen_direction)
         level.change_room(player.offscreen_direction)
 
         player.set_checkpoint()
-        player.ROOM_CHANGE_SOUNDS.play_random(0.15)
+        # player.ROOM_CHANGE_SOUNDS.play_random(0.15)
 
     player.update_hearts()
+
+    if player.dead:
+        sound.set_music_volume(0.0)
+    else:
+        sound.set_music_volume(sound.MUSIC_VOLUME)
 
     # Drawing everything
     draw_background(post_surf, main_cam)
     spikes.draw(post_surf, main_cam)
     level.draw(post_surf, main_cam)
+
+    # Fixes the Secret Ceiling not drawing due to camera sliding two rooms at once
+    if level.active_column == START_COL + 2 and level.active_row == START_ROW + 8:
+        if main_cam.sliding:
+            level.room_grid[START_COL + 1][START_ROW + 7].draw(post_surf, main_cam)
     player.draw(post_surf, main_cam)
 
     # Deathlock border
@@ -711,7 +739,9 @@ while True:
 
     player.draw_hearts(post_surf)
 
-    # debug.debug(clock.get_fps())
+    debug.debug(clock.get_fps())
+    debug.debug(main_cam.sliding, main_cam.last_slide_frame)
+    debug.debug(main_cam.slide_x_frame, main_cam.slide_y_frame, main_cam.SLIDE_LENGTH)
 
     # debug.debug(float(player.x_vel), float(player.ext_x_vel))
     # debug.debug(player.health, player.dead)

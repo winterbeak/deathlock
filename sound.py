@@ -173,4 +173,3 @@ MUSIC_VOLUME = 0.3
 
 load_music("deathlocked")
 set_music_volume(MUSIC_VOLUME)
-play_music()

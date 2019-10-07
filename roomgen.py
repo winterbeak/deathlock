@@ -191,12 +191,19 @@ def ready_for_landing():
     room = grid.Room()
 
     room.change_rect(0, 9, 1, 14, grid.WALL)  # Left wall
-    room.change_rect(0, 14, 11, 11, grid.WALL) # Left ledge
+    room.change_rect(0, 14, 11, 11, grid.WALL)  # Left ledge
+    room.change_rect(12, 0, 3, 1, grid.WALL)  # Overhang ceiling
     room.change_rect(11, 0, 1, 13, grid.WALL)  # Overhang left
     room.change_rect(11, 12, 9, 1, grid.WALL)  # Overhang floor
 
-    for x in range(19, 25):  # Overhang staircase
-        y = (x - 7)
+    room.change_rect(12, 9, 3, 3, grid.WALL)  # Square
+    room.change_rect(18, 6, 3, 3, grid.WALL)  # L-bottom
+    room.change_rect(21, 3, 3, 6, grid.WALL)  # L-right
+
+    room.change_rect(24, 0, 1, 9, grid.WALL)  # Low-middle square
+
+    for x in range(20, 25):  # Overhang staircase
+        y = (x - 8)
         room.change_rect(x, y, 1, 2, grid.WALL)
 
     room.change_rect(0, 24, 25, 1, grid.WALL)  # Floor
@@ -204,13 +211,19 @@ def ready_for_landing():
     room.change_point(0, 11, grid.SPIKE_EMIT_RIGHT)
     room.change_point(11, 12, grid.SPIKE_EMIT_DOWN)
 
+    room.change_rect(21, 3, 3, 1, grid.SPIKE_EMIT_UP)  # Spikes in top right
+
     # Left entrance
     room.change_rect(0, 0, 1, 9, grid.CHECKPOINT_ZONE[0])
     room.add_checkpoint(2, 12)
 
     # Right entrance
-    room.change_rect(24, 0, 1, 17, grid.CHECKPOINT_ZONE[1])
+    room.change_rect(24, 9, 1, 7, grid.CHECKPOINT_ZONE[1])
     room.add_checkpoint(23, 13)
+
+    # Top entrance
+    room.change_rect(15, 0, 9, 1, grid.CHECKPOINT_ZONE[2])
+    room.add_checkpoint(19, 4)
 
     return room
 
@@ -220,14 +233,14 @@ def up_and_up_and_up():
 
     room.change_rect(0, 24, 25, 1, grid.WALL)  # Floor
     room.change_rect(22, 8, 3, 17, grid.WALL)  # Right wall
-    room.change_point(0, 18, grid.WALL)  # Leftmost ledge
+    room.change_point(0, 17, grid.WALL)  # Leftmost ledge
 
     room.change_point(9, 24, grid.SPIKE_EMIT_UP)
     room.change_point(14, 18, grid.SPIKE_EMIT_UP)
     room.change_point(19, 12, grid.SPIKE_EMIT_UP)
 
     # Left entrance
-    room.change_rect(0, 19, 1, 5, grid.CHECKPOINT_ZONE[0])
+    room.change_rect(0, 18, 1, 6, grid.CHECKPOINT_ZONE[0])
     room.add_checkpoint(2, 22)
 
     # Right entrance
@@ -240,13 +253,131 @@ def up_and_up_and_up():
 def crossing_rooms():
     room = grid.Room()
 
-    room.change_rect(0, 8, 25, 17, grid.WALL)  # Floor
-    room.change_rect(10, 0, 15, 25, grid.WALL)  # Wall
+    room.change_rect(0, 8, 10, 17, grid.WALL)  # Launcher floor
+    room.change_rect(10, 0, 1, 25, grid.WALL)  # Launcher wall
 
-    room.change_point(1, 8, grid.SPIKE_EMIT_UP)
+    room.change_rect(0, 15, 25, 10, grid.WALL)  # Triple floor
+
+    room.change_point(1, 8, grid.SPIKE_EMIT_UP)  # Launcher spikes
     room.change_point(10, 7, grid.SPIKE_EMIT_LEFT)
+
+    room.change_point(18, 4, grid.SPIKE_EMIT_UP)  # Triple spikes
+    room.change_point(13, 10, grid.SPIKE_EMIT_UP)
+    room.change_point(11, 15, grid.SPIKE_EMIT_UP)
 
     room.change_rect(0, 0, 1, 8, grid.CHECKPOINT_ZONE[0])
     room.add_checkpoint(3, 6)
+
+    room.change_rect(11, 0, 14, 1, grid.CHECKPOINT_ZONE[1])
+    room.change_rect(24, 0, 1, 15, grid.CHECKPOINT_ZONE[1])
+    room.add_checkpoint(23, 13)
+
+    return room
+
+
+def climber():
+    room = grid.Room()
+
+    room.change_rect(24, 5, 1, 20, grid.WALL)  # Right wall
+    room.change_rect(14, 0, 1, 25, grid.WALL)  # Left wall
+    room.change_rect(14, 0, 11, 1, grid.WALL)  # Ceiling
+
+    room.change_rect(15, 22, 3, 1, grid.WALL)  # Lowest platform
+    room.change_rect(21, 19, 3, 1, grid.WALL)  # Second lowest platform
+    room.change_rect(15, 16, 3, 1, grid.WALL)  # Third lowest platform
+    room.change_rect(21, 13, 3, 1, grid.WALL)  # Fourth lowest platform
+    room.change_rect(15, 10, 3, 1, grid.WALL)  # Fifth lowest platform
+    room.change_rect(21, 7, 3, 1, grid.WALL)  # Sixth lowest platform
+
+    room.change_point(22, 7, grid.SPIKE_EMIT_UP)
+
+    room.change_rect(15, 24, 9, 1, grid.CHECKPOINT_ZONE[0])
+    room.add_checkpoint(22, 21)
+
+    return room
+
+
+def uncrossable_chasm():
+    room = grid.Room()
+
+    room.change_rect(0, 5, 7, 20, grid.WALL)  # Left ledge
+    room.change_rect(18, 9, 7, 15, grid.WALL)  # Right ledge
+    room.change_rect(0, 24, 25, 1, grid.WALL)  # Floor
+    room.change_point(0, 0, grid.WALL)  # Top left corner
+
+    room.change_point(6, 5, grid.SPIKE_EMIT_UP)
+
+    room.change_rect(0, 1, 1, 4, grid.CHECKPOINT_ZONE[0])  # Left entrance
+    room.change_rect(1, 0, 24, 1, grid.CHECKPOINT_ZONE[0])  # Top entrance
+    room.add_checkpoint(2, 4)
+
+    return room
+
+
+def secret_ceiling():
+    room = grid.Room()
+
+    room.change_rect(0, 0, 1, 25, grid.WALL)  # Left wall
+    room.change_rect(24, 0, 1, 25, grid.WALL)  # Right wall
+
+    room.change_point(13, 21, grid.SPIKE_EMIT_RIGHT)
+
+    room.change_rect(1, 24, 23, 1, grid.CHECKPOINT_ZONE[0])
+    room.add_checkpoint(12, 22)
+
+    return room
+
+
+def stand_in_weird_places():
+    room = grid.Room()
+
+    room.change_rect(0, 9, 1, 16, grid.WALL)  # Left wall
+    room.change_rect(0, 14, 11, 11, grid.WALL)  # Left ledge
+    room.change_rect(10, 4, 1, 10, grid.WALL)  # Blocker
+
+    room.change_rect(22, 24, 3, 1, grid.WALL)  # Right ledge
+    room.change_rect(19, 0, 3, 22, grid.WALL)  # Right overhang
+
+    room.change_point(3, 14, grid.SPIKE_EMIT_UP)  # Lower initial launcher
+    room.change_point(6, 9, grid.SPIKE_EMIT_UP)  # Higher initial launcher
+    room.change_point(23, 24, grid.SPIKE_EMIT_UP)  # Solution launcher
+    room.change_point(10, 24, grid.SPIKE_EMIT_RIGHT)  # Right launcher
+
+    room.change_rect(0, 0, 1, 9, grid.CHECKPOINT_ZONE[0])
+    room.add_checkpoint(5, 11)
+
+    room.change_rect(12, 24, 10, 1, grid.CHECKPOINT_ZONE[1])
+    room.add_checkpoint(22, 22)
+
+    return room
+
+
+def the_big_jump():
+    room = grid.Room()
+
+    room.change_rect(7, 19, 1, 6, grid.WALL)
+
+    room.change_point(7, 24, grid.SPIKE_EMIT_LEFT)
+
+    room.change_rect(0, 0, 1, 25, grid.CHECKPOINT_ZONE[0])
+    room.add_checkpoint(2, 23)
+
+    return room
+
+
+def safety_net():
+    room = grid.Room()
+
+    room.change_rect(0, 15, 25, 10, grid.WALL)  # Floor
+    room.change_rect(7, 0, 1, 25, grid.WALL)  # Divider
+
+    room.change_point(2, 15, grid.SPIKE_EMIT_UP)
+
+    room.change_rect(0, 0, 7, 1, grid.CHECKPOINT_ZONE[0])  # Fail entrance
+    room.change_rect(0, 1, 1, 14, grid.CHECKPOINT_ZONE[0])
+    room.add_checkpoint(5, 13)
+
+    room.change_rect(8, 0, 17, 1, grid.CHECKPOINT_ZONE[1])
+    room.add_checkpoint(9, 13)
 
     return room
