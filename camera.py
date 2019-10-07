@@ -31,8 +31,13 @@ class Camera:
 
     def update(self):
         if self.last_slide_frame:
-            self.sliding = False
             self.last_slide_frame = False
+
+            # If statements fix a bug where you enter another room
+            # and the camera stops sliding on the same frame
+            if self.slide_x_frame >= self.SLIDE_LENGTH:
+                if self.slide_y_frame >= self.SLIDE_LENGTH:
+                    self.sliding = False
 
         if self.slide_x_frame < self.SLIDE_LENGTH:
             self.slide_x_frame += 1

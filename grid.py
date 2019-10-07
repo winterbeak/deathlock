@@ -203,14 +203,15 @@ class Room:
                 elif self.tile_at(rel_col, rel_row) == SPIKE_EMIT_DOWN:
                     surf.blit(spike_box_down, (x, y))
 
-                elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[0]:
-                    pygame.draw.rect(surf, const.LIGHT_BLUE, rect)
-
-                elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[1]:
-                    pygame.draw.rect(surf, const.LIGHT_GREEN, rect)
-
-                elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[2]:
-                    pygame.draw.rect(surf, const.LIGHT_MAGENTA, rect)
+                # # Draws checkpoint zones, for debugging purposes.
+                # elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[0]:
+                #     pygame.draw.rect(surf, const.LIGHT_BLUE, rect)
+                #
+                # elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[1]:
+                #     pygame.draw.rect(surf, const.LIGHT_GREEN, rect)
+                #
+                # elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[2]:
+                #     pygame.draw.rect(surf, const.LIGHT_MAGENTA, rect)
 
 
 class Level:
