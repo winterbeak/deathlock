@@ -181,3 +181,19 @@ class CollisionEntity:
         x2 = x1 + self._width - 1
         y = self._y + self._height
         return self._level.collide_horiz(x1, x2, y, self.collide_void)
+
+
+class GravityCollisionEntity(CollisionEntity):
+    def __init__(self, level, width, height, terminal_velocity,
+                 x=0, y=0, extend_x=0, extend_y=0):
+        super().__init__(level, width, height, x, y, extend_x, extend_y)
+        self._terminal_velocity = terminal_velocity
+
+    @property
+    def grounded(self):
+        return self._against_floor()
+
+    def update(self):
+        if self.grounded:
+            self.y_acc = const.GRAVITY
+        super().update()
