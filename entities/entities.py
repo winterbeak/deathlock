@@ -180,7 +180,4 @@ class CollisionEntity:
         x1 = self._x
         x2 = x1 + self._width - 1
         y = self._y + self._height
-        if self._level.collide_horiz(x1, x2, y, screen_edge):
-            return True
-        else:
-            return False
+        return self._level.collide_horiz(x1, x2, y, screen_edge)
