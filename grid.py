@@ -184,7 +184,7 @@ class Room:
             for rel_col in range(self.WIDTH):
                 col = self.column * self.WIDTH + rel_col
                 row = self.row * self.HEIGHT + rel_row
-                x = col * TILE_W - camera.x
+                x = col * TILE_W - camera._x
                 y = row * TILE_H - camera.y
                 rect = (x, y, TILE_W, TILE_H)
 
@@ -340,7 +340,7 @@ class Level:
         room.rightmost_tile = room.leftmost_tile + room.WIDTH - 1
         room.bottommost_tile = room.topmost_tile + room.HEIGHT - 1
 
-        room.x = column * room.PIXEL_W
+        room._x = column * room.PIXEL_W
         room.y = row * room.PIXEL_H
 
         for checkpoint in room.checkpoints:

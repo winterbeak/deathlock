@@ -8,8 +8,8 @@ class CollisionEntity:
     CHECK_STEPS = 4
 
     def __init__(self, level, width, height, x=0, y=0, extend_x=0, extend_y=0):
-        self.x = x
-        self.y = y
+        self._x = x
+        self._y = y
         self._width = width
         self._height = height
 
@@ -29,6 +29,26 @@ class CollisionEntity:
 
         self._level = level  # reference to the level layout
 
+    @property
+    def x(self):
+        return self._x
+
+    @x.setter
+    def x(self, value):
+        self._x = value
+        self._gridbox.x = value
+        self._hitbox.x = value - self._extend_x
+
+    @property
+    def y(self):
+        return self._y
+
+    @y.setter
+    def y(self, value):
+        self._y = value
+        self._gridbox.y = value
+        self._hitbox.y = value
+
     def _move(self, void_solid=True):
         """moves body based on velocity and acceleration"""
         self._collide_stage(void_solid)
@@ -36,8 +56,8 @@ class CollisionEntity:
         self.x_vel += self.x_acc
         self.y_vel += self.y_acc
 
-        self.x += self.x_vel
-        self.y += self.y_vel
+        self._x += self.x_vel
+        self._y += self.y_vel
 
         # Determines direction of movement
         if self.x_vel < 0:
@@ -54,26 +74,13 @@ class CollisionEntity:
         else:
             self._y_dir = 0
 
-        self._goto(self.x, self.y)
-
-    def _goto(self, x, y):
-        """instantly moves the body to a specific position"""
-        x = int(x)
-        y = int(y)
-        self.x = x
-        self.y = y
-        self._gridbox.x = x
-        self._gridbox.y = y
-        self._hitbox.x = x - self._extend_x
-        self._hitbox.y = y - self._extend_y
-
     def _next_x(self):
         """returns the x position of the body on the next frame"""
-        return self.x + self.x_vel + self.x_acc
+        return self._x + self.x_vel + self.x_acc
 
     def _next_y(self):
         """returns the y position of the body on the next frame"""
-        return self.y + self.y_vel + self.y_acc
+        return self._y + self.y_vel + self.y_acc
 
     def _stop_x(self):
         self._x_dir = 0
@@ -88,21 +95,21 @@ class CollisionEntity:
     def _snap_x(self, col, side=const.LEFT):
         """snaps you to either the left side or right side of a tile"""
         if side == const.LEFT:
-            self._goto(grid.x_of(col, const.LEFT) - self._width, self.y)
+            self.x = grid.x_of(col, const.LEFT) - self._width
             self._stop_x()
 
         elif side == const.RIGHT:
-            self._goto(grid.x_of(col, const.RIGHT), self.y)
+            self.x = grid.x_of(col, const.RIGHT)
             self._stop_x()
 
     def _snap_y(self, row, side=const.TOP):
         """snaps you to either the top or bottom of a tile"""
         if side == const.TOP:
-            self._goto(self.x, grid.y_of(row, const.TOP) - self._height)
+            self.y = grid.y_of(row, const.TOP) - self._height
             self._stop_y()
 
         elif side == const.BOTTOM:
-            self._goto(self.x, grid.y_of(row, const.BOTTOM))
+            self.y = grid.y_of(row, const.BOTTOM)
             self._stop_y()
 
     def _collide_stage(self, void_solid=True):
@@ -111,8 +118,8 @@ class CollisionEntity:
         if screen_edge is True, then the edge of the screen acts as a wall."""
 
         for step in range(1, self.CHECK_STEPS + 1):
-            diff_x = self._next_x() - self.x
-            diff_y = self._next_y() - self.y
+            diff_x = self._next_x() - self._x
+            diff_y = self._next_y() - self._y
 
             if diff_x < 0:
                 dir_x = const.LEFT
@@ -128,9 +135,9 @@ class CollisionEntity:
             else:
                 dir_y = 0
 
-            left_x = self.x
+            left_x = self._x
             right_x = left_x + self._width - 1
-            top_y = int(self.y + (diff_y * (step / self.CHECK_STEPS)))
+            top_y = int(self._y + (diff_y * (step / self.CHECK_STEPS)))
             bottom_y = top_y + self._height - 1
 
             if dir_y == const.UP:
@@ -140,9 +147,9 @@ class CollisionEntity:
                 if self._level.collide_horiz(left_x, right_x, bottom_y, void_solid):
                     self._snap_y(grid.row_at(bottom_y), const.TOP)
 
-            left_x = int(self.x + (diff_x * (step / 4)))
+            left_x = int(self._x + (diff_x * (step / 4)))
             right_x = left_x + self._width - 1
-            top_y = self.y
+            top_y = self._y
             bottom_y = top_y + self._height - 1
 
             if dir_x == const.LEFT:
@@ -154,21 +161,21 @@ class CollisionEntity:
                     self._snap_x(grid.col_at(right_x), const.LEFT)
 
     def _against_wall(self, void_solid=True):
-        top_y = self.y
+        top_y = self._y
         bottom_y = top_y + self._height - 1
 
         if self._x_dir == const.LEFT:
-            x = self.x - 1
+            x = self._x - 1
             return self._level.collide_vert(x, top_y, bottom_y, void_solid)
 
         elif self._x_dir == const.RIGHT:
-            x = self.x + self._width
+            x = self._x + self._width
             return self._level.collide_vert(x, top_y, bottom_y, void_solid)
 
     def _against_floor(self, screen_edge):
-        x1 = self.x
+        x1 = self._x
         x2 = x1 + self._width - 1
-        y = self.y + self._height
+        y = self._y + self._height
         if self._level.collide_horiz(x1, x2, y, screen_edge):
             return True
         else:

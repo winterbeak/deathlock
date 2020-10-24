@@ -70,25 +70,25 @@ class Puncher:
 
     def draw(self, surf, camera):
         if self.direction == const.LEFT:
-            x = (self.base_x + grid.TILE_W - self.outness) - camera.x
+            x = (self.base_x + grid.TILE_W - self.outness) - camera._x
             y = self.base_y - camera.y
 
             surf.blit(punch_left, (x, y))
 
         elif self.direction == const.UP:
-            x = self.base_x - camera.x
+            x = self.base_x - camera._x
             y = (self.base_y + grid.TILE_H - self.outness) - camera.y
 
             surf.blit(punch_up, (x, y))
 
         elif self.direction == const.RIGHT:
-            x = (self.base_x - grid.TILE_W + self.outness) - camera.x
+            x = (self.base_x - grid.TILE_W + self.outness) - camera._x
             y = self.base_y - camera.y
 
             surf.blit(punch_right, (x, y))
 
         elif self.direction == const.DOWN:
-            x = self.base_x - camera.x
+            x = self.base_x - camera._x
             y = (self.base_y - grid.TILE_H + self.outness) - camera.y
 
             surf.blit(punch_down, (x, y))

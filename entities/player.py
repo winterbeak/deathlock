@@ -147,7 +147,7 @@ class Player:
     def draw(self, surf, cam):
         self.sprite.update()
 
-        x = self.gridbox.x - cam.x
+        x = self.gridbox.x - cam._x
         y = self.gridbox.y - cam.y
         self.sprite.draw_frame(surf, x, y)
 

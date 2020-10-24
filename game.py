@@ -49,7 +49,7 @@ def init_background():
 
 
 def draw_background(surf, cam):
-    x = -(cam.x % (grid.TILE_W * 2)) - 10
+    x = -(cam._x % (grid.TILE_W * 2)) - 10
     y = -(cam.y % (grid.TILE_H * 2)) - 10
     surf.blit(background, (x, y))
 
