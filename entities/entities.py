@@ -51,7 +51,7 @@ class CollisionEntity:
         self._gridbox.y = value
         self._hitbox.y = value
 
-    def _move(self):
+    def update(self):
         self._collide_stage()
 
         self.x_vel += self.x_acc
