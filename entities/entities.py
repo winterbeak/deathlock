@@ -53,14 +53,17 @@ class CollisionEntity:
 
     def update(self):
         self._collide_stage()
+        self._update_kinematics()
+        self._update_direction()
 
+    def _update_kinematics(self):
         self.x_vel += self.x_acc
         self.y_vel += self.y_acc
 
         self._x += self.x_vel
         self._y += self.y_vel
 
-        # Determines direction of movement
+    def _update_direction(self):
         if self.x_vel < 0:
             self._x_dir = const.LEFT
         elif self.x_vel > 0:
