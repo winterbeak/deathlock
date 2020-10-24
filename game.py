@@ -1,3 +1,6 @@
+# Come on and slam.
+# And welcome to the jam.
+
 import sound
 
 import random
