@@ -6,33 +6,33 @@ import graphics
 import grid
 
 
-spikes = []
+punchers = []
 
-spike_left = graphics.load_image("punch", 2)
-spike_left.set_colorkey(const.TRANSPARENT)
-spike_right = pygame.transform.flip(spike_left, True, False)
-spike_up = pygame.transform.rotate(spike_right, 90)
-spike_down = pygame.transform.rotate(spike_right, -90)
+punch_left = graphics.load_image("punch", 2)
+punch_left.set_colorkey(const.TRANSPARENT)
+punch_right = pygame.transform.flip(punch_left, True, False)
+punch_up = pygame.transform.rotate(punch_right, 90)
+punch_down = pygame.transform.rotate(punch_right, -90)
 
 
 def add(col, row, direction):
-    spikes.append(Spike(col, row, direction))
+    punchers.append(Puncher(col, row, direction))
 
 
 def draw(surf, camera):
-    for spike in spikes:
-        spike.draw(surf, camera)
+    for puncher in punchers:
+        puncher.draw(surf, camera)
 
 
 def update():
-    for spike in reversed(spikes):
-        spike.update()
+    for puncher in reversed(punchers):
+        puncher.update()
 
-        if spike.done:
-            spikes.remove(spike)
+        if puncher.done:
+            punchers.remove(puncher)
 
 
-class Spike:
+class Puncher:
     OUT_LENGTH = 3
     WAIT_LENGTH = 30
     IN_LENGTH = 10
@@ -73,22 +73,22 @@ class Spike:
             x = (self.base_x + grid.TILE_W - self.outness) - camera.x
             y = self.base_y - camera.y
 
-            surf.blit(spike_left, (x, y))
+            surf.blit(punch_left, (x, y))
 
         elif self.direction == const.UP:
             x = self.base_x - camera.x
             y = (self.base_y + grid.TILE_H - self.outness) - camera.y
 
-            surf.blit(spike_up, (x, y))
+            surf.blit(punch_up, (x, y))
 
         elif self.direction == const.RIGHT:
             x = (self.base_x - grid.TILE_W + self.outness) - camera.x
             y = self.base_y - camera.y
 
-            surf.blit(spike_right, (x, y))
+            surf.blit(punch_right, (x, y))
 
         elif self.direction == const.DOWN:
             x = self.base_x - camera.x
             y = (self.base_y - grid.TILE_H + self.outness) - camera.y
 
-            surf.blit(spike_down, (x, y))
+            surf.blit(punch_down, (x, y))

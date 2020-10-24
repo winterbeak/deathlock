@@ -13,7 +13,7 @@ import camera
 import grid
 
 import roomgen
-import spikes
+import punchers
 
 
 # INITIALIZATION
@@ -382,30 +382,30 @@ class Player:
                 center_col = grid.col_at(self.x + (self.WIDTH // 2))
                 center_row = grid.row_at(self.y + (self.HEIGHT // 2))
                 tile = self.level.tile_at(center_col, center_row)
-                if tile == grid.SPIKE_LEFT:
+                if tile == grid.PUNCHER_LEFT:
                     self.get_hit()
-                    spikes.add(center_col, center_row, const.LEFT)
+                    punchers.add(center_col, center_row, const.LEFT)
                     self.ext_x_vel = -7
 
                     if self.x_vel > 0:
                         self.x_vel = 0
 
-                elif tile == grid.SPIKE_UP:
+                elif tile == grid.PUNCHER_UP:
                     self.get_hit()
-                    spikes.add(center_col, center_row, const.UP)
+                    punchers.add(center_col, center_row, const.UP)
                     self.y_vel = -12
 
-                elif tile == grid.SPIKE_RIGHT:
+                elif tile == grid.PUNCHER_RIGHT:
                     self.get_hit()
-                    spikes.add(center_col, center_row, const.RIGHT)
+                    punchers.add(center_col, center_row, const.RIGHT)
                     self.ext_x_vel = 7
 
                     if self.x_vel < 0:
                         self.x_vel = 0
 
-                elif tile == grid.SPIKE_DOWN:
+                elif tile == grid.PUNCHER_DOWN:
                     self.get_hit()
-                    spikes.add(center_col, center_row, const.DOWN)
+                    punchers.add(center_col, center_row, const.DOWN)
                     self.y_vel = 7
 
             elif self.invuln_frames:
@@ -732,7 +732,7 @@ while True:
         player.stop_y()
 
     player.move(not player.dead)
-    spikes.update()
+    punchers.update()
 
     main_cam.update()
     # Resets the camera in case it decenters
@@ -775,7 +775,7 @@ while True:
 
     # Drawing everything
     draw_background(post_surf, main_cam)
-    spikes.draw(post_surf, main_cam)
+    punchers.draw(post_surf, main_cam)
     level.draw(post_surf, main_cam)
 
     # Fixes the Secret Ceiling not drawing due to camera sliding two rooms at once

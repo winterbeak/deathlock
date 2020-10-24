@@ -10,22 +10,22 @@ TILE_H = 20
 VOID = 0
 EMPTY = 1
 WALL = 2
-SPIKE_EMIT_LEFT = 3
-SPIKE_EMIT_UP = 4
-SPIKE_EMIT_RIGHT = 5
-SPIKE_EMIT_DOWN = 6
-SPIKE_LEFT = 7
-SPIKE_UP = 8
-SPIKE_RIGHT = 9
-SPIKE_DOWN = 10
+PUNCHER_EMIT_LEFT = 3
+PUNCHER_EMIT_UP = 4
+PUNCHER_EMIT_RIGHT = 5
+PUNCHER_EMIT_DOWN = 6
+PUNCHER_LEFT = 7
+PUNCHER_UP = 8
+PUNCHER_RIGHT = 9
+PUNCHER_DOWN = 10
 CHECKPOINT_ZONE = [11, 12, 13]
 MAX_CHECKPOINTS = 3
 
 
-spike_box_left = graphics.load_image("punch_box", 2)
-spike_box_up = pygame.transform.rotate(spike_box_left, -90)
-spike_box_right = pygame.transform.rotate(spike_box_left, 180)
-spike_box_down = pygame.transform.rotate(spike_box_left, 90)
+punch_box_left = graphics.load_image("punch_box", 2)
+punch_box_up = pygame.transform.rotate(punch_box_left, -90)
+punch_box_right = pygame.transform.rotate(punch_box_left, 180)
+punch_box_down = pygame.transform.rotate(punch_box_left, 90)
 
 
 def col_at(x):
@@ -99,15 +99,15 @@ class Room:
         if not self.out_of_bounds(rel_col, rel_row):
             self.grid[rel_col][rel_row] = kind
 
-            # Adds spike sensors to the spiked blocks
-            if kind == SPIKE_EMIT_LEFT:
-                self.change_point(rel_col - 1, rel_row, SPIKE_LEFT)
-            elif kind == SPIKE_EMIT_UP:
-                self.change_point(rel_col, rel_row - 1, SPIKE_UP)
-            elif kind == SPIKE_EMIT_RIGHT:
-                self.change_point(rel_col + 1, rel_row, SPIKE_RIGHT)
-            elif kind == SPIKE_EMIT_DOWN:
-                self.change_point(rel_col, rel_row + 1, SPIKE_DOWN)
+            # Adds punch sensors to the punch blocks
+            if kind == PUNCHER_EMIT_LEFT:
+                self.change_point(rel_col - 1, rel_row, PUNCHER_LEFT)
+            elif kind == PUNCHER_EMIT_UP:
+                self.change_point(rel_col, rel_row - 1, PUNCHER_UP)
+            elif kind == PUNCHER_EMIT_RIGHT:
+                self.change_point(rel_col + 1, rel_row, PUNCHER_RIGHT)
+            elif kind == PUNCHER_EMIT_DOWN:
+                self.change_point(rel_col, rel_row + 1, PUNCHER_DOWN)
 
         else:
             print("change_point() tried to add a tile out of bounds")
@@ -135,15 +135,15 @@ class Room:
 
         return VOID
 
-    def is_spike(self, rel_col, rel_row):
+    def is_puncher(self, rel_col, rel_row):
         tile = self.tile_at(rel_col, rel_row)
-        if tile == SPIKE_LEFT:
+        if tile == PUNCHER_LEFT:
             return True
-        if tile == SPIKE_UP:
+        if tile == PUNCHER_UP:
             return True
-        if tile == SPIKE_RIGHT:
+        if tile == PUNCHER_RIGHT:
             return True
-        if tile == SPIKE_DOWN:
+        if tile == PUNCHER_DOWN:
             return True
 
         return False
@@ -164,13 +164,13 @@ class Room:
         if not void_solid and tile == VOID:
             return False
 
-        if tile == SPIKE_LEFT:
+        if tile == PUNCHER_LEFT:
             return False
-        if tile == SPIKE_UP:
+        if tile == PUNCHER_UP:
             return False
-        if tile == SPIKE_RIGHT:
+        if tile == PUNCHER_RIGHT:
             return False
-        if tile == SPIKE_DOWN:
+        if tile == PUNCHER_DOWN:
             return False
 
         if tile in CHECKPOINT_ZONE:
@@ -191,17 +191,17 @@ class Room:
                 if self.tile_at(rel_col, rel_row) == WALL:
                     pygame.draw.rect(surf, const.BLACK, rect)
 
-                elif self.tile_at(rel_col, rel_row) == SPIKE_EMIT_LEFT:
-                    surf.blit(spike_box_left, (x, y))
+                elif self.tile_at(rel_col, rel_row) == PUNCHER_EMIT_LEFT:
+                    surf.blit(punch_box_left, (x, y))
 
-                elif self.tile_at(rel_col, rel_row) == SPIKE_EMIT_UP:
-                    surf.blit(spike_box_up, (x, y))
+                elif self.tile_at(rel_col, rel_row) == PUNCHER_EMIT_UP:
+                    surf.blit(punch_box_up, (x, y))
 
-                elif self.tile_at(rel_col, rel_row) == SPIKE_EMIT_RIGHT:
-                    surf.blit(spike_box_right, (x, y))
+                elif self.tile_at(rel_col, rel_row) == PUNCHER_EMIT_RIGHT:
+                    surf.blit(punch_box_right, (x, y))
 
-                elif self.tile_at(rel_col, rel_row) == SPIKE_EMIT_DOWN:
-                    surf.blit(spike_box_down, (x, y))
+                elif self.tile_at(rel_col, rel_row) == PUNCHER_EMIT_DOWN:
+                    surf.blit(punch_box_down, (x, y))
 
                 # # Draws checkpoint zones, for debugging purposes.
                 # elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[0]:
@@ -285,7 +285,7 @@ class Level:
 
         return False
 
-    def is_spike(self, col, row):
+    def is_puncher(self, col, row):
         if not self.out_of_bounds_tile(col, row):
             room_col = col // Room.WIDTH
             room_row = row // Room.HEIGHT
@@ -293,7 +293,7 @@ class Level:
             rel_row = row % Room.HEIGHT
 
             room = self.room_grid[room_col][room_row]
-            return room.is_spike(rel_col, rel_row)
+            return room.is_puncher(rel_col, rel_row)
 
         return False
 
