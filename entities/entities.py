@@ -27,6 +27,8 @@ class CollisionEntity:
         self._hitbox = pygame.Rect(x - extend_x, y - extend_y,
                                    width + extend_x * 2, height + extend_y * 2)
 
+        self.collide_void = True
+
         self._level = level  # reference to the level layout
 
     @property
@@ -49,9 +51,8 @@ class CollisionEntity:
         self._gridbox.y = value
         self._hitbox.y = value
 
-    def _move(self, void_solid=True):
-        """moves body based on velocity and acceleration"""
-        self._collide_stage(void_solid)
+    def _move(self):
+        self._collide_stage()
 
         self.x_vel += self.x_acc
         self.y_vel += self.y_acc
@@ -112,7 +113,7 @@ class CollisionEntity:
             self.y = grid.y_of(row, const.BOTTOM)
             self._stop_y()
 
-    def _collide_stage(self, void_solid=True):
+    def _collide_stage(self):
         """checks collision with stage and updates movement accordingly
 
         if screen_edge is True, then the edge of the screen acts as a wall."""
@@ -141,10 +142,10 @@ class CollisionEntity:
             bottom_y = top_y + self._height - 1
 
             if dir_y == const.UP:
-                if self._level.collide_horiz(left_x, right_x, top_y, void_solid):
+                if self._level.collide_horiz(left_x, right_x, top_y, self.collide_void):
                     self._snap_y(grid.row_at(top_y), const.BOTTOM)
             elif dir_y == const.DOWN:
-                if self._level.collide_horiz(left_x, right_x, bottom_y, void_solid):
+                if self._level.collide_horiz(left_x, right_x, bottom_y, self.collide_void):
                     self._snap_y(grid.row_at(bottom_y), const.TOP)
 
             left_x = int(self._x + (diff_x * (step / 4)))
@@ -153,24 +154,24 @@ class CollisionEntity:
             bottom_y = top_y + self._height - 1
 
             if dir_x == const.LEFT:
-                if self._level.collide_vert(left_x, top_y, bottom_y, void_solid):
+                if self._level.collide_vert(left_x, top_y, bottom_y, self.collide_void):
                     self._snap_x(grid.col_at(left_x), const.RIGHT)
 
             elif dir_x == const.RIGHT:
-                if self._level.collide_vert(right_x, top_y, bottom_y, void_solid):
+                if self._level.collide_vert(right_x, top_y, bottom_y, self.collide_void):
                     self._snap_x(grid.col_at(right_x), const.LEFT)
 
-    def _against_wall(self, void_solid=True):
+    def _against_wall(self):
         top_y = self._y
         bottom_y = top_y + self._height - 1
 
         if self._x_dir == const.LEFT:
             x = self._x - 1
-            return self._level.collide_vert(x, top_y, bottom_y, void_solid)
+            return self._level.collide_vert(x, top_y, bottom_y, self.collide_void)
 
         elif self._x_dir == const.RIGHT:
             x = self._x + self._width
-            return self._level.collide_vert(x, top_y, bottom_y, void_solid)
+            return self._level.collide_vert(x, top_y, bottom_y, self.collide_void)
 
     def _against_floor(self, screen_edge):
         x1 = self._x
