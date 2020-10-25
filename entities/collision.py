@@ -194,6 +194,6 @@ class GravityCollision(Collision):
         return self._against_floor()
 
     def update(self):
-        if self.grounded:
+        if not self.grounded:
             self.y_acc = const.GRAVITY
         super().update()
