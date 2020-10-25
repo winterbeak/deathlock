@@ -197,3 +197,4 @@ class GravityCollision(Collision):
         if not self.grounded:
             self.y_acc = const.GRAVITY
         super().update()
+        self.y_vel = min(self.y_vel, self._terminal_velocity)
