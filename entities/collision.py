@@ -60,8 +60,8 @@ class Collision:
         self.x_vel += self.x_acc
         self.y_vel += self.y_acc
 
-        self._x += self.x_vel
-        self._y += self.y_vel
+        self.x += self.x_vel
+        self.y += self.y_vel
 
     def _update_direction(self):
         if self.x_vel < 0:
