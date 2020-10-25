@@ -147,7 +147,6 @@ while True:
             pygame.K_w in events.keys.held_keys or pygame.K_UP in events.keys.held_keys or
             pygame.K_SPACE in events.keys.held_keys):
         if player.grounded and not player.dead:
-            player.grounded = False
             player.y_vel = -player.JUMP_SPEED
             player.JUMP_SOUNDS.play_random(0.3)
             player.tumble = False
@@ -188,6 +187,7 @@ while True:
         if (pygame.K_LEFT in events.keys.held_keys or
                 pygame.K_a in events.keys.held_keys):
             player.x_vel += -player.MOVE_ACC
+            player.x_vel = max(player.x_vel, -player.MOVE_SPEED)
 
             if player.ext_x_vel > 0:
                 player.ext_x_vel -= player.EXT_DEC
@@ -215,6 +215,7 @@ while True:
         elif (pygame.K_RIGHT in events.keys.held_keys or
                 pygame.K_d in events.keys.held_keys):
             player.x_vel += player.MOVE_ACC
+            player.x_vel = min(player.x_vel, player.MOVE_SPEED)
 
             if player.ext_x_vel < 0:
                 player.ext_x_vel += player.EXT_DEC
@@ -313,11 +314,12 @@ while True:
         player.REVIVE_SOUNDS.play_random(0.15)
         player.set_health(player.MAX_HEALTH)
         player.tumble = False
-        player.goto(player.respawn_x, player.respawn_y)
-        player.stop_x()
-        player.stop_y()
+        player.x = player.respawn_x
+        player.y = player.respawn_y
+        player._stop_x()
+        player._stop_y()
 
-    player.move(not player.dead)
+    player.update()
     punchers.update()
 
     main_cam.update()
@@ -329,7 +331,8 @@ while True:
     if player.offscreen_direction != 0:
         # Warp back to start at end of game
         if level.active_column == START_COL + 2 and level.active_row == START_ROW + 12:
-            player.goto(player.x - (grid.Room.PIXEL_W * 2), player.y - (grid.Room.PIXEL_H * 12))
+            player.x = player.x - (grid.Room.PIXEL_W * 2)
+            player.y = player.y - (grid.Room.PIXEL_H * 12)
 
             main_cam.base_x -= grid.Room.PIXEL_W * 2
             main_cam.base_y -= grid.Room.PIXEL_H * 12

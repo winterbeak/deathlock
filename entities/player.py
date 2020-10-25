@@ -1,13 +1,14 @@
 import pygame
 import constants as const
 
+from entities import collision
 import sound
 import grid
 import punchers
 import graphics
 
 
-class Player:
+class Player(collision.GravityCollision):
     CHECK_STEPS = 4
     TERMINAL_VELOCITY = 20.0
 
@@ -101,31 +102,16 @@ class Player:
 
     LAND_SOUNDS = sound.load_numbers("land%i", 3)
 
-    def __init__(self, level, x, y, camera, extend_x=0, extend_y=0):
+    def __init__(self, level, x, y, camera):
+        super().__init__(level, self.WIDTH, self.HEIGHT, self.TERMINAL_VELOCITY,
+                         x, y)
         self.health = self.MAX_HEALTH
         self.dead = False
         self.offscreen_direction = 0
 
-        self.x = x
-        self.y = y
-        self.x_vel = 0.0
-        self.y_vel = 0.0
-        self.x_acc = 0.0
-        self.y_acc = 0.0
-
         # external velocities - caused by non-player forces
         self.ext_x_vel = 0.0
 
-        self.x_dir = 0
-        self.y_dir = 0
-
-        self.extend_x = extend_x
-        self.extend_y = extend_y
-        self.gridbox = pygame.Rect(x, y, self.WIDTH, self.HEIGHT)
-        self.hitbox = pygame.Rect(x - extend_x, y - extend_y,
-                                  self.WIDTH + extend_x * 2, self.HEIGHT + extend_y * 2)
-
-        self.grounded = False
         self.level = level  # reference to the level layout
         self.camera = camera
 
@@ -147,8 +133,8 @@ class Player:
     def draw(self, surf, cam):
         self.sprite.update()
 
-        x = self.gridbox.x - cam._x
-        y = self.gridbox.y - cam.y
+        x = self._gridbox.x - cam.x
+        y = self._gridbox.y - cam.y
         self.sprite.draw_frame(surf, x, y)
 
     def check_offscreen(self):
@@ -171,45 +157,16 @@ class Player:
         else:
             self.offscreen_direction = 0
 
-    def move(self, void_solid=True):
+    def update(self):
         """moves body based on velocity and acceleration"""
-        if not self.grounded:
-            self.y_acc = const.GRAVITY
-
-        if self.x_vel > self.MOVE_SPEED:
-            self.x_vel = self.MOVE_SPEED
-        elif self.x_vel < -self.MOVE_SPEED:
-            self.x_vel = -self.MOVE_SPEED
-        self.collide_stage(not self.dead)
-
-        self.x_vel += self.x_acc
-        self.y_vel += self.y_acc
-        if self.y_vel > self.TERMINAL_VELOCITY:
-            self.y_vel = self.TERMINAL_VELOCITY
-
-        self.x += self.x_vel + self.ext_x_vel
-        self.y += self.y_vel
-
-        # Determines direction of movement
-        if self.x_vel < 0:
-            self.x_dir = const.LEFT
-        elif self.x_vel > 0:
-            self.x_dir = const.RIGHT
-        else:
-            self.x_dir = 0
-
-        if self.y_vel < 0:
-            self.y_dir = const.UP
-        elif self.y_vel > 0:
-            self.y_dir = const.DOWN
-        else:
-            self.y_dir = 0
-
-        self.check_ground(void_solid)
-
-        self.goto(self.x, self.y)
-
+        self.collide_void = not self.dead
+        super().update()
+        self.collide_punchers()
         self.check_offscreen()
+
+    def _update_kinematics(self):
+        super()._update_kinematics()
+        self.x += self.ext_x_vel
 
     def change_health(self, amount):
         self.health += amount
@@ -225,137 +182,39 @@ class Player:
         else:
             self.dead = False
 
-    # Body
-    def goto(self, x, y):
-        """instantly moves the body to a specific position"""
-        x = int(x)
-        y = int(y)
-        self.x = x
-        self.y = y
-        self.gridbox.x = x
-        self.gridbox.y = y
-        self.hitbox.x = x - self.extend_x
-        self.hitbox.y = y - self.extend_y
+    def collide_punchers(self):
+        if not self.dead and not self.invuln_frames:
+            center_col = grid.col_at(self.x + (self.WIDTH // 2))
+            center_row = grid.row_at(self.y + (self.HEIGHT // 2))
+            tile = self.level.tile_at(center_col, center_row)
+            if tile == grid.PUNCHER_LEFT:
+                self.get_hit()
+                punchers.add(center_col, center_row, const.LEFT)
+                self.ext_x_vel = -7
 
-    def next_x(self):
-        """returns the x position of the body on the next frame"""
-        return self.x + self.x_vel + self.ext_x_vel + self.x_acc
+                if self.x_vel > 0:
+                    self.x_vel = 0
 
-    def next_y(self):
-        """returns the y position of the body on the next frame"""
-        return self.y + self.y_vel + self.y_acc
+            elif tile == grid.PUNCHER_UP:
+                self.get_hit()
+                punchers.add(center_col, center_row, const.UP)
+                self.y_vel = -12
 
-    def stop_x(self):
-        self.x_dir = 0
-        self.x_vel = 0
-        self.ext_x_vel = 0
-        self.x_acc = 0
+            elif tile == grid.PUNCHER_RIGHT:
+                self.get_hit()
+                punchers.add(center_col, center_row, const.RIGHT)
+                self.ext_x_vel = 7
 
-    def stop_y(self):
-        self.y_dir = 0
-        self.y_vel = 0
-        self.y_acc = 0
+                if self.x_vel < 0:
+                    self.x_vel = 0
 
-    def snap_x(self, col, side=const.LEFT):
-        """snaps you to either the left side or right side of a tile"""
-        if side == const.LEFT:
-            self.goto(grid.x_of(col, const.LEFT) - self.WIDTH, self.y)
-            self.stop_x()
+            elif tile == grid.PUNCHER_DOWN:
+                self.get_hit()
+                punchers.add(center_col, center_row, const.DOWN)
+                self.y_vel = 7
 
-        elif side == const.RIGHT:
-            self.goto(grid.x_of(col, const.RIGHT), self.y)
-            self.stop_x()
-
-    def snap_y(self, row, side=const.TOP):
-        """snaps you to either the top or bottom of a tile"""
-        if side == const.TOP:
-            self.goto(self.x, grid.y_of(row, const.TOP) - self.HEIGHT)
-            self.stop_y()
-
-        elif side == const.BOTTOM:
-            self.goto(self.x, grid.y_of(row, const.BOTTOM))
-            self.stop_y()
-
-    def collide_stage(self, void_solid=True):
-        """checks collision with stage and updates movement accordingly
-
-        if screen_edge is True, then the edge of the screen acts as a wall."""
-
-        for step in range(1, self.CHECK_STEPS + 1):
-            diff_x = self.next_x() - self.x
-            diff_y = self.next_y() - self.y
-
-            if diff_x < 0:
-                dir_x = const.LEFT
-            elif diff_x > 0:
-                dir_x = const.RIGHT
-            else:
-                dir_x = 0
-
-            if diff_y < 0:
-                dir_y = const.UP
-            elif diff_y > 0:
-                dir_y = const.DOWN
-            else:
-                dir_y = 0
-
-            left_x = self.x
-            right_x = left_x + self.WIDTH - 1
-            top_y = int(self.y + (diff_y * (step / self.CHECK_STEPS)))
-            bottom_y = top_y + self.HEIGHT - 1
-
-            if dir_y == const.UP:
-                if self.level.collide_horiz(left_x, right_x, top_y, void_solid):
-                    self.snap_y(grid.row_at(top_y), const.BOTTOM)
-            elif dir_y == const.DOWN:
-                if self.level.collide_horiz(left_x, right_x, bottom_y, void_solid):
-                    self.snap_y(grid.row_at(bottom_y), const.TOP)
-
-            left_x = int(self.x + (diff_x * (step / 4)))
-            right_x = left_x + self.WIDTH - 1
-            top_y = self.y
-            bottom_y = top_y + self.HEIGHT - 1
-
-            if dir_x == const.LEFT:
-                if self.level.collide_vert(left_x, top_y, bottom_y, void_solid):
-                    self.snap_x(grid.col_at(left_x), const.RIGHT)
-
-            elif dir_x == const.RIGHT:
-                if self.level.collide_vert(right_x, top_y, bottom_y, void_solid):
-                    self.snap_x(grid.col_at(right_x), const.LEFT)
-
-            if not self.dead and not self.invuln_frames:
-                center_col = grid.col_at(self.x + (self.WIDTH // 2))
-                center_row = grid.row_at(self.y + (self.HEIGHT // 2))
-                tile = self.level.tile_at(center_col, center_row)
-                if tile == grid.PUNCHER_LEFT:
-                    self.get_hit()
-                    punchers.add(center_col, center_row, const.LEFT)
-                    self.ext_x_vel = -7
-
-                    if self.x_vel > 0:
-                        self.x_vel = 0
-
-                elif tile == grid.PUNCHER_UP:
-                    self.get_hit()
-                    punchers.add(center_col, center_row, const.UP)
-                    self.y_vel = -12
-
-                elif tile == grid.PUNCHER_RIGHT:
-                    self.get_hit()
-                    punchers.add(center_col, center_row, const.RIGHT)
-                    self.ext_x_vel = 7
-
-                    if self.x_vel < 0:
-                        self.x_vel = 0
-
-                elif tile == grid.PUNCHER_DOWN:
-                    self.get_hit()
-                    punchers.add(center_col, center_row, const.DOWN)
-                    self.y_vel = 7
-
-            elif self.invuln_frames:
-                self.invuln_frames -= 1
+        elif self.invuln_frames:
+            self.invuln_frames -= 1
 
     def update_wall_push(self, direction):
         top_y = self.y
@@ -386,17 +245,6 @@ class Player:
         self.invuln_frames = self.INVULN_LENGTH
         self.HIT_SOUNDS.play_random()
         self.camera.shake(6, 1)
-
-    def check_ground(self, screen_edge):
-        x1 = self.x
-        x2 = x1 + self.WIDTH - 1
-        y = self.y + self.HEIGHT
-        if self.level.collide_horiz(x1, x2, y, screen_edge):
-            if not self.grounded:
-                self.LAND_SOUNDS.play_random(0.3)
-            self.grounded = True
-        else:
-            self.grounded = False
 
     def set_checkpoint(self):
         room = self.level.room_grid[self.level.active_column][self.level.active_row]
