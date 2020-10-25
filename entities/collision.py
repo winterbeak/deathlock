@@ -4,7 +4,7 @@ import constants as const
 import grid
 
 
-class CollisionEntity:
+class Collision:
     CHECK_STEPS = 4
 
     def __init__(self, level, width, height, x=0, y=0, extend_x=0, extend_y=0):
@@ -183,7 +183,7 @@ class CollisionEntity:
         return self._level.collide_horiz(x1, x2, y, self.collide_void)
 
 
-class GravityCollisionEntity(CollisionEntity):
+class GravityCollision(Collision):
     def __init__(self, level, width, height, terminal_velocity,
                  x=0, y=0, extend_x=0, extend_y=0):
         super().__init__(level, width, height, x, y, extend_x, extend_y)
