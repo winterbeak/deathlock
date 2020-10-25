@@ -184,7 +184,7 @@ class Room:
             for rel_col in range(self.WIDTH):
                 col = self.column * self.WIDTH + rel_col
                 row = self.row * self.HEIGHT + rel_row
-                x = col * TILE_W - camera._x
+                x = col * TILE_W - camera.x
                 y = row * TILE_H - camera.y
                 rect = (x, y, TILE_W, TILE_H)
 
