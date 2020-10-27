@@ -8,7 +8,7 @@ import punchers
 import graphics
 
 
-class Player(collision.GravityCollision):
+class Player(collision.PunchableGravityCollision):
     CHECK_STEPS = 4
     TERMINAL_VELOCITY = 20.0
 
@@ -18,8 +18,6 @@ class Player(collision.GravityCollision):
     MOVE_ACC = 0.8
     MOVE_DEC = 1.5
     EXT_DEC = 0.5
-
-    INVULN_LENGTH = 10
 
     HEALTH_SPACING = 5
 
@@ -161,12 +159,7 @@ class Player(collision.GravityCollision):
         """moves body based on velocity and acceleration"""
         self.collide_void = not self.dead
         super().update()
-        self.collide_punchers()
         self.check_offscreen()
-
-    def _update_kinematics(self):
-        super()._update_kinematics()
-        self.x += self.ext_x_vel
 
     def change_health(self, amount):
         self.health += amount
@@ -181,40 +174,6 @@ class Player(collision.GravityCollision):
             self.dead = True
         else:
             self.dead = False
-
-    def collide_punchers(self):
-        if not self.dead and not self.invuln_frames:
-            center_col = grid.col_at(self.x + (self.WIDTH // 2))
-            center_row = grid.row_at(self.y + (self.HEIGHT // 2))
-            tile = self.level.tile_at(center_col, center_row)
-            if tile == grid.PUNCHER_LEFT:
-                self.get_hit()
-                punchers.add(center_col, center_row, const.LEFT)
-                self.ext_x_vel = -7
-
-                if self.x_vel > 0:
-                    self.x_vel = 0
-
-            elif tile == grid.PUNCHER_UP:
-                self.get_hit()
-                punchers.add(center_col, center_row, const.UP)
-                self.y_vel = -12
-
-            elif tile == grid.PUNCHER_RIGHT:
-                self.get_hit()
-                punchers.add(center_col, center_row, const.RIGHT)
-                self.ext_x_vel = 7
-
-                if self.x_vel < 0:
-                    self.x_vel = 0
-
-            elif tile == grid.PUNCHER_DOWN:
-                self.get_hit()
-                punchers.add(center_col, center_row, const.DOWN)
-                self.y_vel = 7
-
-        elif self.invuln_frames:
-            self.invuln_frames -= 1
 
     def update_wall_push(self, direction):
         top_y = self.y
@@ -239,11 +198,10 @@ class Player(collision.GravityCollision):
             heart_sprite = self.heart_sprites[heart]
             heart_sprite.draw_frame(surf, self.HEART_X[heart], self.HEART_Y)
 
-    def get_hit(self):
+    def _get_hit(self):
+        super()._get_hit()
         self.tumble = True
         self.change_health(-1)
-        self.invuln_frames = self.INVULN_LENGTH
-        self.HIT_SOUNDS.play_random()
         self.camera.shake(6, 1)
 
     def set_checkpoint(self):
