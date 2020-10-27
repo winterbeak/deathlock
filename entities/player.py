@@ -6,6 +6,7 @@ import events
 import sound
 import grid
 import punchers
+import random
 import graphics
 
 
@@ -159,6 +160,12 @@ class Player(collision.PunchableGravityCollision):
     def update(self):
         """moves body based on velocity and acceleration"""
         self.collide_void = not self.dead
+        self.take_inputs()
+        self.update_animation()
+        super().update()
+        self.check_offscreen()
+
+    def take_inputs(self):
         # Jumping
         if (pygame.K_p in events.keys.held_keys or pygame.K_z in events.keys.held_keys or
                 pygame.K_w in events.keys.held_keys or pygame.K_UP in events.keys.held_keys or
@@ -166,10 +173,67 @@ class Player(collision.PunchableGravityCollision):
             if self.grounded and not self.dead:
                 self.jump()
 
+        # Moving left & right
+        if not self.dead:
+            if (pygame.K_LEFT in events.keys.held_keys or
+                    pygame.K_a in events.keys.held_keys):
+                self.move_left()
+
+            elif (pygame.K_RIGHT in events.keys.held_keys or
+                  pygame.K_d in events.keys.held_keys):
+                self.move_right()
+
+            # Decelerate when you stop moving
+            else:
+                self.stay_still()
+
+        elif self.dead and self.grounded:
+            self.x_vel = 0
+            self.ext_x_vel = 0
+
         if events.keys.pressed_key == pygame.K_r:
             self.respawn()
-        super().update()
-        self.check_offscreen()
+
+    def move_left(self):
+        self.x_vel += -self.MOVE_ACC
+        self.x_vel = max(self.x_vel, -self.MOVE_SPEED)
+
+        if self.ext_x_vel > 0:
+            self.ext_x_vel -= self.EXT_DEC
+            if self.ext_x_vel < 0:
+                self.ext_x_vel = 0
+
+    def move_right(self):
+        self.x_vel += self.MOVE_ACC
+        self.x_vel = min(self.x_vel, self.MOVE_SPEED)
+
+        if self.ext_x_vel < 0:
+            self.ext_x_vel += self.EXT_DEC
+            if self.ext_x_vel > 0:
+                self.ext_x_vel = 0
+
+    def stay_still(self):
+        self.run_sound_frame = self.RUN_SOUND_DELAY
+
+        if self.x_vel < 0:
+            self.x_vel += self.MOVE_DEC
+            if self.x_vel > 0:
+                self.x_vel = 0
+
+        elif self.x_vel > 0:
+            self.x_vel -= self.MOVE_DEC
+            if self.x_vel < 0:
+                self.x_vel = 0
+
+        if self.ext_x_vel < 0:
+            self.ext_x_vel += self.EXT_DEC
+            if self.ext_x_vel > 0:
+                self.ext_x_vel = 0
+
+        elif self.ext_x_vel > 0:
+            self.ext_x_vel -= self.EXT_DEC
+            if self.ext_x_vel < 0:
+                self.ext_x_vel = 0
 
     def jump(self):
         self.y_vel = -self.JUMP_SPEED
@@ -198,6 +262,116 @@ class Player(collision.PunchableGravityCollision):
             self.dead = True
         else:
             self.dead = False
+
+    def update_animation(self):
+        if not self.dead:
+            if not self.grounded:
+                if self.tumble:
+                    if self.facing == const.LEFT:
+                        self.sprite.set_anim(self.TUMBLE_LEFT_ID)
+                    else:
+                        self.sprite.set_anim(self.TUMBLE_RIGHT_ID)
+
+                # Jumping animation
+                else:
+                    if self.facing == const.LEFT:
+                        self.sprite.set_anim(self.JUMP_LEFT_ID)
+                    else:
+                        self.sprite.set_anim(self.JUMP_RIGHT_ID)
+
+                    if self.y_vel < -self.JUMP_SPEED + 2.5:
+                        self.sprite.frame = 0
+                    elif self.y_vel < -self.JUMP_SPEED + 5:
+                        self.sprite.frame = 1
+                    elif self.y_vel < -self.JUMP_SPEED + 7.5:
+                        self.sprite.frame = 2
+                    elif self.y_vel < 0:
+                        self.sprite.frame = 3
+                    elif self.y_vel < 2.5:
+                        self.sprite.frame = 4
+                    else:
+                        self.sprite.frame = 5
+
+            else:
+                self.tumble = False
+
+            if (pygame.K_LEFT in events.keys.held_keys or
+                    pygame.K_a in events.keys.held_keys):
+
+                if self.grounded:
+                    self.sprite.set_anim(self.RUN_LEFT_ID)
+
+                if not self.tumble:
+                    self.facing = const.LEFT
+
+                self.update_wall_push(const.LEFT)
+
+                # Plays running sound
+                if self.sprite.anim != self.WALL_PUSH_LEFT_ID:
+                    if self.grounded:
+                        if self.run_sound_frame < self.RUN_SOUND_DELAY:
+                            self.run_sound_frame += 1
+                        else:
+                            self.run_sound_frame = 0
+                            self.RUN_SOUNDS.play_random(random.random() / 4 + 0.75)
+
+            elif (pygame.K_RIGHT in events.keys.held_keys or
+                  pygame.K_d in events.keys.held_keys):
+
+                if self.grounded:
+                    self.sprite.set_anim(self.RUN_RIGHT_ID)
+
+                if not self.tumble:
+                    self.facing = const.RIGHT
+
+                self.update_wall_push(const.RIGHT)
+
+                if self.sprite.anim != self.WALL_PUSH_RIGHT_ID:
+                    if self.grounded:
+                        if self.run_sound_frame < self.RUN_SOUND_DELAY:
+                            self.run_sound_frame += 1
+                        else:
+                            self.run_sound_frame = 0
+                            self.RUN_SOUNDS.play_random(random.random() / 2 + 0.5)
+
+            else:
+                if self.grounded:
+                    if self.facing == const.LEFT:
+                        self.sprite.set_anim(self.IDLE_LEFT_ID)
+                    elif self.facing == const.RIGHT:
+                        self.sprite.set_anim(self.IDLE_RIGHT_ID)
+
+        elif self.dead and self.grounded:
+            if self.facing == const.LEFT:
+                self.sprite.set_anim(self.DEAD_GROUNDED_LEFT_ID)
+            elif self.facing == const.RIGHT:
+                self.sprite.set_anim(self.DEAD_GROUNDED_RIGHT_ID)
+
+        elif self.dead:
+            if self.facing == const.LEFT:
+                self.sprite.set_anim(self.DEAD_FALL_LEFT_ID)
+            else:
+                self.sprite.set_anim(self.DEAD_FALL_RIGHT_ID)
+
+            if self.y_vel < -self.JUMP_SPEED + 2.5:
+                self.sprite.frame = 0
+            elif self.y_vel < -self.JUMP_SPEED + 5:
+                self.sprite.frame = 1
+            elif self.y_vel < -self.JUMP_SPEED + 7.5:
+                self.sprite.frame = 2
+            elif self.y_vel < 0:
+                self.sprite.frame = 3
+            elif self.y_vel < 2.5:
+                self.sprite.frame = 4
+            else:
+                self.sprite.frame_delay += 1
+                if self.sprite.frame_delay > 1:
+                    self.sprite.frame_delay = 0
+
+                    if self.sprite.frame == 5:
+                        self.sprite.frame = 6
+                    else:
+                        self.sprite.frame = 5
 
     def update_wall_push(self, direction):
         top_y = self.y
