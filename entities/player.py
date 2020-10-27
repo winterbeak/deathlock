@@ -11,6 +11,11 @@ import graphics
 
 
 class Player(collision.PunchableGravityCollision):
+    jump_key = events.Keybind([pygame.K_p, pygame.K_z, pygame.K_w,
+                                pygame.K_UP, pygame.K_SPACE])
+    left_key = events.Keybind([pygame.K_a, pygame.K_LEFT])
+    right_key = events.Keybind([pygame.K_d, pygame.K_RIGHT])
+
     CHECK_STEPS = 4
     TERMINAL_VELOCITY = 20.0
 
@@ -175,20 +180,16 @@ class Player(collision.PunchableGravityCollision):
 
     def take_inputs(self):
         # Jumping
-        if (pygame.K_p in events.keys.held_keys or pygame.K_z in events.keys.held_keys or
-                pygame.K_w in events.keys.held_keys or pygame.K_UP in events.keys.held_keys or
-                pygame.K_SPACE in events.keys.held_keys):
+        if self.jump_key.is_held:
             if self.grounded and not self.dead:
                 self.jump()
 
         # Moving left & right
         if not self.dead:
-            if (pygame.K_LEFT in events.keys.held_keys or
-                    pygame.K_a in events.keys.held_keys):
+            if self.left_key.is_held:
                 self.move_left()
 
-            elif (pygame.K_RIGHT in events.keys.held_keys or
-                  pygame.K_d in events.keys.held_keys):
+            elif self.right_key.is_held:
                 self.move_right()
 
             # Decelerate when you stop moving
