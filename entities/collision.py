@@ -215,6 +215,7 @@ class PunchableGravityCollision(GravityCollision):
 
         self.invuln_frames = 0
         self.puncher_x_vel = 0
+        self.puncher_deceleration = 0.5
 
     def update(self):
         super().update()
@@ -229,7 +230,20 @@ class PunchableGravityCollision(GravityCollision):
 
     def _update_kinematics(self):
         super()._update_kinematics()
+        self._update_puncher_vel()
         self.x += self.puncher_x_vel
+
+    def _update_puncher_vel(self):
+        if self.grounded:
+            if self.puncher_x_vel < 0:
+                self.puncher_x_vel += self.puncher_deceleration
+                if self.puncher_x_vel > 0:
+                    self.puncher_x_vel = 0
+
+            elif self.puncher_x_vel > 0:
+                self.puncher_x_vel -= self.puncher_deceleration
+                if self.puncher_x_vel < 0:
+                    self.puncher_x_vel = 0
 
     def _get_hit(self):
         self.invuln_frames = self.INVULN_LENGTH

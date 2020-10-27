@@ -19,7 +19,6 @@ class Player(collision.PunchableGravityCollision):
     MOVE_SPEED = 4
     MOVE_ACC = 0.8
     MOVE_DEC = 1.5
-    EXT_DEC = 0.5
 
     HEALTH_SPACING = 5
 
@@ -109,9 +108,6 @@ class Player(collision.PunchableGravityCollision):
         self.dead = False
         self.offscreen_direction = 0
 
-        # external velocities - caused by non-player forces
-        self.ext_x_vel = 0.0
-
         self.level = level  # reference to the level layout
         self.camera = camera
 
@@ -189,7 +185,7 @@ class Player(collision.PunchableGravityCollision):
 
         elif self.dead and self.grounded:
             self.x_vel = 0
-            self.ext_x_vel = 0
+            self.puncher_x_vel = 0
 
         if events.keys.pressed_key == pygame.K_r:
             self.respawn()
@@ -198,19 +194,19 @@ class Player(collision.PunchableGravityCollision):
         self.x_vel += -self.MOVE_ACC
         self.x_vel = max(self.x_vel, -self.MOVE_SPEED)
 
-        if self.ext_x_vel > 0:
-            self.ext_x_vel -= self.EXT_DEC
-            if self.ext_x_vel < 0:
-                self.ext_x_vel = 0
+        if self.puncher_x_vel > 0:
+            self.puncher_x_vel -= self.puncher_deceleration
+            if self.puncher_x_vel < 0:
+                self.puncher_x_vel = 0
 
     def move_right(self):
         self.x_vel += self.MOVE_ACC
         self.x_vel = min(self.x_vel, self.MOVE_SPEED)
 
-        if self.ext_x_vel < 0:
-            self.ext_x_vel += self.EXT_DEC
-            if self.ext_x_vel > 0:
-                self.ext_x_vel = 0
+        if self.puncher_x_vel < 0:
+            self.puncher_x_vel += self.puncher_deceleration
+            if self.puncher_x_vel > 0:
+                self.puncher_x_vel = 0
 
     def stay_still(self):
         self.run_sound_frame = self.RUN_SOUND_DELAY
@@ -224,16 +220,6 @@ class Player(collision.PunchableGravityCollision):
             self.x_vel -= self.MOVE_DEC
             if self.x_vel < 0:
                 self.x_vel = 0
-
-        if self.ext_x_vel < 0:
-            self.ext_x_vel += self.EXT_DEC
-            if self.ext_x_vel > 0:
-                self.ext_x_vel = 0
-
-        elif self.ext_x_vel > 0:
-            self.ext_x_vel -= self.EXT_DEC
-            if self.ext_x_vel < 0:
-                self.ext_x_vel = 0
 
     def jump(self):
         self.y_vel = -self.JUMP_SPEED
