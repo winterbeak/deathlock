@@ -169,7 +169,6 @@ class Player(collision.PunchableGravityCollision):
             self.offscreen_direction = 0
 
     def update(self):
-        """moves body based on velocity and acceleration"""
         self.collide_void = not self.dead
         self.take_inputs()
         self.update_animation()
