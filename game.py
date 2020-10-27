@@ -142,15 +142,6 @@ beat_once = False
 while True:
     events.update()
 
-    # Jumping
-    if (pygame.K_p in events.keys.held_keys or pygame.K_z in events.keys.held_keys or
-            pygame.K_w in events.keys.held_keys or pygame.K_UP in events.keys.held_keys or
-            pygame.K_SPACE in events.keys.held_keys):
-        if player.grounded and not player.dead:
-            player.y_vel = -player.JUMP_SPEED
-            player.JUMP_SOUNDS.play_random(0.3)
-            player.tumble = False
-
     # Moving left & right
     if not player.dead:
 

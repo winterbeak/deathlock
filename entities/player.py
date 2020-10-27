@@ -159,10 +159,22 @@ class Player(collision.PunchableGravityCollision):
     def update(self):
         """moves body based on velocity and acceleration"""
         self.collide_void = not self.dead
+        # Jumping
+        if (pygame.K_p in events.keys.held_keys or pygame.K_z in events.keys.held_keys or
+                pygame.K_w in events.keys.held_keys or pygame.K_UP in events.keys.held_keys or
+                pygame.K_SPACE in events.keys.held_keys):
+            if self.grounded and not self.dead:
+                self.jump()
+
         if events.keys.pressed_key == pygame.K_r:
             self.respawn()
         super().update()
         self.check_offscreen()
+
+    def jump(self):
+        self.y_vel = -self.JUMP_SPEED
+        self.JUMP_SOUNDS.play_random(0.3)
+        self.tumble = False
 
     def respawn(self):
         self.REVIVE_SOUNDS.play_random(0.15)
