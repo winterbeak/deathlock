@@ -2,6 +2,7 @@ import pygame
 import constants as const
 
 from entities import collision
+import events
 import sound
 import grid
 import punchers
@@ -158,8 +159,19 @@ class Player(collision.PunchableGravityCollision):
     def update(self):
         """moves body based on velocity and acceleration"""
         self.collide_void = not self.dead
+        if events.keys.pressed_key == pygame.K_r:
+            self.respawn()
         super().update()
         self.check_offscreen()
+
+    def respawn(self):
+        self.REVIVE_SOUNDS.play_random(0.15)
+        self.set_health(self.MAX_HEALTH)
+        self.tumble = False
+        self.x = self.respawn_x
+        self.y = self.respawn_y
+        self._stop_x()
+        self._stop_y()
 
     def change_health(self, amount):
         self.health += amount

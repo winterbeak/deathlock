@@ -311,13 +311,6 @@ while True:
             for sprite in player.heart_sprites:
                 sprite.frame = 0
                 sprite.frame_delay = 22
-        player.REVIVE_SOUNDS.play_random(0.15)
-        player.set_health(player.MAX_HEALTH)
-        player.tumble = False
-        player.x = player.respawn_x
-        player.y = player.respawn_y
-        player._stop_x()
-        player._stop_y()
 
     player.update()
     punchers.update()
