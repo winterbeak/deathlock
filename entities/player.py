@@ -104,7 +104,7 @@ class Player(collision.PunchableGravityCollision):
     def __init__(self, level, x, y, camera):
         super().__init__(level, self.WIDTH, self.HEIGHT, self.TERMINAL_VELOCITY,
                          x, y)
-        self.health = self.MAX_HEALTH
+        self._health = self.MAX_HEALTH
         self.dead = False
         self.offscreen_direction = 0
 
@@ -125,6 +125,18 @@ class Player(collision.PunchableGravityCollision):
             self.heart_sprites[heart_sprite].set_anim(heart_sprite)
 
         self.run_sound_frame = self.RUN_SOUND_DELAY
+
+    @property
+    def health(self):
+        return self._health
+
+    @health.setter
+    def health(self, value):
+        self._health = value
+        if self._health <= 0:
+            self.dead = True
+        else:
+            self.dead = False
 
     def draw(self, surf, cam):
         self.sprite.update()
@@ -228,26 +240,12 @@ class Player(collision.PunchableGravityCollision):
 
     def respawn(self):
         self.REVIVE_SOUNDS.play_random(0.15)
-        self.set_health(self.MAX_HEALTH)
+        self.health = self.MAX_HEALTH
         self.tumble = False
         self.x = self.respawn_x
         self.y = self.respawn_y
         self._stop_x()
         self._stop_y()
-
-    def change_health(self, amount):
-        self.health += amount
-        if self.health <= 0:
-            self.dead = True
-        else:
-            self.dead = False
-
-    def set_health(self, amount):
-        self.health = amount
-        if self.health <= 0:
-            self.dead = True
-        else:
-            self.dead = False
 
     def update_animation(self):
         if not self.dead:
@@ -385,7 +383,7 @@ class Player(collision.PunchableGravityCollision):
     def _get_hit(self):
         super()._get_hit()
         self.tumble = True
-        self.change_health(-1)
+        self.health -= 1
         self.camera.shake(6, 1)
 
     def set_checkpoint(self):

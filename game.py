@@ -132,7 +132,7 @@ main_cam.base_x = level.active_column * grid.Room.PIXEL_W
 main_cam.base_y = level.active_row * grid.Room.PIXEL_H
 
 player = entities.player.Player(level, PLAYER_START_X, PLAYER_START_Y, main_cam)
-player.set_health(0)
+player.health = 0
 
 player.set_checkpoint()
 
