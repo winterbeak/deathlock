@@ -1,7 +1,9 @@
 import pygame
 import constants as const
 
+import sound
 import grid
+import punchers
 
 
 class Collision:
@@ -37,9 +39,10 @@ class Collision:
 
     @x.setter
     def x(self, value):
-        self._x = value
-        self._gridbox.x = value
-        self._hitbox.x = value - self._extend_x
+        x = int(value)
+        self._x = x
+        self._gridbox.x = x
+        self._hitbox.x = x - self._extend_x
 
     @property
     def y(self):
@@ -47,9 +50,10 @@ class Collision:
 
     @y.setter
     def y(self, value):
-        self._y = value
-        self._gridbox.y = value
-        self._hitbox.y = value
+        y = int(value)
+        self._y = y
+        self._gridbox.y = y
+        self._hitbox.y = y - self._extend_y
 
     def update(self):
         self._collide_stage()
@@ -198,3 +202,69 @@ class GravityCollision(Collision):
             self.y_acc = const.GRAVITY
         super().update()
         self.y_vel = min(self.y_vel, self._terminal_velocity)
+
+
+class PunchableGravityCollision(GravityCollision):
+    HIT_SOUNDS = sound.load_numbers("hit%i", 3)
+    INVULN_LENGTH = 10
+
+    def __init__(self, level, width, height, terminal_velocity,
+                 x=0, y=0, extend_x=0, extend_y=0):
+        super().__init__(level, width, height, terminal_velocity,
+                         x, y, extend_x, extend_y)
+
+        self.invuln_frames = 0
+        self.puncher_x_vel = 0
+
+    def update(self):
+        super().update()
+        self.collide_punchers()
+
+    def _stop_x(self):
+        super()._stop_x()
+        self.puncher_x_vel = 0
+
+    def _next_x(self):
+        return super()._next_x() + self.puncher_x_vel
+
+    def _update_kinematics(self):
+        super()._update_kinematics()
+        self.x += self.puncher_x_vel
+
+    def _get_hit(self):
+        self.invuln_frames = self.INVULN_LENGTH
+        self.HIT_SOUNDS.play_random()
+
+    def collide_punchers(self):
+        if not self.invuln_frames:
+            center_col = grid.col_at(self.x + (self._width // 2))
+            center_row = grid.row_at(self.y + (self._height // 2))
+            tile = self._level.tile_at(center_col, center_row)
+            if tile == grid.PUNCHER_LEFT:
+                self._get_hit()
+                punchers.add(center_col, center_row, const.LEFT)
+                self.puncher_x_vel = -7
+
+                if self.x_vel > 0:
+                    self.x_vel = 0
+
+            elif tile == grid.PUNCHER_UP:
+                self._get_hit()
+                punchers.add(center_col, center_row, const.UP)
+                self.y_vel = -12
+
+            elif tile == grid.PUNCHER_RIGHT:
+                self._get_hit()
+                punchers.add(center_col, center_row, const.RIGHT)
+                self.puncher_x_vel = 7
+
+                if self.x_vel < 0:
+                    self.x_vel = 0
+
+            elif tile == grid.PUNCHER_DOWN:
+                self._get_hit()
+                punchers.add(center_col, center_row, const.DOWN)
+                self.y_vel = 7
+
+        elif self.invuln_frames:
+            self.invuln_frames -= 1
