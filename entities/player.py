@@ -5,7 +5,6 @@ from entities import collision
 import events
 import sound
 import grid
-import punchers
 import random
 import graphics
 

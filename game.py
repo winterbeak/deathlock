@@ -1,6 +1,5 @@
 import sound
 
-import random
 import pygame
 # import sys
 
