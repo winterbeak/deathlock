@@ -148,7 +148,7 @@ class Player(collision.PunchableGravityCollision):
         y = self._gridbox.y - cam.y
         self.sprite.draw_frame(surf, x, y)
 
-    def check_offscreen(self):
+    def _check_offscreen(self):
         center_x = self.x + (self.WIDTH // 2)
         center_y = self.y + (self.HEIGHT // 2)
 
@@ -170,12 +170,12 @@ class Player(collision.PunchableGravityCollision):
 
     def update(self):
         self.collide_void = not self.dead
-        self.take_inputs()
-        self.update_animation()
+        self._take_inputs()
+        self._update_animation()
         super().update()
-        self.check_offscreen()
+        self._check_offscreen()
 
-    def take_inputs(self):
+    def _take_inputs(self):
         # Jumping
         if self.jump_key.is_held:
             if self.grounded and not self.dead:
@@ -184,14 +184,14 @@ class Player(collision.PunchableGravityCollision):
         # Moving left & right
         if not self.dead:
             if self.left_key.is_held:
-                self.move_left()
+                self._move_left()
 
             elif self.right_key.is_held:
-                self.move_right()
+                self._move_right()
 
             # Decelerate when you stop moving
             else:
-                self.stay_still()
+                self._stay_still()
 
         elif self.dead and self.grounded:
             self.x_vel = 0
@@ -200,7 +200,7 @@ class Player(collision.PunchableGravityCollision):
         if events.keys.pressed_key == pygame.K_r:
             self.respawn()
 
-    def move_left(self):
+    def _move_left(self):
         self.x_vel += -self.MOVE_ACC
         self.x_vel = max(self.x_vel, -self.MOVE_SPEED)
 
@@ -209,7 +209,7 @@ class Player(collision.PunchableGravityCollision):
             if self.puncher_x_vel < 0:
                 self.puncher_x_vel = 0
 
-    def move_right(self):
+    def _move_right(self):
         self.x_vel += self.MOVE_ACC
         self.x_vel = min(self.x_vel, self.MOVE_SPEED)
 
@@ -218,7 +218,7 @@ class Player(collision.PunchableGravityCollision):
             if self.puncher_x_vel > 0:
                 self.puncher_x_vel = 0
 
-    def stay_still(self):
+    def _stay_still(self):
         self.run_sound_frame = self.RUN_SOUND_DELAY
 
         if self.x_vel < 0:
@@ -245,7 +245,7 @@ class Player(collision.PunchableGravityCollision):
         self._stop_x()
         self._stop_y()
 
-    def update_animation(self):
+    def _update_animation(self):
         if not self.dead:
             if not self.grounded:
                 if self.tumble:
@@ -254,7 +254,7 @@ class Player(collision.PunchableGravityCollision):
                     else:
                         self.sprite.set_anim(self.TUMBLE_RIGHT_ID)
 
-                # Jumping animation
+                # Jumping
                 else:
                     if self.facing == const.LEFT:
                         self.sprite.set_anim(self.JUMP_LEFT_ID)
@@ -277,6 +277,7 @@ class Player(collision.PunchableGravityCollision):
             else:
                 self.tumble = False
 
+            # Moving left
             if (pygame.K_LEFT in events.keys.held_keys or
                     pygame.K_a in events.keys.held_keys):
 
@@ -286,7 +287,7 @@ class Player(collision.PunchableGravityCollision):
                 if not self.tumble:
                     self.facing = const.LEFT
 
-                self.update_wall_push(const.LEFT)
+                self._update_wall_push(const.LEFT)
 
                 # Plays running sound
                 if self.sprite.anim != self.WALL_PUSH_LEFT_ID:
@@ -306,7 +307,7 @@ class Player(collision.PunchableGravityCollision):
                 if not self.tumble:
                     self.facing = const.RIGHT
 
-                self.update_wall_push(const.RIGHT)
+                self._update_wall_push(const.RIGHT)
 
                 if self.sprite.anim != self.WALL_PUSH_RIGHT_ID:
                     if self.grounded:
@@ -355,7 +356,7 @@ class Player(collision.PunchableGravityCollision):
                     else:
                         self.sprite.frame = 5
 
-    def update_wall_push(self, direction):
+    def _update_wall_push(self, direction):
         top_y = self.y
         bottom_y = top_y + self.HEIGHT - 1
 
