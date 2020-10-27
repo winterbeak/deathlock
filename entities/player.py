@@ -16,7 +16,6 @@ class Player(collision.PunchableGravityCollision):
     left_key = events.Keybind([pygame.K_a, pygame.K_LEFT])
     right_key = events.Keybind([pygame.K_d, pygame.K_RIGHT])
 
-    CHECK_STEPS = 4
     TERMINAL_VELOCITY = 20.0
 
     MAX_HEALTH = 3
@@ -117,7 +116,6 @@ class Player(collision.PunchableGravityCollision):
         self.camera = camera
 
         self.tumble = False
-        self.invuln_frames = 0
 
         self.respawn_x = 0.0
         self.respawn_y = 0.0
