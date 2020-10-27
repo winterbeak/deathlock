@@ -11,7 +11,7 @@ import graphics
 
 class Player(collision.PunchableGravityCollision):
     jump_key = events.Keybind([pygame.K_p, pygame.K_z, pygame.K_w,
-                                pygame.K_UP, pygame.K_SPACE])
+                               pygame.K_UP, pygame.K_SPACE])
     left_key = events.Keybind([pygame.K_a, pygame.K_LEFT])
     right_key = events.Keybind([pygame.K_d, pygame.K_RIGHT])
 
