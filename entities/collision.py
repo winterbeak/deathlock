@@ -195,6 +195,8 @@ class GravityCollision(Collision):
 
     @property
     def grounded(self):
+        if self.y_vel < 0:
+            return False
         return self._against_floor()
 
     def update(self):
