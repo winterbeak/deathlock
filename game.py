@@ -11,6 +11,7 @@ import graphics
 import camera
 import grid
 import entities.player
+import entities.handler
 
 import roomgen
 import punchers
@@ -135,6 +136,9 @@ player.health = 0
 
 player.set_checkpoint()
 
+entity_handler = entities.handler.Handler()
+entity_handler.list = [player]
+
 first_revive = True
 beat_once = False
 
@@ -150,7 +154,7 @@ while True:
                 sprite.frame = 0
                 sprite.frame_delay = 22
 
-    player.update()
+    entity_handler.update_all()
     punchers.update()
 
     main_cam.update()
@@ -205,7 +209,7 @@ while True:
             level.room_grid[START_COL][START_ROW + 7].draw(post_surf, main_cam)
         elif level.active_column == START_COL + 2 and level.active_row == START_ROW + 10:
             level.room_grid[START_COL + 3][START_ROW + 9].draw(post_surf, main_cam)
-    player.draw(post_surf, main_cam)
+    entity_handler.draw_all(post_surf, main_cam)
 
     if ((level.active_column == START_COL and level.active_row == START_ROW + 3) or
             (level.previous_column == START_COL and level.previous_row == START_ROW + 3)):
