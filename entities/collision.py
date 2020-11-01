@@ -192,6 +192,9 @@ class Collision:
     def draw_hitbox(self, surface, cam, color=const.BLUE):
         pygame.draw.rect(surface, color, cam.move_rect(self._hitbox))
 
+    def draw(self, surface, cam):
+        self.draw_gridbox(surface, cam)
+
 
 class GravityCollision(Collision):
     def __init__(self, level, width, height, terminal_velocity,
