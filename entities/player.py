@@ -193,16 +193,13 @@ class Player(collision.PunchableGravityCollision):
             self._jump_buffer -= 1
 
     def _take_inputs(self):
-        # Jumping
-        if self.jump_key.is_pressed:
-            if not self.dead and self._coyote_timer > 0:
+        if not self.dead:
+            if self.jump_key.is_pressed and self._coyote_timer > 0:
                 self.jump()
 
-        if self.grounded and self._jump_buffer > 0:
-            self.jump()
+            if self.grounded and self._jump_buffer > 0:
+                self.jump()
 
-        # Moving left & right
-        if not self.dead:
             if self.left_key.is_held:
                 self._move_left()
 
