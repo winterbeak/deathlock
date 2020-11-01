@@ -18,6 +18,7 @@ class Player(collision.PunchableGravityCollision):
     TERMINAL_VELOCITY = 20.0
 
     COYOTE_TIME = 5
+    JUMP_BUFFER = 5
 
     MAX_HEALTH = 3
     JUMP_SPEED = 9
@@ -122,6 +123,7 @@ class Player(collision.PunchableGravityCollision):
         self.respawn_y = 0.0
 
         self._coyote_timer = 0
+        self._jump_buffer = 0
 
         self.sprite = graphics.AnimInstance(self.ANIMSHEET)
         self.facing = const.LEFT
@@ -185,11 +187,19 @@ class Player(collision.PunchableGravityCollision):
         elif self._coyote_timer > 0:
             self._coyote_timer -= 1
 
+        if self.jump_key.is_pressed and not self.dead:
+            self._jump_buffer = self.JUMP_BUFFER
+        elif self._jump_buffer > 0:
+            self._jump_buffer -= 1
+
     def _take_inputs(self):
         # Jumping
         if self.jump_key.is_pressed:
             if not self.dead and self._coyote_timer > 0:
                 self.jump()
+
+        if self.grounded and self._jump_buffer > 0:
+            self.jump()
 
         # Moving left & right
         if not self.dead:
