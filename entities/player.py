@@ -176,7 +176,7 @@ class Player(collision.PunchableGravityCollision):
 
     def _take_inputs(self):
         # Jumping
-        if self.jump_key.is_held:
+        if self.jump_key.is_pressed:
             if self.grounded and not self.dead:
                 self.jump()
 
