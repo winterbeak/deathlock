@@ -186,6 +186,12 @@ class Collision:
         y = self._y + self._height
         return self._level.collide_horiz(x1, x2, y, self.collide_void)
 
+    def draw_gridbox(self, surface, cam, color=const.RED):
+        pygame.draw.rect(surface, color, cam.move_rect(self._gridbox))
+
+    def draw_hitbox(self, surface, cam, color=const.BLUE):
+        pygame.draw.rect(surface, color, cam.move_rect(self._hitbox))
+
 
 class GravityCollision(Collision):
     def __init__(self, level, width, height, terminal_velocity,
