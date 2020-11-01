@@ -3,6 +3,32 @@ import pygame
 pygame.init()
 
 
+class Keybind:
+    def __init__(self, key_list):
+        self.list = key_list
+
+    @property
+    def is_held(self):
+        for key in self.list:
+            if keys.is_held(key):
+                return True
+        return False
+
+    @property
+    def is_pressed(self):
+        for key in self.list:
+            if keys.pressed_key == key:
+                return True
+        return False
+
+    @property
+    def is_released(self):
+        for key in self.list:
+            if keys.released_key == key:
+                return True
+        return False
+
+
 class MouseHandler:
     def __init__(self):
         self.clicked = False
@@ -22,6 +48,9 @@ class KeyHandler:
         self.pressed_key = None
         self.released = False
         self.released_key = None
+
+    def is_held(self, key):
+        return key in self.held_keys
 
 
 quit_program = False

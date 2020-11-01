@@ -340,7 +340,7 @@ class Level:
         room.rightmost_tile = room.leftmost_tile + room.WIDTH - 1
         room.bottommost_tile = room.topmost_tile + room.HEIGHT - 1
 
-        room.x = column * room.PIXEL_W
+        room._x = column * room.PIXEL_W
         room.y = row * room.PIXEL_H
 
         for checkpoint in room.checkpoints:
