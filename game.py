@@ -13,7 +13,6 @@ import grid
 import entities.player
 import entities.handler
 
-import roomgen
 import punchers
 
 
@@ -86,46 +85,6 @@ level.active_row = DEBUG_START_ROW
 
 PLAYER_START_X = DEBUG_START_COL * grid.Room.PIXEL_W + (grid.Room.PIXEL_W - entities.player.Player.WIDTH) // 2
 PLAYER_START_Y = DEBUG_START_ROW * grid.Room.PIXEL_H
-
-level.add_room(roomgen.intro_fallway(), START_COL, START_ROW)
-level.add_room(roomgen.intro_fallway(), START_COL, START_ROW + 1)
-level.add_room(roomgen.intro_fallway(), START_COL, START_ROW + 2)
-level.add_room(roomgen.fallway_disturbance(), START_COL, START_ROW + 3)
-level.add_room(roomgen.fallway_disturbance_2(), START_COL, START_ROW + 4)
-
-level.add_room(roomgen.lets_go_left(), START_COL, START_ROW + 5)
-level.add_room(roomgen.run_into_it(), START_COL - 1, START_ROW + 5)
-level.add_room(roomgen.triple_bounce(), START_COL - 2, START_ROW + 5)
-level.add_room(roomgen.ow_my_head(), START_COL - 3, START_ROW + 5)
-
-level.add_room(roomgen.far_enough(), START_COL - 3, START_ROW + 6)
-level.add_room(roomgen.spike_spike(), START_COL - 3, START_ROW + 7)
-level.add_room(roomgen.not_far_enough(), START_COL - 3, START_ROW + 8)
-
-level.add_room(roomgen.elbow(), START_COL - 3, START_ROW + 9)
-level.add_room(roomgen.ready_for_launch(), START_COL - 2, START_ROW + 9)
-level.add_room(roomgen.ready_for_landing(), START_COL - 1, START_ROW + 9)
-
-level.add_room(roomgen.up_and_up_and_up(), START_COL, START_ROW + 9)
-level.add_room(roomgen.crossing_rooms(), START_COL + 1, START_ROW + 9)
-
-level.add_room(roomgen.climber(), START_COL - 1, START_ROW + 8)
-level.add_room(roomgen.uncrossable_chasm(), START_COL, START_ROW + 8)
-level.add_room(roomgen.secret_ceiling(), START_COL, START_ROW + 7)
-level.add_room(roomgen.stand_in_weird_places(), START_COL + 1, START_ROW + 8)
-level.add_room(roomgen.the_big_jump(), START_COL + 2, START_ROW + 8)
-level.add_room(roomgen.safety_net(), START_COL + 2, START_ROW + 9)
-
-level.add_room(roomgen.fall_the_right_way(), START_COL + 3, START_ROW + 8)
-level.add_room(roomgen.run_run_jump(), START_COL + 4, START_ROW + 8)
-level.add_room(roomgen.wrong(), START_COL + 4, START_ROW + 7)
-level.add_room(roomgen.extra_gravity(), START_COL + 3, START_ROW + 7)
-
-level.add_room(roomgen.left_down_town(), START_COL + 3, START_ROW + 9)
-level.add_room(roomgen.how_to_go_left(), START_COL + 3, START_ROW + 10)
-level.add_room(roomgen.mysteriously_easy(), START_COL + 2, START_ROW + 10)
-level.add_room(roomgen.funnel_vision(), START_COL + 2, START_ROW + 11)
-level.add_room(roomgen.intro_fallway(), START_COL + 2, START_ROW + 12)
 
 main_cam = camera.Camera()
 main_cam.base_x = level.active_column * grid.Room.PIXEL_W
