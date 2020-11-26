@@ -84,8 +84,8 @@ class Room:
 
     def out_of_bounds(self, rel_col, rel_row):
         """returns whether or not a tile is outside of the grid"""
-        if 0 <= rel_col <= self.WIDTH:
-            if 0 <= rel_row <= self.HEIGHT:
+        if 0 <= rel_col < self.WIDTH:
+            if 0 <= rel_row < self.HEIGHT:
                 return False
 
         return True
