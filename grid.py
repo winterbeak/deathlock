@@ -18,8 +18,7 @@ PUNCHER_LEFT = 7
 PUNCHER_UP = 8
 PUNCHER_RIGHT = 9
 PUNCHER_DOWN = 10
-CHECKPOINT_ZONE = [11, 12, 13]
-MAX_CHECKPOINTS = 3
+DEATHLOCK = 11
 
 
 punch_box_left = graphics.load_image("punch_box", 2)
@@ -60,8 +59,8 @@ def y_of(row, direction=const.UP):
 
 class Room:
     """the grid where all the tiles on a single screen are placed"""
-    WIDTH = 25  # the amount of tiles across the room
-    HEIGHT = 25
+    WIDTH = const.SCRN_W // TILE_W  # the amount of tiles across the room
+    HEIGHT = const.SCRN_H // TILE_H
     PIXEL_W = WIDTH * TILE_W
     PIXEL_H = HEIGHT * TILE_H
 
@@ -80,12 +79,10 @@ class Room:
 
         self.grid = [[EMPTY for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
 
-        self.checkpoints = []
-
     def out_of_bounds(self, rel_col, rel_row):
         """returns whether or not a tile is outside of the grid"""
-        if 0 <= rel_col <= self.WIDTH:
-            if 0 <= rel_row <= self.HEIGHT:
+        if 0 <= rel_col < self.WIDTH:
+            if 0 <= rel_row < self.HEIGHT:
                 return False
 
         return True
@@ -122,11 +119,6 @@ class Room:
             for row in range(rel_row, rel_row + h):
                 self.change_point(col, row, kind)
 
-    def add_checkpoint(self, rel_col, rel_row):
-        """note: the checkpoint will stay relative until
-        the room is added to a level"""
-        self.checkpoints.append([rel_col, rel_row])
-
     def tile_at(self, rel_col, rel_row):
         """returns the tile type at a certain position
         all tiles out of bounds return VOID"""
@@ -148,20 +140,16 @@ class Room:
 
         return False
 
-    def is_checkpoint_zone(self, rel_col, rel_row):
-        tile = self.tile_at(rel_col, rel_row)
-        if tile in CHECKPOINT_ZONE:
-            return True
-
-        return False
-
-    def is_solid(self, rel_col, rel_row, void_solid=True):
+    def is_solid(self, rel_col, rel_row, deathlock_solid=True, void_solid=True):
         """returns whether a tile is solid or not"""
         tile = self.tile_at(rel_col, rel_row)
         if tile == EMPTY:
             return False
 
         if not void_solid and tile == VOID:
+            return False
+
+        if not deathlock_solid and tile == DEATHLOCK:
             return False
 
         if tile == PUNCHER_LEFT:
@@ -173,10 +161,27 @@ class Room:
         if tile == PUNCHER_DOWN:
             return False
 
-        if tile in CHECKPOINT_ZONE:
-            return False
-
         return True
+
+    def collide_vert(self, x, y1, y2, deathlock_solid, void_solid):
+        col = col_at(x)
+        start_row = row_at(y1)
+        end_row = row_at(y2)
+        for row in range(start_row, end_row + 1):
+            if self.is_solid(col, row, deathlock_solid, void_solid):
+                return True
+
+        return False
+
+    def collide_horiz(self, x1, x2, y, deathlock_solid, void_solid):
+        start_col = col_at(x1)
+        end_col = col_at(x2)
+        row = row_at(y)
+        for col in range(start_col, end_col + 1):
+            if self.is_solid(col, row, deathlock_solid, void_solid):
+                return True
+
+        return False
 
     def draw(self, surf, camera):
         """draws the entire stage"""
@@ -191,6 +196,9 @@ class Room:
                 if self.tile_at(rel_col, rel_row) == WALL:
                     pygame.draw.rect(surf, const.BLACK, rect)
 
+                elif self.tile_at(rel_col, rel_row) == DEATHLOCK:
+                    pygame.draw.rect(surf, const.RED, rect)
+
                 elif self.tile_at(rel_col, rel_row) == PUNCHER_EMIT_LEFT:
                     surf.blit(punch_box_left, (x, y))
 
@@ -202,155 +210,3 @@ class Room:
 
                 elif self.tile_at(rel_col, rel_row) == PUNCHER_EMIT_DOWN:
                     surf.blit(punch_box_down, (x, y))
-
-                # # Draws checkpoint zones, for debugging purposes.
-                # elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[0]:
-                #     pygame.draw.rect(surf, const.LIGHT_BLUE, rect)
-                #
-                # elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[1]:
-                #     pygame.draw.rect(surf, const.LIGHT_GREEN, rect)
-                #
-                # elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[2]:
-                #     pygame.draw.rect(surf, const.LIGHT_MAGENTA, rect)
-
-
-class Level:
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        self.room_grid = [[Room() for _ in range(height)] for _ in range(width)]
-        self.active_row = 0
-        self.active_column = 0
-        self.previous_row = 0
-        self.previous_column = 0
-
-        self.rightmost_tile = width * Room.WIDTH - 1
-        self.bottommost_tile = height * Room.HEIGHT - 1
-
-    def draw(self, surf, camera):
-        if camera.sliding:
-            self.draw_room(surf, camera, self.previous_column, self.previous_row)
-
-        self.draw_room(surf, camera, self.active_column, self.active_row)
-
-    def draw_room(self, surf, camera, col, row):
-        if not self.out_of_bounds_room(col, row):
-            self.room_grid[col][row].draw(surf, camera)
-
-    def out_of_bounds_room(self, col, row):
-        """returns whether a given grid is out of bounds or not"""
-        if 0 <= col < self.width:
-            if 0 <= row < self.height:
-                return False
-
-        return True
-
-    def out_of_bounds_tile(self, col, row):
-        """returns whether a given tile is out of bounds or not"""
-        if 0 <= col <= self.rightmost_tile:
-            if 0 <= row <= self.bottommost_tile:
-                return False
-
-        return True
-
-    def tile_at(self, col, row):
-        if not self.out_of_bounds_tile(col, row):
-            room_col = col // Room.WIDTH
-            room_row = row // Room.HEIGHT
-            rel_col = col % Room.WIDTH
-            rel_row = row % Room.HEIGHT
-
-            room = self.room_grid[room_col][room_row]
-            return room.tile_at(rel_col, rel_row)
-
-        return VOID
-
-    def is_solid(self, col, row, void_solid):
-        if not self.out_of_bounds_tile(col, row):
-            room_col = col // Room.WIDTH
-            room_row = row // Room.HEIGHT
-
-            if void_solid:
-                if room_col != self.active_column or room_row != self.active_row:
-                    return True
-
-            rel_col = col % Room.WIDTH
-            rel_row = row % Room.HEIGHT
-
-            room = self.room_grid[room_col][room_row]
-            return room.is_solid(rel_col, rel_row, void_solid)
-
-        if void_solid:
-            return True
-
-        return False
-
-    def is_puncher(self, col, row):
-        if not self.out_of_bounds_tile(col, row):
-            room_col = col // Room.WIDTH
-            room_row = row // Room.HEIGHT
-            rel_col = col % Room.WIDTH
-            rel_row = row % Room.HEIGHT
-
-            room = self.room_grid[room_col][room_row]
-            return room.is_puncher(rel_col, rel_row)
-
-        return False
-
-    def collide_vert(self, x, y1, y2, void_solid):
-        col = col_at(x)
-        start_row = row_at(y1)
-        end_row = row_at(y2)
-        for row in range(start_row, end_row + 1):
-            if self.is_solid(col, row, void_solid):
-                return True
-
-        return False
-
-    def collide_horiz(self, x1, x2, y, void_solid):
-        start_col = col_at(x1)
-        end_col = col_at(x2)
-        row = row_at(y)
-        for col in range(start_col, end_col + 1):
-            if self.is_solid(col, row, void_solid):
-                return True
-
-        return False
-
-    def change_room(self, direction):
-        self.previous_column = self.active_column
-        self.previous_row = self.active_row
-
-        if direction == const.LEFT:
-            self.active_column -= 1
-        elif direction == const.RIGHT:
-            self.active_column += 1
-        elif direction == const.UP:
-            self.active_row -= 1
-        elif direction == const.DOWN:
-            self.active_row += 1
-        else:
-            print("Passed an invalid direction to change_room()!")
-
-    def add_room(self, room, column, row):
-        room.column = column
-        room.row = row
-        room.leftmost_tile = column * room.WIDTH
-        room.topmost_tile = row * room.HEIGHT
-        room.rightmost_tile = room.leftmost_tile + room.WIDTH - 1
-        room.bottommost_tile = room.topmost_tile + room.HEIGHT - 1
-
-        room._x = column * room.PIXEL_W
-        room.y = row * room.PIXEL_H
-
-        for checkpoint in room.checkpoints:
-            checkpoint[0] += room.leftmost_tile
-            checkpoint[1] += room.topmost_tile
-
-        self.room_grid[room.column][room.row] = room
-
-    def current_center_x(self):
-        return self.active_column * Room.PIXEL_W + (Room.PIXEL_W // 2)
-
-    def current_center_y(self):
-        return self.active_row * Room.PIXEL_H + (Room.PIXEL_H // 2)

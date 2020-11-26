@@ -30,6 +30,7 @@ class Collision:
                                    width + extend_x * 2, height + extend_y * 2)
 
         self.collide_void = True
+        self.collide_deathlock = True
 
         self._level = level  # reference to the level layout
 
@@ -149,10 +150,10 @@ class Collision:
             bottom_y = top_y + self._height - 1
 
             if dir_y == const.UP:
-                if self._level.collide_horiz(left_x, right_x, top_y, self.collide_void):
+                if self._level.collide_horiz(left_x, right_x, top_y, self.collide_deathlock, self.collide_void):
                     self._snap_y(grid.row_at(top_y), const.BOTTOM)
             elif dir_y == const.DOWN:
-                if self._level.collide_horiz(left_x, right_x, bottom_y, self.collide_void):
+                if self._level.collide_horiz(left_x, right_x, bottom_y, self.collide_deathlock, self.collide_void):
                     self._snap_y(grid.row_at(bottom_y), const.TOP)
 
             left_x = int(self._x + (diff_x * (step / 4)))
@@ -161,11 +162,11 @@ class Collision:
             bottom_y = top_y + self._height - 1
 
             if dir_x == const.LEFT:
-                if self._level.collide_vert(left_x, top_y, bottom_y, self.collide_void):
+                if self._level.collide_vert(left_x, top_y, bottom_y, self.collide_deathlock, self.collide_void):
                     self._snap_x(grid.col_at(left_x), const.RIGHT)
 
             elif dir_x == const.RIGHT:
-                if self._level.collide_vert(right_x, top_y, bottom_y, self.collide_void):
+                if self._level.collide_vert(right_x, top_y, bottom_y, self.collide_deathlock, self.collide_void):
                     self._snap_x(grid.col_at(right_x), const.LEFT)
 
     def _against_wall(self):
@@ -174,17 +175,17 @@ class Collision:
 
         if self._x_dir == const.LEFT:
             x = self._x - 1
-            return self._level.collide_vert(x, top_y, bottom_y, self.collide_void)
+            return self._level.collide_vert(x, top_y, bottom_y, self.collide_deathlock, self.collide_void)
 
         elif self._x_dir == const.RIGHT:
             x = self._x + self._width
-            return self._level.collide_vert(x, top_y, bottom_y, self.collide_void)
+            return self._level.collide_vert(x, top_y, bottom_y, self.collide_deathlock, self.collide_void)
 
     def _against_floor(self):
         x1 = self._x
         x2 = x1 + self._width - 1
         y = self._y + self._height
-        return self._level.collide_horiz(x1, x2, y, self.collide_void)
+        return self._level.collide_horiz(x1, x2, y, self.collide_deathlock, self.collide_void)
 
     def draw_gridbox(self, surface, cam, color=const.RED):
         pygame.draw.rect(surface, color, cam.move_rect(self._gridbox))

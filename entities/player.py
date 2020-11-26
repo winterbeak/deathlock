@@ -153,33 +153,12 @@ class Player(collision.PunchableGravityCollision):
         y = self._gridbox.y - cam.y
         self.sprite.draw_frame(surf, x, y)
 
-    def _check_offscreen(self):
-        center_x = self.x + (self.WIDTH // 2)
-        center_y = self.y + (self.HEIGHT // 2)
-
-        grid_left = grid.Room.PIXEL_W * self.level.active_column
-        grid_right = grid_left + grid.Room.PIXEL_W
-        grid_top = grid.Room.PIXEL_H * self.level.active_row
-        grid_bottom = grid_top + grid.Room.PIXEL_H
-
-        if center_x > grid_right:
-            self.offscreen_direction = const.RIGHT
-        elif center_x < grid_left:
-            self.offscreen_direction = const.LEFT
-        elif center_y > grid_bottom:
-            self.offscreen_direction = const.DOWN
-        elif center_y < grid_top:
-            self.offscreen_direction = const.UP
-        else:
-            self.offscreen_direction = 0
-
     def update(self):
-        self.collide_void = not self.dead
+        self.collide_deathlock = not self.dead
         self._update_timers()
         self._take_inputs()
         self._update_animation()
         super().update()
-        self._check_offscreen()
 
     def _update_timers(self):
         if self.grounded:
@@ -380,50 +359,16 @@ class Player(collision.PunchableGravityCollision):
 
         if direction == const.LEFT:
             x = self.x - 1
-            if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
+            if self.level.collide_vert(x, top_y, bottom_y, not self.dead, True):
                 self.sprite.set_anim(self.WALL_PUSH_LEFT_ID)
 
         elif direction == const.RIGHT:
             x = self.x + self.WIDTH
-            if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
+            if self.level.collide_vert(x, top_y, bottom_y, not self.dead, True):
                 self.sprite.set_anim(self.WALL_PUSH_RIGHT_ID)
-
-    def update_hearts(self):
-        for heart in self.heart_sprites:
-            heart.update()
-
-    def draw_hearts(self, surf):
-        for heart in range(self.health):
-            heart_sprite = self.heart_sprites[heart]
-            heart_sprite.draw_frame(surf, self.HEART_X[heart], self.HEART_Y)
 
     def _get_hit(self):
         super()._get_hit()
         self.tumble = True
         self.health -= 1
         self.camera.shake(6, 1)
-
-    def set_checkpoint(self):
-        room = self.level.room_grid[self.level.active_column][self.level.active_row]
-
-        center_col = grid.col_at(self.x + (self.WIDTH // 2))
-        center_row = grid.row_at(self.y + (self.HEIGHT // 2))
-        tile = self.level.tile_at(center_col, center_row)
-
-        if tile in grid.CHECKPOINT_ZONE:
-            checkpoint_num = grid.CHECKPOINT_ZONE.index(tile)
-            col, row = room.checkpoints[checkpoint_num]
-
-            x_offset = (grid.TILE_W - self.WIDTH) // 2  # centers the player on the tile
-            y_offset = (grid.TILE_H - self.HEIGHT) // 2
-            self.respawn_x = grid.x_of(col) + x_offset
-            self.respawn_y = grid.y_of(row) + y_offset
-
-        else:
-            print("Player entered level without setting checkpoint!")
-
-            for y in range(-1, 2, 1):
-                for x in range(-1, 2, 1):
-                    print(self.level.tile_at(center_col + x, center_row + y), end=" ")
-
-                print()
