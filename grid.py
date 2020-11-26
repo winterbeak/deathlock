@@ -178,6 +178,26 @@ class Room:
 
         return True
 
+    def collide_vert(self, x, y1, y2, void_solid):
+        col = col_at(x)
+        start_row = row_at(y1)
+        end_row = row_at(y2)
+        for row in range(start_row, end_row + 1):
+            if self.is_solid(col, row, void_solid):
+                return True
+
+        return False
+
+    def collide_horiz(self, x1, x2, y, void_solid):
+        start_col = col_at(x1)
+        end_col = col_at(x2)
+        row = row_at(y)
+        for col in range(start_col, end_col + 1):
+            if self.is_solid(col, row, void_solid):
+                return True
+
+        return False
+
     def draw(self, surf, camera):
         """draws the entire stage"""
         for rel_row in range(self.HEIGHT):

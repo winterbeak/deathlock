@@ -153,33 +153,12 @@ class Player(collision.PunchableGravityCollision):
         y = self._gridbox.y - cam.y
         self.sprite.draw_frame(surf, x, y)
 
-    def _check_offscreen(self):
-        center_x = self.x + (self.WIDTH // 2)
-        center_y = self.y + (self.HEIGHT // 2)
-
-        grid_left = grid.Room.PIXEL_W * self.level.active_column
-        grid_right = grid_left + grid.Room.PIXEL_W
-        grid_top = grid.Room.PIXEL_H * self.level.active_row
-        grid_bottom = grid_top + grid.Room.PIXEL_H
-
-        if center_x > grid_right:
-            self.offscreen_direction = const.RIGHT
-        elif center_x < grid_left:
-            self.offscreen_direction = const.LEFT
-        elif center_y > grid_bottom:
-            self.offscreen_direction = const.DOWN
-        elif center_y < grid_top:
-            self.offscreen_direction = const.UP
-        else:
-            self.offscreen_direction = 0
-
     def update(self):
         self.collide_void = not self.dead
         self._update_timers()
         self._take_inputs()
         self._update_animation()
         super().update()
-        self._check_offscreen()
 
     def _update_timers(self):
         if self.grounded:
