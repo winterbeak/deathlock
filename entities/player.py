@@ -372,28 +372,3 @@ class Player(collision.PunchableGravityCollision):
         self.tumble = True
         self.health -= 1
         self.camera.shake(6, 1)
-
-    def set_checkpoint(self):
-        room = self.level.room_grid[self.level.active_column][self.level.active_row]
-
-        center_col = grid.col_at(self.x + (self.WIDTH // 2))
-        center_row = grid.row_at(self.y + (self.HEIGHT // 2))
-        tile = self.level.tile_at(center_col, center_row)
-
-        if tile in grid.CHECKPOINT_ZONE:
-            checkpoint_num = grid.CHECKPOINT_ZONE.index(tile)
-            col, row = room.checkpoints[checkpoint_num]
-
-            x_offset = (grid.TILE_W - self.WIDTH) // 2  # centers the player on the tile
-            y_offset = (grid.TILE_H - self.HEIGHT) // 2
-            self.respawn_x = grid.x_of(col) + x_offset
-            self.respawn_y = grid.y_of(row) + y_offset
-
-        else:
-            print("Player entered level without setting checkpoint!")
-
-            for y in range(-1, 2, 1):
-                for x in range(-1, 2, 1):
-                    print(self.level.tile_at(center_col + x, center_row + y), end=" ")
-
-                print()

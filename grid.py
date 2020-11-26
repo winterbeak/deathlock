@@ -18,8 +18,6 @@ PUNCHER_LEFT = 7
 PUNCHER_UP = 8
 PUNCHER_RIGHT = 9
 PUNCHER_DOWN = 10
-CHECKPOINT_ZONE = [11, 12, 13]
-MAX_CHECKPOINTS = 3
 
 
 punch_box_left = graphics.load_image("punch_box", 2)
@@ -80,8 +78,6 @@ class Room:
 
         self.grid = [[EMPTY for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
 
-        self.checkpoints = []
-
     def out_of_bounds(self, rel_col, rel_row):
         """returns whether or not a tile is outside of the grid"""
         if 0 <= rel_col < self.WIDTH:
@@ -122,11 +118,6 @@ class Room:
             for row in range(rel_row, rel_row + h):
                 self.change_point(col, row, kind)
 
-    def add_checkpoint(self, rel_col, rel_row):
-        """note: the checkpoint will stay relative until
-        the room is added to a level"""
-        self.checkpoints.append([rel_col, rel_row])
-
     def tile_at(self, rel_col, rel_row):
         """returns the tile type at a certain position
         all tiles out of bounds return VOID"""
@@ -148,13 +139,6 @@ class Room:
 
         return False
 
-    def is_checkpoint_zone(self, rel_col, rel_row):
-        tile = self.tile_at(rel_col, rel_row)
-        if tile in CHECKPOINT_ZONE:
-            return True
-
-        return False
-
     def is_solid(self, rel_col, rel_row, void_solid=True):
         """returns whether a tile is solid or not"""
         tile = self.tile_at(rel_col, rel_row)
@@ -171,9 +155,6 @@ class Room:
         if tile == PUNCHER_RIGHT:
             return False
         if tile == PUNCHER_DOWN:
-            return False
-
-        if tile in CHECKPOINT_ZONE:
             return False
 
         return True
@@ -222,13 +203,3 @@ class Room:
 
                 elif self.tile_at(rel_col, rel_row) == PUNCHER_EMIT_DOWN:
                     surf.blit(punch_box_down, (x, y))
-
-                # # Draws checkpoint zones, for debugging purposes.
-                # elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[0]:
-                #     pygame.draw.rect(surf, const.LIGHT_BLUE, rect)
-                #
-                # elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[1]:
-                #     pygame.draw.rect(surf, const.LIGHT_GREEN, rect)
-                #
-                # elif self.tile_at(rel_col, rel_row) == CHECKPOINT_ZONE[2]:
-                #     pygame.draw.rect(surf, const.LIGHT_MAGENTA, rect)
