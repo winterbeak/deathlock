@@ -154,7 +154,7 @@ class Player(collision.PunchableGravityCollision):
         self.sprite.draw_frame(surf, x, y)
 
     def update(self):
-        self.collide_void = not self.dead
+        self.collide_deathlock = not self.dead
         self._update_timers()
         self._take_inputs()
         self._update_animation()
@@ -359,12 +359,12 @@ class Player(collision.PunchableGravityCollision):
 
         if direction == const.LEFT:
             x = self.x - 1
-            if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
+            if self.level.collide_vert(x, top_y, bottom_y, not self.dead, True):
                 self.sprite.set_anim(self.WALL_PUSH_LEFT_ID)
 
         elif direction == const.RIGHT:
             x = self.x + self.WIDTH
-            if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
+            if self.level.collide_vert(x, top_y, bottom_y, not self.dead, True):
                 self.sprite.set_anim(self.WALL_PUSH_RIGHT_ID)
 
     def _get_hit(self):

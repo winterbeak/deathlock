@@ -18,6 +18,7 @@ PUNCHER_LEFT = 7
 PUNCHER_UP = 8
 PUNCHER_RIGHT = 9
 PUNCHER_DOWN = 10
+DEATHLOCK = 11
 
 
 punch_box_left = graphics.load_image("punch_box", 2)
@@ -139,13 +140,16 @@ class Room:
 
         return False
 
-    def is_solid(self, rel_col, rel_row, void_solid=True):
+    def is_solid(self, rel_col, rel_row, deathlock_solid=True, void_solid=True):
         """returns whether a tile is solid or not"""
         tile = self.tile_at(rel_col, rel_row)
         if tile == EMPTY:
             return False
 
         if not void_solid and tile == VOID:
+            return False
+
+        if not deathlock_solid and tile == DEATHLOCK:
             return False
 
         if tile == PUNCHER_LEFT:
@@ -159,22 +163,22 @@ class Room:
 
         return True
 
-    def collide_vert(self, x, y1, y2, void_solid):
+    def collide_vert(self, x, y1, y2, deathlock_solid, void_solid):
         col = col_at(x)
         start_row = row_at(y1)
         end_row = row_at(y2)
         for row in range(start_row, end_row + 1):
-            if self.is_solid(col, row, void_solid):
+            if self.is_solid(col, row, deathlock_solid, void_solid):
                 return True
 
         return False
 
-    def collide_horiz(self, x1, x2, y, void_solid):
+    def collide_horiz(self, x1, x2, y, deathlock_solid, void_solid):
         start_col = col_at(x1)
         end_col = col_at(x2)
         row = row_at(y)
         for col in range(start_col, end_col + 1):
-            if self.is_solid(col, row, void_solid):
+            if self.is_solid(col, row, deathlock_solid, void_solid):
                 return True
 
         return False
@@ -191,6 +195,9 @@ class Room:
 
                 if self.tile_at(rel_col, rel_row) == WALL:
                     pygame.draw.rect(surf, const.BLACK, rect)
+
+                elif self.tile_at(rel_col, rel_row) == DEATHLOCK:
+                    pygame.draw.rect(surf, const.RED, rect)
 
                 elif self.tile_at(rel_col, rel_row) == PUNCHER_EMIT_LEFT:
                     surf.blit(punch_box_left, (x, y))
