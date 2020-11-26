@@ -94,8 +94,6 @@ while True:
 
     main_cam.update()
 
-    player.update_hearts()
-
     if player.dead:
         sound.set_music_volume(0.0)
     else:
@@ -107,12 +105,6 @@ while True:
     level.draw(post_surf, main_cam)
 
     entity_handler.draw_all(post_surf, main_cam)
-
-    # Deathlock border
-    if not player.dead:
-        pygame.draw.rect(post_surf, const.RED, (0, 0, const.SCRN_W, const.SCRN_H), 5)
-
-    player.draw_hearts(post_surf)
 
     # debug.debug(clock.get_fps())
     # debug.debug(main_cam.sliding, main_cam.last_slide_frame)

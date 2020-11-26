@@ -367,15 +367,6 @@ class Player(collision.PunchableGravityCollision):
             if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
                 self.sprite.set_anim(self.WALL_PUSH_RIGHT_ID)
 
-    def update_hearts(self):
-        for heart in self.heart_sprites:
-            heart.update()
-
-    def draw_hearts(self, surf):
-        for heart in range(self.health):
-            heart_sprite = self.heart_sprites[heart]
-            heart_sprite.draw_frame(surf, self.HEART_X[heart], self.HEART_Y)
-
     def _get_hit(self):
         super()._get_hit()
         self.tumble = True
