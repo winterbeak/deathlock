@@ -74,7 +74,7 @@ def current_room_is_silent():
         return True
 
 
-level = grid.Level(10, 20)
+level = grid.Room()
 
 START_COL = 3
 START_ROW = 3
