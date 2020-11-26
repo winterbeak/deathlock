@@ -60,8 +60,8 @@ def y_of(row, direction=const.UP):
 
 class Room:
     """the grid where all the tiles on a single screen are placed"""
-    WIDTH = 25  # the amount of tiles across the room
-    HEIGHT = 25
+    WIDTH = const.SCRN_W // TILE_W  # the amount of tiles across the room
+    HEIGHT = const.SCRN_H // TILE_H
     PIXEL_W = WIDTH * TILE_W
     PIXEL_H = HEIGHT * TILE_H
 
