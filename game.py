@@ -83,17 +83,11 @@ DEBUG_START_ROW = START_ROW
 level.active_column = DEBUG_START_COL
 level.active_row = DEBUG_START_ROW
 
-PLAYER_START_X = DEBUG_START_COL * grid.Room.PIXEL_W + (grid.Room.PIXEL_W - entities.player.Player.WIDTH) // 2
-PLAYER_START_Y = DEBUG_START_ROW * grid.Room.PIXEL_H
-
 main_cam = camera.Camera()
 main_cam.base_x = 0
 main_cam.base_y = 0
 
-player = entities.player.Player(level, PLAYER_START_X, PLAYER_START_Y, main_cam)
-player.health = 0
-
-player.set_checkpoint()
+player = entities.player.Player(level, 10, 10, main_cam)
 
 entity_handler = entities.handler.Handler()
 entity_handler.list = [player]
