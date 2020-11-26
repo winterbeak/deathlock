@@ -63,7 +63,14 @@ def screen_update(fps):
     clock.tick(fps)
 
 
-level = grid.Room()
+def test_level():
+    room = grid.Room()
+    room.change_rect(0, 20, 40, 1, grid.WALL)
+    room.change_point(17, 17, grid.PUNCHER_EMIT_RIGHT)
+    return room
+
+
+level = test_level()
 
 main_cam = camera.Camera()
 main_cam.base_x = 0
