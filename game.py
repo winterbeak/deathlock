@@ -87,8 +87,8 @@ PLAYER_START_X = DEBUG_START_COL * grid.Room.PIXEL_W + (grid.Room.PIXEL_W - enti
 PLAYER_START_Y = DEBUG_START_ROW * grid.Room.PIXEL_H
 
 main_cam = camera.Camera()
-main_cam.base_x = level.active_column * grid.Room.PIXEL_W
-main_cam.base_y = level.active_row * grid.Room.PIXEL_H
+main_cam.base_x = 0
+main_cam.base_y = 0
 
 player = entities.player.Player(level, PLAYER_START_X, PLAYER_START_Y, main_cam)
 player.health = 0
@@ -117,21 +117,12 @@ while True:
     punchers.update()
 
     main_cam.update()
-    # Resets the camera in case it decenters
-    if main_cam.last_slide_frame:
-        main_cam.base_x = level.active_column * grid.Room.PIXEL_W
-        main_cam.base_y = level.active_row * grid.Room.PIXEL_H
 
     if player.offscreen_direction != 0:
         # Warp back to start at end of game
         if level.active_column == START_COL + 2 and level.active_row == START_ROW + 12:
             player.x = player.x - (grid.Room.PIXEL_W * 2)
             player.y = player.y - (grid.Room.PIXEL_H * 12)
-
-            main_cam.base_x -= grid.Room.PIXEL_W * 2
-            main_cam.base_y -= grid.Room.PIXEL_H * 12
-            main_cam.x = main_cam.base_x
-            main_cam.y = main_cam.base_y
 
             level.active_column = START_COL
             level.active_row = START_ROW
@@ -143,7 +134,6 @@ while True:
             first_revive = True
             beat_once = True
 
-        main_cam.slide(player.offscreen_direction)
         level.change_room(player.offscreen_direction)
 
         player.set_checkpoint()
