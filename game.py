@@ -29,6 +29,7 @@ TUTORIAL_TEXT.set_colorkey(const.TRANSPARENT)
 CREDITS_TEXT = graphics.load_image("credits", 2)
 CREDITS_TEXT.set_colorkey(const.TRANSPARENT)
 
+
 def init_background():
     surf = pygame.Surface((const.SCRN_W + grid.TILE_W * 2,
                            const.SCRN_H + grid.TILE_H * 2))
@@ -62,26 +63,7 @@ def screen_update(fps):
     clock.tick(fps)
 
 
-
-def current_room_is_silent():
-    column = level.active_column
-    row = level.active_row
-
-    if column == START_COL and START_ROW <= row <= START_ROW + 2:
-        return True
-
-    if column == START_COL + 2 and START_ROW + 10 <= row <= START_ROW + 12:
-        return True
-
-
 level = grid.Room()
-
-START_COL = 3
-START_ROW = 3
-DEBUG_START_COL = START_COL
-DEBUG_START_ROW = START_ROW
-level.active_column = DEBUG_START_COL
-level.active_row = DEBUG_START_ROW
 
 main_cam = camera.Camera()
 main_cam.base_x = 0
@@ -112,30 +94,9 @@ while True:
 
     main_cam.update()
 
-    if player.offscreen_direction != 0:
-        # Warp back to start at end of game
-        if level.active_column == START_COL + 2 and level.active_row == START_ROW + 12:
-            player.x = player.x - (grid.Room.PIXEL_W * 2)
-            player.y = player.y - (grid.Room.PIXEL_H * 12)
-
-            level.active_column = START_COL
-            level.active_row = START_ROW
-            level.previous_column = START_COL
-            level.previous_row = START_ROW - 1
-
-            sound.stop_music()
-
-            first_revive = True
-            beat_once = True
-
-        level.change_room(player.offscreen_direction)
-
-        player.set_checkpoint()
-        # player.ROOM_CHANGE_SOUNDS.play_random(0.15)
-
     player.update_hearts()
 
-    if player.dead or current_room_is_silent():
+    if player.dead:
         sound.set_music_volume(0.0)
     else:
         sound.set_music_volume(sound.MUSIC_VOLUME)
@@ -145,26 +106,7 @@ while True:
     punchers.draw(post_surf, main_cam)
     level.draw(post_surf, main_cam)
 
-    # Fixes the Secret Ceiling not drawing due to camera sliding two rooms at once
-    # (also fixes Left Down Town for the same bug)
-    if main_cam.sliding:
-        if level.active_column == START_COL + 1 and level.active_row == START_ROW + 8:
-            level.room_grid[START_COL][START_ROW + 7].draw(post_surf, main_cam)
-        elif level.active_column == START_COL + 2 and level.active_row == START_ROW + 10:
-            level.room_grid[START_COL + 3][START_ROW + 9].draw(post_surf, main_cam)
     entity_handler.draw_all(post_surf, main_cam)
-
-    if ((level.active_column == START_COL and level.active_row == START_ROW + 3) or
-            (level.previous_column == START_COL and level.previous_row == START_ROW + 3)):
-        y = (START_ROW + 3) * grid.Room.PIXEL_H - main_cam.y + 180
-        if beat_once:
-            x = START_COL * grid.Room.PIXEL_W - main_cam.x
-            x += (const.SCRN_W - CREDITS_TEXT.get_width()) // 2 - 2
-            post_surf.blit(CREDITS_TEXT, (x, y))
-        else:
-            x = START_COL * grid.Room.PIXEL_W - main_cam.x
-            x += (const.SCRN_W - CREDITS_TEXT.get_width()) // 2 - 2
-            post_surf.blit(TUTORIAL_TEXT, (x, y))
 
     # Deathlock border
     if not player.dead:
