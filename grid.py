@@ -104,15 +104,7 @@ class Room:
         if not self.out_of_bounds(col, row):
             self.grid[col][row].append(kind)
 
-            # Adds punch sensors to the punch blocks
-            if kind == PUNCHER_EMIT_LEFT:
-                self.add_point(col - 1, row, PUNCHER_LEFT)
-            elif kind == PUNCHER_EMIT_UP:
-                self.add_point(col, row - 1, PUNCHER_UP)
-            elif kind == PUNCHER_EMIT_RIGHT:
-                self.add_point(col + 1, row, PUNCHER_RIGHT)
-            elif kind == PUNCHER_EMIT_DOWN:
-                self.add_point(col, row + 1, PUNCHER_DOWN)
+            self.emit_puncher(col, row, kind)
         else:
             print("add_point() tried to add a tile out of bounds")
 
@@ -125,20 +117,20 @@ class Room:
         if not self.out_of_bounds(col, row):
             self.grid[col][row] = [kind]
 
-            # Adds punch sensors to the punch blocks
-            if kind == PUNCHER_EMIT_LEFT:
-                self.add_point(col - 1, row, PUNCHER_LEFT)
-            elif kind == PUNCHER_EMIT_UP:
-                self.add_point(col, row - 1, PUNCHER_UP)
-            elif kind == PUNCHER_EMIT_RIGHT:
-                self.add_point(col + 1, row, PUNCHER_RIGHT)
-            elif kind == PUNCHER_EMIT_DOWN:
-                self.add_point(col, row + 1, PUNCHER_DOWN)
-
-
+            self.emit_puncher(col, row, kind)
 
         else:
             print("change_point() tried to add a tile out of bounds")
+
+    def emit_puncher(self, col, row, kind):
+        if kind == PUNCHER_EMIT_LEFT:
+            self.add_point(col - 1, row, PUNCHER_LEFT)
+        elif kind == PUNCHER_EMIT_UP:
+            self.add_point(col, row - 1, PUNCHER_UP)
+        elif kind == PUNCHER_EMIT_RIGHT:
+            self.add_point(col + 1, row, PUNCHER_RIGHT)
+        elif kind == PUNCHER_EMIT_DOWN:
+            self.add_point(col, row + 1, PUNCHER_DOWN)
 
     def change_rect(self, col, row, w, h, kind):
         """places a rectangle of tiles at the given coordinates
