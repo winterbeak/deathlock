@@ -56,6 +56,18 @@ class Collision:
         self._gridbox.y = y
         self._hitbox.y = y - self._extend_y
 
+    @property
+    def center_x(self):
+        return self._x + self._width // 2
+
+    @property
+    def center_y(self):
+        return self._y + self._height // 2
+
+    @property
+    def center_pos(self):
+        return self.center_x, self.center_y
+
     def update(self):
         self._collide_stage()
         self._update_kinematics()
@@ -263,8 +275,8 @@ class PunchableGravityCollision(GravityCollision):
 
     def collide_punchers(self):
         if not self.invuln_frames:
-            center_col = grid.col_at(self.x + (self._width // 2))
-            center_row = grid.row_at(self.y + (self._height // 2))
+            center_col = grid.col_at(self.center_x)
+            center_row = grid.row_at(self.center_y)
 
             if self._level.has_tile(grid.PunchZone, center_col, center_row):
                 tile = self._level.get_tile(grid.PunchZone, center_col, center_row)
