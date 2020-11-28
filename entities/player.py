@@ -119,6 +119,7 @@ class Player(collision.PunchableGravityCollision):
 
         self.tumble = False
 
+        self.checkpoint = None
         self.respawn_x = 0.0
         self.respawn_y = 0.0
 
@@ -378,7 +379,13 @@ class Player(collision.PunchableGravityCollision):
         col = grid.col_at(self.center_x)
         row = grid.row_at(self.center_y)
         if self._level.has_tile(grid.CheckpointRay, col, row):
+            if self.checkpoint:
+                self.checkpoint.active = False
+
             ray = self._level.get_tile(grid.CheckpointRay, col, row)
             checkpoint = ray.checkpoint
+            checkpoint.active = True
+
             self.respawn_x = grid.x_of(checkpoint.col)
             self.respawn_y = grid.y_of(checkpoint.row)
+            self.checkpoint = checkpoint

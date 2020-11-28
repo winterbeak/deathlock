@@ -45,6 +45,7 @@ class Checkpoint(Tile):
         self.direction = direction
         self.col = col
         self.row = row
+        self.active = False
 
 
 class CheckpointRay(Tile):
@@ -296,10 +297,6 @@ class Room:
                     elif punch_box.direction == const.DOWN:
                         surf.blit(punch_box_down, (x, y))
 
-                if self.has_tile(Checkpoint, col, row):
-                    checkpoint_pos = (x + TILE_W // 2, y + TILE_H // 2)
-                    pygame.draw.circle(surf, const.GREEN, checkpoint_pos, 10)
-
                 if self.has_tile(CheckpointRay, col, row):
                     tile = self.get_tile(CheckpointRay, col, row)
                     if tile.orientation == const.HORIZ:
@@ -308,3 +305,11 @@ class Room:
                     elif tile.orientation == const.VERT:
                         ray_rect = (x + TILE_W // 3, y, TILE_W // 3, TILE_H)
                         pygame.draw.rect(surf, const.GREEN, ray_rect)
+
+                if self.has_tile(Checkpoint, col, row):
+                    checkpoint = self.get_tile(Checkpoint, col, row)
+                    checkpoint_pos = (x + TILE_W // 2, y + TILE_H // 2)
+                    pygame.draw.circle(surf, const.GREEN, checkpoint_pos, 10)
+
+                    if not checkpoint.active:
+                        pygame.draw.circle(surf, const.DARK_GREEN, checkpoint_pos, 7)
