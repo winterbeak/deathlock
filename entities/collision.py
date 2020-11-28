@@ -265,8 +265,8 @@ class PunchableGravityCollision(GravityCollision):
         if not self.invuln_frames:
             center_col = grid.col_at(self.x + (self._width // 2))
             center_row = grid.row_at(self.y + (self._height // 2))
-            tile = self._level.tile_at(center_col, center_row)
-            if tile == grid.PUNCHER_LEFT:
+
+            if self._level.has_tile(grid.PUNCHER_LEFT, center_col, center_row):
                 self._get_hit()
                 punchers.add(center_col, center_row, const.LEFT)
                 self.puncher_x_vel = -7
@@ -274,12 +274,12 @@ class PunchableGravityCollision(GravityCollision):
                 if self.x_vel > 0:
                     self.x_vel = 0
 
-            elif tile == grid.PUNCHER_UP:
+            elif self._level.has_tile(grid.PUNCHER_UP, center_col, center_row):
                 self._get_hit()
                 punchers.add(center_col, center_row, const.UP)
                 self.y_vel = -12
 
-            elif tile == grid.PUNCHER_RIGHT:
+            elif self._level.has_tile(grid.PUNCHER_RIGHT, center_col, center_row):
                 self._get_hit()
                 punchers.add(center_col, center_row, const.RIGHT)
                 self.puncher_x_vel = 7
@@ -287,7 +287,7 @@ class PunchableGravityCollision(GravityCollision):
                 if self.x_vel < 0:
                     self.x_vel = 0
 
-            elif tile == grid.PUNCHER_DOWN:
+            elif self._level.has_tile(grid.PUNCHER_DOWN, center_col, center_row):
                 self._get_hit()
                 punchers.add(center_col, center_row, const.DOWN)
                 self.y_vel = 7
