@@ -65,14 +65,15 @@ def screen_update(fps):
 
 def test_level():
     room = grid.Room()
-    room.change_rect(0, 20, 40, 1, grid.WALL)
-    room.change_rect(20, 0, 1, 20, grid.DEATHLOCK)
-    room.change_point(17, 17, grid.PUNCHER_EMIT_RIGHT)
+    room.add_rect(0, 20, 40, 1, grid.Wall)
+    room.add_rect(20, 0, 1, 20, grid.Deathlock)
+    room.add_tile(17, 17, grid.PunchBox(const.RIGHT))
 
-    room.change_point(10, 17, grid.PUNCHER_EMIT_RIGHT)
-    room.change_point(11, 18, grid.PUNCHER_EMIT_UP)
-    room.add_point(11, 17, grid.DEATHLOCK)
-    room.change_point(11, 13, grid.PUNCHER_EMIT_DOWN)
+    room.add_tile(10, 17, grid.PunchBox(const.RIGHT))
+    room.add_tile(11, 18, grid.PunchBox(const.UP))
+    room.add_tile(11, 17, grid.Deathlock())
+    room.add_tile(11, 13, grid.PunchBox(const.DOWN))
+    room.add_rect(0, 30, 40, 1, lambda : grid.PunchBox(const.UP))
     return room
 
 

@@ -6,32 +6,37 @@ import constants as const
 TILE_W = 20
 TILE_H = 20
 
-# TILE TYPES
-VOID = 0
-EMPTY = 1
-WALL = 2
-PUNCHER_EMIT_LEFT = 3
-PUNCHER_EMIT_UP = 4
-PUNCHER_EMIT_RIGHT = 5
-PUNCHER_EMIT_DOWN = 6
-PUNCHER_LEFT = 7
-PUNCHER_UP = 8
-PUNCHER_RIGHT = 9
-PUNCHER_DOWN = 10
-DEATHLOCK = 11
-CHECKPOINT_EMIT_LEFT = 12
-CHECKPOINT_EMIT_UP = 13
-CHECKPOINT_EMIT_RIGHT = 14
-CHECKPOINT_EMIT_DOWN = 15
-CHECKPOINT_RAY_VERT = 16
-CHECKPOINT_RAY_HORIZ = 17
 
-PUNCHER_EMITS = [PUNCHER_EMIT_LEFT, PUNCHER_EMIT_UP,
-                 PUNCHER_EMIT_DOWN, PUNCHER_EMIT_RIGHT]
-PUNCHERS = [PUNCHER_LEFT, PUNCHER_UP, PUNCHER_RIGHT, PUNCHER_DOWN]
-SOLIDS = [WALL] + PUNCHER_EMITS
-CHECKPOINT_EMITS = [CHECKPOINT_EMIT_LEFT, CHECKPOINT_EMIT_UP,
-                    CHECKPOINT_EMIT_DOWN, CHECKPOINT_EMIT_RIGHT]
+class Tile:
+    def __init__(self, solid):
+        self.solid = solid
+
+
+class Void(Tile):
+    def __init__(self):
+        super().__init__(True)
+
+
+class Wall(Tile):
+    def __init__(self):
+        super().__init__(True)
+
+
+class PunchBox(Tile):
+    def __init__(self, direction):
+        super().__init__(True)
+        self.direction = direction
+
+
+class PunchZone(Tile):
+    def __init__(self, direction):
+        super().__init__(False)
+        self.direction = direction
+
+
+class Deathlock(Tile):
+    def __init__(self):
+        super().__init__(False)
 
 
 punch_box_left = graphics.load_image("punch_box", 2)
@@ -100,39 +105,21 @@ class Room:
 
         return True
 
-    def add_point(self, col, row, kind):
+    def add_tile(self, col, row, tile):
         if not self.out_of_bounds(col, row):
-            self.grid[col][row].append(kind)
-
-            self.emit_puncher(col, row, kind)
-        else:
-            print("add_point() tried to add a tile out of bounds")
-
-    def change_point(self, col, row, kind):
-        """changes a single tile
-
-        the tiles changed are relative to the current room,
-        not the entire level
-        """
-        if not self.out_of_bounds(col, row):
-            self.grid[col][row] = [kind]
-
-            self.emit_puncher(col, row, kind)
+            self.grid[col][row].append(tile)
 
         else:
-            print("change_point() tried to add a tile out of bounds")
+            print("add_tile() tried to add a tile out of bounds")
 
-    def emit_puncher(self, col, row, kind):
-        if kind == PUNCHER_EMIT_LEFT:
-            self.add_point(col - 1, row, PUNCHER_LEFT)
-        elif kind == PUNCHER_EMIT_UP:
-            self.add_point(col, row - 1, PUNCHER_UP)
-        elif kind == PUNCHER_EMIT_RIGHT:
-            self.add_point(col + 1, row, PUNCHER_RIGHT)
-        elif kind == PUNCHER_EMIT_DOWN:
-            self.add_point(col, row + 1, PUNCHER_DOWN)
+    def clear_point(self, col, row):
+        if not self.out_of_bounds(col, row):
+            self.grid[col][row] = []
 
-    def change_rect(self, col, row, w, h, kind):
+        else:
+            print("clear_point() tried to add a tile out of bounds")
+
+    def add_rect(self, col, row, w, h, constructor):
         """places a rectangle of tiles at the given coordinates
 
         the tiles changed are relative to the current room,
@@ -140,71 +127,72 @@ class Room:
         """
         for col in range(col, col + w):
             for row in range(row, row + h):
-                self.change_point(col, row, kind)
+                self.add_tile(col, row, constructor())
 
     def tiles_at(self, col, row):
         """returns the tiles at a given point"""
         if not self.out_of_bounds(col, row):
             return self.grid[col][row]
 
-        return [VOID]
+        return [Void()]
 
-    def has_tile(self, kind, col, row):
+    def has_tile(self, type_, col, row):
         """determines if a certain space contains a tile"""
         if not self.out_of_bounds(col, row):
-            return kind in self.grid[col][row]
-
-        return kind == VOID
-
-    def has_listed_tile(self, kinds, col, row):
-        """determines if a certain space contains any tiles in the list"""
-        if not self.out_of_bounds(col, row):
-            for kind in kinds:
-                if kind in self.grid[col][row]:
+            for tile in self.tiles_at(col, row):
+                if type(tile) == type_:
                     return True
-
             return False
 
-        return VOID in kinds
+        return type_ == Void
 
-    def is_puncher(self, col, row):
-        return self.has_listed_tile(PUNCHERS, col, row)
+    def get_tile(self, type_, col, row):
+        """gets the first tile with a given type on this space"""
+        for tile in self.tiles_at(col, row):
+            if type(tile) == type_:
+                return tile
 
-    def is_empty(self, col, row):
-        return not self.tiles_at(col, row)
+        raise("There is not tile of type %s there!" % str(type_))
 
-    def is_solid(self, col, row, deathlock_solid=True, void_solid=True):
-        """returns whether a tile is solid or not"""
-        if self.is_empty(col, row):
-            return False
-
-        if self.has_listed_tile(SOLIDS, col, row):
-            return True
-
-        if void_solid and self.has_tile(VOID, col, row):
-            return True
-
-        if deathlock_solid and self.has_tile(DEATHLOCK, col, row):
-            return True
-
-        return False
-
-    def collide_vert(self, x, y1, y2, deathlock_solid, void_solid):
-        col = col_at(x)
-        start_row = row_at(y1)
-        end_row = row_at(y2)
-        for row in range(start_row, end_row + 1):
-            if self.is_solid(col, row, deathlock_solid, void_solid):
+    def has_listed_tile(self, types, col, row):
+        """determines if a certain space contains any tiles in the list"""
+        for type_ in types:
+            if self.has_tile(type_, col, row):
                 return True
 
         return False
 
-    def collide_horiz(self, x1, x2, y, deathlock_solid, void_solid):
+    def is_empty(self, col, row):
+        return not self.tiles_at(col, row)
+
+    def has_solid(self, col, row):
+        """returns whether a tile is solid or not"""
+        for tile in self.tiles_at(col, row):
+            if tile.solid:
+                return True
+
+        return False
+
+    def collide_vert(self, x, y1, y2, collide_deathlock):
+        col = col_at(x)
+        start_row = row_at(y1)
+        end_row = row_at(y2)
+        for row in range(start_row, end_row + 1):
+            if collide_deathlock and self.has_tile(Deathlock, col, row):
+                return True
+            if self.has_solid(col, row):
+                return True
+
+        return False
+
+    def collide_horiz(self, x1, x2, y, collide_deathlock):
         start_col = col_at(x1)
         end_col = col_at(x2)
         row = row_at(y)
         for col in range(start_col, end_col + 1):
-            if self.is_solid(col, row, deathlock_solid, void_solid):
+            if collide_deathlock and self.has_tile(Deathlock, col, row):
+                return True
+            if self.has_solid(col, row):
                 return True
 
         return False
@@ -219,20 +207,19 @@ class Room:
                 y = full_row * TILE_H - camera.y
                 rect = (x, y, TILE_W, TILE_H)
 
-                if self.has_tile(WALL, col, row):
+                if self.has_tile(Wall, col, row):
                     pygame.draw.rect(surf, const.BLACK, rect)
 
-                if self.has_tile(DEATHLOCK, col, row):
+                if self.has_tile(Deathlock, col, row):
                     pygame.draw.rect(surf, const.RED, rect)
 
-                if self.has_tile(PUNCHER_EMIT_LEFT, col, row):
-                    surf.blit(punch_box_left, (x, y))
-
-                if self.has_tile(PUNCHER_EMIT_UP, col, row):
-                    surf.blit(punch_box_up, (x, y))
-
-                if self.has_tile(PUNCHER_EMIT_RIGHT, col, row):
-                    surf.blit(punch_box_right, (x, y))
-
-                if self.has_tile(PUNCHER_EMIT_DOWN, col, row):
-                    surf.blit(punch_box_down, (x, y))
+                if self.has_tile(PunchBox, col, row):
+                    punch_box = self.get_tile(PunchBox, col, row)
+                    if punch_box.direction == const.LEFT:
+                        surf.blit(punch_box_left, (x, y))
+                    elif punch_box.direction == const.UP:
+                        surf.blit(punch_box_up, (x, y))
+                    elif punch_box.direction == const.RIGHT:
+                        surf.blit(punch_box_right, (x, y))
+                    elif punch_box.direction == const.DOWN:
+                        surf.blit(punch_box_down, (x, y))
