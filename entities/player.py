@@ -119,6 +119,7 @@ class Player(collision.PunchableGravityCollision):
 
         self.tumble = False
 
+        self.checkpoint = None
         self.respawn_x = 0.0
         self.respawn_y = 0.0
 
@@ -158,6 +159,7 @@ class Player(collision.PunchableGravityCollision):
         self._update_timers()
         self._take_inputs()
         self._update_animation()
+        self._collide_checkpoints()
         super().update()
 
     def _update_timers(self):
@@ -359,12 +361,12 @@ class Player(collision.PunchableGravityCollision):
 
         if direction == const.LEFT:
             x = self.x - 1
-            if self.level.collide_vert(x, top_y, bottom_y, not self.dead, True):
+            if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
                 self.sprite.set_anim(self.WALL_PUSH_LEFT_ID)
 
         elif direction == const.RIGHT:
             x = self.x + self.WIDTH
-            if self.level.collide_vert(x, top_y, bottom_y, not self.dead, True):
+            if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
                 self.sprite.set_anim(self.WALL_PUSH_RIGHT_ID)
 
     def _get_hit(self):
@@ -372,3 +374,18 @@ class Player(collision.PunchableGravityCollision):
         self.tumble = True
         self.health -= 1
         self.camera.shake(6, 1)
+
+    def _collide_checkpoints(self):
+        col = grid.col_at(self.center_x)
+        row = grid.row_at(self.center_y)
+        if self._level.has_tile(grid.CheckpointRay, col, row):
+            if self.checkpoint:
+                self.checkpoint.active = False
+
+            ray = self._level.get_tile(grid.CheckpointRay, col, row)
+            checkpoint = ray.checkpoint
+            checkpoint.active = True
+
+            self.respawn_x = grid.x_of(checkpoint.col)
+            self.respawn_y = grid.y_of(checkpoint.row)
+            self.checkpoint = checkpoint
