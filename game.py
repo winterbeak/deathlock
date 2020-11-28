@@ -68,6 +68,11 @@ def test_level():
     room.change_rect(0, 20, 40, 1, grid.WALL)
     room.change_rect(20, 0, 1, 20, grid.DEATHLOCK)
     room.change_point(17, 17, grid.PUNCHER_EMIT_RIGHT)
+
+    room.change_point(10, 17, grid.PUNCHER_EMIT_RIGHT)
+    room.change_point(11, 18, grid.PUNCHER_EMIT_UP)
+    room.add_point(11, 17, grid.DEATHLOCK)
+    room.change_point(11, 13, grid.PUNCHER_EMIT_DOWN)
     return room
 
 

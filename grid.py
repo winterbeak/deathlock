@@ -100,6 +100,22 @@ class Room:
 
         return True
 
+    def add_point(self, col, row, kind):
+        if not self.out_of_bounds(col, row):
+            self.grid[col][row].append(kind)
+
+            # Adds punch sensors to the punch blocks
+            if kind == PUNCHER_EMIT_LEFT:
+                self.add_point(col - 1, row, PUNCHER_LEFT)
+            elif kind == PUNCHER_EMIT_UP:
+                self.add_point(col, row - 1, PUNCHER_UP)
+            elif kind == PUNCHER_EMIT_RIGHT:
+                self.add_point(col + 1, row, PUNCHER_RIGHT)
+            elif kind == PUNCHER_EMIT_DOWN:
+                self.add_point(col, row + 1, PUNCHER_DOWN)
+        else:
+            print("add_point() tried to add a tile out of bounds")
+
     def change_point(self, col, row, kind):
         """changes a single tile
 
@@ -111,13 +127,15 @@ class Room:
 
             # Adds punch sensors to the punch blocks
             if kind == PUNCHER_EMIT_LEFT:
-                self.change_point(col - 1, row, PUNCHER_LEFT)
+                self.add_point(col - 1, row, PUNCHER_LEFT)
             elif kind == PUNCHER_EMIT_UP:
-                self.change_point(col, row - 1, PUNCHER_UP)
+                self.add_point(col, row - 1, PUNCHER_UP)
             elif kind == PUNCHER_EMIT_RIGHT:
-                self.change_point(col + 1, row, PUNCHER_RIGHT)
+                self.add_point(col + 1, row, PUNCHER_RIGHT)
             elif kind == PUNCHER_EMIT_DOWN:
-                self.change_point(col, row + 1, PUNCHER_DOWN)
+                self.add_point(col, row + 1, PUNCHER_DOWN)
+
+
 
         else:
             print("change_point() tried to add a tile out of bounds")
