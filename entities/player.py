@@ -158,6 +158,7 @@ class Player(collision.PunchableGravityCollision):
         self._update_timers()
         self._take_inputs()
         self._update_animation()
+        self._collide_checkpoints()
         super().update()
 
     def _update_timers(self):
@@ -372,3 +373,12 @@ class Player(collision.PunchableGravityCollision):
         self.tumble = True
         self.health -= 1
         self.camera.shake(6, 1)
+
+    def _collide_checkpoints(self):
+        col = grid.col_at(self.center_x)
+        row = grid.row_at(self.center_y)
+        if self._level.has_tile(grid.CheckpointRay, col, row):
+            ray = self._level.get_tile(grid.CheckpointRay, col, row)
+            checkpoint = ray.checkpoint
+            self.respawn_x = grid.x_of(checkpoint.col)
+            self.respawn_y = grid.y_of(checkpoint.row)
