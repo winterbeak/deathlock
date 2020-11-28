@@ -39,6 +39,22 @@ class Deathlock(Tile):
         super().__init__(False)
 
 
+class Checkpoint(Tile):
+    def __init__(self, direction, col, row):
+        super().__init__(False)
+        self.direction = direction
+        self.col = col
+        self.row = row
+
+
+class CheckpointRay(Tile):
+    def __init__(self, checkpoint, orientation):
+        super().__init__(False)
+
+        self.orientation = orientation
+        self.checkpoint = checkpoint
+
+
 punch_box_left = graphics.load_image("punch_box", 2)
 punch_box_up = pygame.transform.rotate(punch_box_left, -90)
 punch_box_right = pygame.transform.rotate(punch_box_left, 180)
@@ -179,14 +195,49 @@ class Room:
             for row in range(self.HEIGHT):
                 for tile in self.tiles_at(col, row):
                     if type(tile) == PunchBox:
-                        if tile.direction == const.LEFT:
-                            self.add_tile(col - 1, row, PunchZone(const.LEFT))
-                        elif tile.direction == const.UP:
-                            self.add_tile(col, row - 1, PunchZone(const.UP))
-                        elif tile.direction == const.RIGHT:
-                            self.add_tile(col + 1, row, PunchZone(const.RIGHT))
-                        elif tile.direction == const.DOWN:
-                            self.add_tile(col, row + 1, PunchZone(const.DOWN))
+                        self.emit_punch_zone(col, row, tile)
+
+                    elif type(tile) == Checkpoint:
+                        self.emit_checkpoint_ray(col, row, tile)
+
+    def emit_punch_zone(self, col, row, tile):
+        if tile.direction == const.LEFT:
+            self.add_tile(col - 1, row, PunchZone(const.LEFT))
+        elif tile.direction == const.UP:
+            self.add_tile(col, row - 1, PunchZone(const.UP))
+        elif tile.direction == const.RIGHT:
+            self.add_tile(col + 1, row, PunchZone(const.RIGHT))
+        elif tile.direction == const.DOWN:
+            self.add_tile(col, row + 1, PunchZone(const.DOWN))
+
+    def emit_checkpoint_ray(self, col, row, tile):
+        if tile.direction == const.LEFT:
+            ray_col = col
+            while not self.stops_checkpoint_ray(ray_col, row):
+                self.add_tile(ray_col, row, CheckpointRay(tile, const.HORIZ))
+                ray_col -= 1
+        elif tile.direction == const.RIGHT:
+            ray_col = col
+            while not self.stops_checkpoint_ray(ray_col, row):
+                self.add_tile(ray_col, row, CheckpointRay(tile, const.HORIZ))
+                ray_col += 1
+        elif tile.direction == const.UP:
+            ray_row = row
+            while not self.stops_checkpoint_ray(col, ray_row):
+                self.add_tile(col, ray_row, CheckpointRay(tile, const.VERT))
+                ray_row -= 1
+        elif tile.direction == const.DOWN:
+            ray_row = row
+            while not self.stops_checkpoint_ray(col, ray_row):
+                self.add_tile(col, ray_row, CheckpointRay(tile, const.VERT))
+                ray_row += 1
+
+    def stops_checkpoint_ray(self, col, row):
+        if self.has_solid(col, row):
+            return True
+        if self.has_tile(Void, col, row):
+            return True
+        return False
 
     def collide_vert(self, x, y1, y2, collide_deathlock):
         col = col_at(x)
@@ -216,6 +267,9 @@ class Room:
         """draws the entire stage"""
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
+                if self.is_empty(col, row):
+                    continue
+
                 full_col = self.column * self.WIDTH + col
                 full_row = self.row * self.HEIGHT + row
                 x = full_col * TILE_W - camera.x
@@ -238,3 +292,16 @@ class Room:
                         surf.blit(punch_box_right, (x, y))
                     elif punch_box.direction == const.DOWN:
                         surf.blit(punch_box_down, (x, y))
+
+                if self.has_tile(Checkpoint, col, row):
+                    checkpoint_pos = (x + TILE_W // 2, y + TILE_H // 2)
+                    pygame.draw.circle(surf, const.GREEN, checkpoint_pos, 10)
+
+                if self.has_tile(CheckpointRay, col, row):
+                    tile = self.get_tile(CheckpointRay, col, row)
+                    if tile.orientation == const.HORIZ:
+                        ray_rect = (x, y + TILE_H // 3, TILE_W, TILE_H // 3)
+                        pygame.draw.rect(surf, const.GREEN, ray_rect)
+                    elif tile.orientation == const.VERT:
+                        ray_rect = (x + TILE_W // 3, y, TILE_W // 3, TILE_H)
+                        pygame.draw.rect(surf, const.GREEN, ray_rect)
