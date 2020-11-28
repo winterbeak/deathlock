@@ -78,10 +78,10 @@ def test_level():
     room.add_tile(11, 13, grid.PunchBox(const.DOWN))
     room.add_rect(0, 30, 40, 1, lambda : grid.PunchBox(const.UP))
 
-    room.add_tile(23, 3, grid.Checkpoint(const.DOWN, 23, 3))
-    room.add_tile(26, 16, grid.Checkpoint(const.RIGHT, 26, 16))
-    room.add_tile(30, 25, grid.Checkpoint(const.LEFT, 30, 25))
-    room.add_tile(30, 24, grid.Checkpoint(const.UP, 30, 24))
+    room.add_checkpoint(23, 3, const.DOWN)
+    room.add_checkpoint(26, 16, const.RIGHT)
+    room.add_checkpoint(30, 25, const.LEFT)
+    room.add_checkpoint(30, 24, const.UP)
 
     room.emit()
 

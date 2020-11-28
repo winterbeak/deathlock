@@ -145,6 +145,9 @@ class Room:
             for row in range(row, row + h):
                 self.add_tile(col, row, constructor())
 
+    def add_checkpoint(self, col, row, direction):
+        self.add_tile(col, row, Checkpoint(direction, col, row))
+
     def tiles_at(self, col, row):
         """returns the tiles at a given point"""
         if not self.out_of_bounds(col, row):
