@@ -92,89 +92,89 @@ class Room:
 
         self.grid = [[[] for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
 
-    def out_of_bounds(self, rel_col, rel_row):
+    def out_of_bounds(self, col, row):
         """returns whether or not a tile is outside of the grid"""
-        if 0 <= rel_col < self.WIDTH:
-            if 0 <= rel_row < self.HEIGHT:
+        if 0 <= col < self.WIDTH:
+            if 0 <= row < self.HEIGHT:
                 return False
 
         return True
 
-    def change_point(self, rel_col, rel_row, kind):
+    def change_point(self, col, row, kind):
         """changes a single tile
 
         the tiles changed are relative to the current room,
         not the entire level
         """
-        if not self.out_of_bounds(rel_col, rel_row):
-            self.grid[rel_col][rel_row] = [kind]
+        if not self.out_of_bounds(col, row):
+            self.grid[col][row] = [kind]
 
             # Adds punch sensors to the punch blocks
             if kind == PUNCHER_EMIT_LEFT:
-                self.change_point(rel_col - 1, rel_row, PUNCHER_LEFT)
+                self.change_point(col - 1, row, PUNCHER_LEFT)
             elif kind == PUNCHER_EMIT_UP:
-                self.change_point(rel_col, rel_row - 1, PUNCHER_UP)
+                self.change_point(col, row - 1, PUNCHER_UP)
             elif kind == PUNCHER_EMIT_RIGHT:
-                self.change_point(rel_col + 1, rel_row, PUNCHER_RIGHT)
+                self.change_point(col + 1, row, PUNCHER_RIGHT)
             elif kind == PUNCHER_EMIT_DOWN:
-                self.change_point(rel_col, rel_row + 1, PUNCHER_DOWN)
+                self.change_point(col, row + 1, PUNCHER_DOWN)
 
         else:
             print("change_point() tried to add a tile out of bounds")
 
-    def change_rect(self, rel_col, rel_row, w, h, kind):
+    def change_rect(self, col, row, w, h, kind):
         """places a rectangle of tiles at the given coordinates
 
         the tiles changed are relative to the current room,
         not the entire level
         """
-        for col in range(rel_col, rel_col + w):
-            for row in range(rel_row, rel_row + h):
+        for col in range(col, col + w):
+            for row in range(row, row + h):
                 self.change_point(col, row, kind)
 
-    def tiles_at(self, rel_col, rel_row):
+    def tiles_at(self, col, row):
         """returns the tiles at a given point"""
-        if not self.out_of_bounds(rel_col, rel_row):
-            return self.grid[rel_col][rel_row]
+        if not self.out_of_bounds(col, row):
+            return self.grid[col][row]
 
         return [VOID]
 
-    def has_tile(self, kind, rel_col, rel_row):
+    def has_tile(self, kind, col, row):
         """determines if a certain space contains a tile"""
-        if not self.out_of_bounds(rel_col, rel_row):
-            return kind in self.grid[rel_col][rel_row]
+        if not self.out_of_bounds(col, row):
+            return kind in self.grid[col][row]
 
         return kind == VOID
 
-    def has_listed_tile(self, kinds, rel_col, rel_row):
+    def has_listed_tile(self, kinds, col, row):
         """determines if a certain space contains any tiles in the list"""
-        if not self.out_of_bounds(rel_col, rel_row):
+        if not self.out_of_bounds(col, row):
             for kind in kinds:
-                if kind in self.grid[rel_col][rel_row]:
+                if kind in self.grid[col][row]:
                     return True
 
             return False
 
         return VOID in kinds
 
-    def is_puncher(self, rel_col, rel_row):
-        return self.has_listed_tile(PUNCHERS, rel_col, rel_row)
+    def is_puncher(self, col, row):
+        return self.has_listed_tile(PUNCHERS, col, row)
 
-    def is_empty(self, rel_col, rel_row):
-        return not self.tiles_at(rel_col, rel_row)
+    def is_empty(self, col, row):
+        return not self.tiles_at(col, row)
 
-    def is_solid(self, rel_col, rel_row, deathlock_solid=True, void_solid=True):
+    def is_solid(self, col, row, deathlock_solid=True, void_solid=True):
         """returns whether a tile is solid or not"""
-        if self.is_empty(rel_col, rel_row):
+        if self.is_empty(col, row):
             return False
 
-        if self.has_listed_tile(SOLIDS, rel_col, rel_row):
+        if self.has_listed_tile(SOLIDS, col, row):
             return True
 
-        if void_solid and self.has_tile(VOID, rel_col, rel_row):
+        if void_solid and self.has_tile(VOID, col, row):
             return True
 
-        if deathlock_solid and self.has_tile(DEATHLOCK, rel_col, rel_row):
+        if deathlock_solid and self.has_tile(DEATHLOCK, col, row):
             return True
 
         return False
@@ -201,28 +201,28 @@ class Room:
 
     def draw(self, surf, camera):
         """draws the entire stage"""
-        for rel_row in range(self.HEIGHT):
-            for rel_col in range(self.WIDTH):
-                col = self.column * self.WIDTH + rel_col
-                row = self.row * self.HEIGHT + rel_row
-                x = col * TILE_W - camera.x
-                y = row * TILE_H - camera.y
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                full_col = self.column * self.WIDTH + col
+                full_row = self.row * self.HEIGHT + row
+                x = full_col * TILE_W - camera.x
+                y = full_row * TILE_H - camera.y
                 rect = (x, y, TILE_W, TILE_H)
 
-                if self.has_tile(WALL, rel_col, rel_row):
+                if self.has_tile(WALL, col, row):
                     pygame.draw.rect(surf, const.BLACK, rect)
 
-                if self.has_tile(DEATHLOCK, rel_col, rel_row):
+                if self.has_tile(DEATHLOCK, col, row):
                     pygame.draw.rect(surf, const.RED, rect)
 
-                if self.has_tile(PUNCHER_EMIT_LEFT, rel_col, rel_row):
+                if self.has_tile(PUNCHER_EMIT_LEFT, col, row):
                     surf.blit(punch_box_left, (x, y))
 
-                if self.has_tile(PUNCHER_EMIT_UP, rel_col, rel_row):
+                if self.has_tile(PUNCHER_EMIT_UP, col, row):
                     surf.blit(punch_box_up, (x, y))
 
-                if self.has_tile(PUNCHER_EMIT_RIGHT, rel_col, rel_row):
+                if self.has_tile(PUNCHER_EMIT_RIGHT, col, row):
                     surf.blit(punch_box_right, (x, y))
 
-                if self.has_tile(PUNCHER_EMIT_DOWN, rel_col, rel_row):
+                if self.has_tile(PUNCHER_EMIT_DOWN, col, row):
                     surf.blit(punch_box_down, (x, y))
