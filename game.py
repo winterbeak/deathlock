@@ -69,11 +69,17 @@ def test_level():
     room.add_rect(20, 0, 1, 20, grid.Deathlock)
     room.add_tile(17, 17, grid.PunchBox(const.RIGHT))
 
-    room.add_tile(10, 17, grid.PunchBox(const.RIGHT))
+    room.add_tile(5, 17, grid.PunchBox(const.UP))
+
     room.add_tile(11, 18, grid.PunchBox(const.UP))
+    room.add_tile(10, 17, grid.PunchBox(const.RIGHT))
+
     room.add_tile(11, 17, grid.Deathlock())
     room.add_tile(11, 13, grid.PunchBox(const.DOWN))
     room.add_rect(0, 30, 40, 1, lambda : grid.PunchBox(const.UP))
+
+    room.emit()
+
     return room
 
 

@@ -173,6 +173,21 @@ class Room:
 
         return False
 
+    def emit(self):
+        """Emits PunchZones from all PunchBoxes"""
+        for col in range(self.WIDTH):
+            for row in range(self.HEIGHT):
+                for tile in self.tiles_at(col, row):
+                    if type(tile) == PunchBox:
+                        if tile.direction == const.LEFT:
+                            self.add_tile(col - 1, row, PunchZone(const.LEFT))
+                        elif tile.direction == const.UP:
+                            self.add_tile(col, row - 1, PunchZone(const.UP))
+                        elif tile.direction == const.RIGHT:
+                            self.add_tile(col + 1, row, PunchZone(const.RIGHT))
+                        elif tile.direction == const.DOWN:
+                            self.add_tile(col, row + 1, PunchZone(const.DOWN))
+
     def collide_vert(self, x, y1, y2, collide_deathlock):
         col = col_at(x)
         start_row = row_at(y1)
