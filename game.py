@@ -108,9 +108,7 @@ def hard_reset():
     player.hard_respawn()
 
 
-while True:
-    events.update()
-
+def game_update():
     if hard_reset_key.is_pressed:
         hard_reset()
 
@@ -124,12 +122,24 @@ while True:
     else:
         sound.set_music_volume(sound.MUSIC_VOLUME)
 
-    # Drawing everything
-    draw_background(post_surf, main_cam)
+
+def game_draw():
+    draw_level()
+
     punchers.draw(post_surf, main_cam)
+    entity_handler.draw_all(post_surf, main_cam)
+
+
+def draw_level():
+    draw_background(post_surf, main_cam)
     level.draw(post_surf, main_cam)
 
-    entity_handler.draw_all(post_surf, main_cam)
+
+while True:
+    events.update()
+
+    game_update()
+    game_draw()
 
     # debug.debug(clock.get_fps())
     # debug.debug(main_cam.sliding, main_cam.last_slide_frame)
