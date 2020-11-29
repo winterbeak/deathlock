@@ -54,10 +54,6 @@ def draw_background(surf, cam):
     surf.blit(background, (x, y))
 
 
-def hard_reset():
-    player.hard_respawn()
-
-
 background = init_background()
 
 
@@ -106,6 +102,11 @@ entity_handler.list = [player]
 hard_reset_key = events.Keybind([pygame.K_t])
 
 sound.play_music()
+
+
+def hard_reset():
+    player.hard_respawn()
+
 
 while True:
     events.update()
