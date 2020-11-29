@@ -243,13 +243,13 @@ class Player(collision.PunchableGravityCollision):
         self.tumble = False
         self.x = self.respawn_x
         self.y = self.respawn_y
-        self._stop_x()
-        self._stop_y()
 
     def hard_respawn(self):
         self.respawn_x = self.hard_respawn_x
         self.respawn_y = self.hard_respawn_y
         self._deactivate_checkpoint()
+        self._stop_x()
+        self._stop_y()
         self.respawn()
 
     def _deactivate_checkpoint(self):
