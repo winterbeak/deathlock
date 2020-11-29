@@ -54,6 +54,10 @@ def draw_background(surf, cam):
     surf.blit(background, (x, y))
 
 
+def hard_reset():
+    player.hard_respawn()
+
+
 background = init_background()
 
 
@@ -102,6 +106,8 @@ entity_handler.list = [player]
 first_revive = True
 beat_once = False
 
+hard_reset_key = events.Keybind([pygame.K_t])
+
 while True:
     events.update()
 
@@ -113,6 +119,9 @@ while True:
             for sprite in player.heart_sprites:
                 sprite.frame = 0
                 sprite.frame_delay = 22
+
+    elif hard_reset_key.is_pressed:
+        hard_reset()
 
     entity_handler.update_all()
     punchers.update()

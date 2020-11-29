@@ -122,6 +122,8 @@ class Player(collision.PunchableGravityCollision):
         self.checkpoint = None
         self.respawn_x = 0.0
         self.respawn_y = 0.0
+        self.hard_respawn_x = x
+        self.hard_respawn_y = y
 
         self._coyote_timer = 0
         self._jump_buffer = 0
@@ -243,6 +245,16 @@ class Player(collision.PunchableGravityCollision):
         self.y = self.respawn_y
         self._stop_x()
         self._stop_y()
+
+    def hard_respawn(self):
+        self.respawn_x = self.hard_respawn_x
+        self.respawn_y = self.hard_respawn_y
+        self._deactivate_checkpoint()
+        self.respawn()
+
+    def _deactivate_checkpoint(self):
+        if self.checkpoint:
+            self.checkpoint.active = False
 
     def _update_animation(self):
         if not self.dead:
@@ -379,8 +391,7 @@ class Player(collision.PunchableGravityCollision):
         col = grid.col_at(self.center_x)
         row = grid.row_at(self.center_y)
         if self._level.has_tile(grid.CheckpointRay, col, row):
-            if self.checkpoint:
-                self.checkpoint.active = False
+            self._deactivate_checkpoint()
 
             ray = self._level.get_tile(grid.CheckpointRay, col, row)
             checkpoint = ray.checkpoint
