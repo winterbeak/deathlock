@@ -8,40 +8,41 @@ TILE_H = 20
 
 
 class Tile:
-    def __init__(self, solid):
+    def __init__(self, solid, emitted):
         self.solid = solid
+        self.emitted = emitted
 
 
 class Void(Tile):
     def __init__(self):
-        super().__init__(True)
+        super().__init__(True, False)
 
 
 class Wall(Tile):
     def __init__(self):
-        super().__init__(True)
+        super().__init__(True, False)
 
 
 class PunchBox(Tile):
     def __init__(self, direction):
-        super().__init__(True)
+        super().__init__(True, False)
         self.direction = direction
 
 
 class PunchZone(Tile):
     def __init__(self, direction):
-        super().__init__(False)
+        super().__init__(False, True)
         self.direction = direction
 
 
 class Deathlock(Tile):
     def __init__(self):
-        super().__init__(False)
+        super().__init__(False, False)
 
 
 class Checkpoint(Tile):
     def __init__(self, direction, col, row):
-        super().__init__(False)
+        super().__init__(False, False)
         self.direction = direction
         self.col = col
         self.row = row
@@ -50,7 +51,7 @@ class Checkpoint(Tile):
 
 class CheckpointRay(Tile):
     def __init__(self, checkpoint, orientation):
-        super().__init__(False)
+        super().__init__(False, True)
 
         self.orientation = orientation
         self.checkpoint = checkpoint
@@ -194,7 +195,8 @@ class Room:
         return False
 
     def emit(self):
-        """Emits PunchZones from all PunchBoxes"""
+        """Emits PunchZones from all PunchBoxes and CheckpointRays from
+        all Checkpoints"""
         for col in range(self.WIDTH):
             for row in range(self.HEIGHT):
                 for tile in self.tiles_at(col, row):
@@ -203,6 +205,14 @@ class Room:
 
                     elif type(tile) == Checkpoint:
                         self.emit_checkpoint_ray(col, row, tile)
+
+    def unemit(self):
+        """Emits PunchZones from all PunchBoxes"""
+        for col in range(self.WIDTH):
+            for row in range(self.HEIGHT):
+                for tile in reversed(self.tiles_at(col, row)):
+                    if tile.emitted:
+                        self.tiles_at(col, row).remove(tile)
 
     def emit_punch_zone(self, col, row, tile):
         if tile.direction == const.LEFT:

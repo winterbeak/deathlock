@@ -155,7 +155,7 @@ while True:
     if editor_key.is_pressed:
         if state == GAME:
             state = EDITOR
-            editor.level = level
+            level.unemit()
         elif state == EDITOR:
             state = GAME
             player.hard_respawn()
