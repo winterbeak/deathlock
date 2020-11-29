@@ -80,7 +80,7 @@ def test_level():
 
     room.add_tile(11, 17, grid.Deathlock())
     room.add_tile(11, 13, grid.PunchBox(const.DOWN))
-    room.add_rect(0, 30, 40, 1, lambda : grid.PunchBox(const.UP))
+    room.add_rect(0, 30, 40, 1, lambda: grid.PunchBox(const.UP))
 
     room.add_checkpoint(23, 3, const.DOWN)
     room.add_checkpoint(26, 16, const.RIGHT)
