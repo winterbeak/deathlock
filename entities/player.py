@@ -120,8 +120,8 @@ class Player(collision.PunchableGravityCollision):
         self.tumble = False
 
         self.checkpoint = None
-        self.respawn_x = 0.0
-        self.respawn_y = 0.0
+        self.respawn_x = x
+        self.respawn_y = y
         self.hard_respawn_x = x
         self.hard_respawn_y = y
 
