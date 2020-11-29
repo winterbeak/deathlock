@@ -133,9 +133,10 @@ def game_update():
 
 
 def game_draw():
-    draw_level()
-
+    draw_background(post_surf, main_cam)
     punchers.draw(post_surf, main_cam)
+    level.draw(post_surf, main_cam)
+
     entity_handler.draw_all(post_surf, main_cam)
 
 
@@ -144,10 +145,6 @@ def editor_update():
 
 
 def editor_draw():
-    draw_level()
-
-
-def draw_level():
     draw_background(post_surf, main_cam)
     level.draw(post_surf, main_cam)
 
