@@ -3,6 +3,7 @@ import pygame
 import constants as const
 import events
 import grid
+import debug
 
 
 basic_tiles = [grid.Wall, grid.Deathlock]
@@ -68,3 +69,17 @@ class Editor:
 
     def update(self):
         self._take_inputs()
+
+    def _draw_selections(self, surf):
+        direction = const.direction_string(self._direction)
+        if self._tile:
+            tile = str(self._tile.__name__)
+        else:
+            tile = "Erase"
+        string = "%-6s %s" % (direction, tile)
+
+        text = debug.TAHOMA_LARGE.render(string, False, const.WHITE, const.BLACK)
+        surf.blit(text, (10, 10))
+
+    def draw(self, surf):
+        self._draw_selections(surf)

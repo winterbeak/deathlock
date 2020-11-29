@@ -35,6 +35,19 @@ DOWN = 4
 TOP = UP
 BOTTOM = DOWN
 
+
+def direction_string(direction):
+    if direction == LEFT:
+        return "LEFT"
+    if direction == RIGHT:
+        return "RIGHT"
+    if direction == UP:
+        return "UP"
+    if direction == DOWN:
+        return "DOWN"
+    return "NONE"
+
+
 VERT = 1
 HORIZ = 2
 

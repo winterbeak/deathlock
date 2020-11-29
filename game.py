@@ -147,6 +147,7 @@ def editor_update():
 def editor_draw():
     draw_background(post_surf, main_cam)
     level.draw(post_surf, main_cam)
+    editor.draw(post_surf)
 
 
 while True:
