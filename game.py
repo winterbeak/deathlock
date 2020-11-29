@@ -104,6 +104,13 @@ hard_reset_key = events.Keybind([pygame.K_t])
 sound.play_music()
 
 
+editor_key = events.Keybind([pygame.K_e])
+
+GAME = 0
+EDITOR = 1
+state = GAME
+
+
 def hard_reset():
     player.hard_respawn()
 
@@ -130,6 +137,14 @@ def game_draw():
     entity_handler.draw_all(post_surf, main_cam)
 
 
+def editor_update():
+    pass
+
+
+def editor_draw():
+    draw_level()
+
+
 def draw_level():
     draw_background(post_surf, main_cam)
     level.draw(post_surf, main_cam)
@@ -138,8 +153,19 @@ def draw_level():
 while True:
     events.update()
 
-    game_update()
-    game_draw()
+    if editor_key.is_pressed:
+        if state == GAME:
+            state = EDITOR
+        elif state == EDITOR:
+            state = GAME
+            player.hard_respawn()
+
+    if state == GAME:
+        game_update()
+        game_draw()
+    elif state == EDITOR:
+        editor_update()
+        editor_draw()
 
     # debug.debug(clock.get_fps())
     # debug.debug(main_cam.sliding, main_cam.last_slide_frame)
