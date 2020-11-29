@@ -7,6 +7,7 @@ import constants as const
 import events
 # import debug
 
+import editor
 import graphics
 import camera
 import grid
@@ -89,6 +90,7 @@ def test_level():
 
 
 level = test_level()
+editor = editor.Editor(level)
 
 main_cam = camera.Camera()
 main_cam.base_x = 0
@@ -138,7 +140,7 @@ def game_draw():
 
 
 def editor_update():
-    pass
+    editor.update()
 
 
 def editor_draw():
@@ -156,9 +158,11 @@ while True:
     if editor_key.is_pressed:
         if state == GAME:
             state = EDITOR
+            editor.level = level
         elif state == EDITOR:
             state = GAME
             player.hard_respawn()
+            level.emit()
 
     if state == GAME:
         game_update()
