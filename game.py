@@ -103,24 +103,14 @@ player = entities.player.Player(level, 10, 10, main_cam)
 entity_handler = entities.handler.Handler()
 entity_handler.list = [player]
 
-first_revive = True
-beat_once = False
-
 hard_reset_key = events.Keybind([pygame.K_t])
+
+sound.play_music()
 
 while True:
     events.update()
 
-    # Resetting level
-    if events.keys.pressed_key == pygame.K_r:
-        if first_revive:
-            first_revive = False
-            sound.play_music()
-            for sprite in player.heart_sprites:
-                sprite.frame = 0
-                sprite.frame_delay = 22
-
-    elif hard_reset_key.is_pressed:
+    if hard_reset_key.is_pressed:
         hard_reset()
 
     entity_handler.update_all()
