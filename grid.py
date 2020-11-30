@@ -143,14 +143,14 @@ class Room:
         the tiles changed are relative to the current room,
         not the entire level
         """
-        for col in range(col, col + w):
-            for row in range(row, row + h):
-                self.add_tile(col, row, constructor())
+        for col_index in range(col, col + w):
+            for row_index in range(row, row + h):
+                self.add_tile(col_index, row_index, constructor())
 
     def clear_rect(self, col, row, w, h):
-        for col in range(col, col + w):
-            for row in range(row, row + h):
-                self.clear_point(col, row)
+        for col_index in range(col, col + w):
+            for row_index in range(row, row + h):
+                self.clear_point(col_index, row_index)
 
     def add_checkpoint(self, col, row, direction):
         self.add_tile(col, row, Checkpoint(direction, col, row))
