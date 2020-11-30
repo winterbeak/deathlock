@@ -12,7 +12,6 @@ selections = [None, grid.Wall, grid.Deathlock, grid.PunchBox, grid.Checkpoint]
 
 class Editor:
     PLACE = 0
-    ERASE = 1
 
     left_key = events.Keybind([pygame.K_a, pygame.K_LEFT])
     right_key = events.Keybind([pygame.K_d, pygame.K_RIGHT])
@@ -53,19 +52,11 @@ class Editor:
             elif self._tile == grid.Checkpoint:
                 self.level.add_checkpoint(col, row, self._direction)
 
-    def _input_erase_tile(self):
-        if events.mouse.held:
-            col = grid.col_at(events.mouse.position[0])
-            row = grid.row_at(events.mouse.position[1])
-            self.level.clear_point(col, row)
-
     def _take_inputs(self):
         self._input_direction()
         self._input_selected_tile()
         if self.mode == self.PLACE:
             self._input_place_block()
-        else:
-            self._input_erase_tile()
 
     def update(self):
         self._take_inputs()
