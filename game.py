@@ -107,7 +107,7 @@ hard_reset_key = events.Keybind([pygame.K_t])
 sound.play_music()
 
 
-editor_key = events.Keybind([pygame.K_e])
+editor_key = events.Keybind([pygame.K_ESCAPE])
 
 GAME = 0
 EDITOR = 1
