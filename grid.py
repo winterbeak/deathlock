@@ -137,6 +137,7 @@ class Room:
     PIXEL_H = HEIGHT * TILE_H
 
     def __init__(self, name):
+        """name is the name of the file in the levels folder"""
         # These values are all default values.
         # Only once the room is added to a level will they be set.
         self.column = 0
