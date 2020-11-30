@@ -124,5 +124,20 @@ class Editor:
         text = debug.TAHOMA_LARGE.render(string, False, const.WHITE, const.BLACK)
         surf.blit(text, (10, 10))
 
+    def _draw_rect_marker(self, surf):
+        x = grid.x_of(self.rect_start_col)
+        y = grid.y_of(self.rect_start_row)
+        rect = (x, y, grid.TILE_W, grid.TILE_H)
+        pygame.draw.rect(surf, const.MAGENTA, rect)
+
+    def _draw_mouse_marker(self, surf):
+        x = grid.x_of(mouse_col())
+        y = grid.y_of(mouse_row())
+        rect = (x, y, grid.TILE_W, grid.TILE_H)
+        pygame.draw.rect(surf, const.MAGENTA, rect)
+
     def draw(self, surf):
+        self._draw_mouse_marker(surf)
+        if self.mode == self.RECT and events.mouse.held:
+            self._draw_rect_marker(surf)
         self._draw_selections(surf)
