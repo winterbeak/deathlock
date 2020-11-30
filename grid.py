@@ -152,6 +152,7 @@ class Room:
         self.grid = [[[] for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
 
         self.name = name
+        self.load()
 
     def out_of_bounds(self, col, row):
         """returns whether or not a tile is outside of the grid"""
