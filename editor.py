@@ -10,6 +10,14 @@ basic_tiles = [grid.Wall, grid.Deathlock]
 selections = [None, grid.Wall, grid.Deathlock, grid.PunchBox, grid.Checkpoint]
 
 
+def mouse_col():
+    return grid.col_at(events.mouse.position[0])
+
+
+def mouse_row():
+    return grid.row_at(events.mouse.position[1])
+
+
 class Editor:
     PLACE = 0
 
@@ -42,8 +50,8 @@ class Editor:
 
     def _input_place_block(self):
         if events.mouse.held:
-            col = grid.col_at(events.mouse.position[0])
-            row = grid.row_at(events.mouse.position[1])
+            col = mouse_col()
+            row = mouse_row()
             self.level.clear_point(col, row)
             if self._tile in basic_tiles:
                 self.level.add_tile(col, row, self._tile())
