@@ -147,6 +147,11 @@ class Room:
             for row in range(row, row + h):
                 self.add_tile(col, row, constructor())
 
+    def clear_rect(self, col, row, w, h):
+        for col in range(col, col + w):
+            for row in range(row, row + h):
+                self.clear_point(col, row)
+
     def add_checkpoint(self, col, row, direction):
         self.add_tile(col, row, Checkpoint(direction, col, row))
 
