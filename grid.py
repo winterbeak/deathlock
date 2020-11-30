@@ -416,7 +416,11 @@ class Room:
     def load(self):
         self.clear()
 
-        with open(level_path(self.name), "r") as file:
+        path = level_path(self.name)
+        if not os.path.exists(path):
+            return
+
+        with open(path, "r") as file:
             data = file.read()
 
         for row_index, row in enumerate(data.split("\n")):

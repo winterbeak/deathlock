@@ -89,7 +89,7 @@ def test_level():
     return room
 
 
-level = grid.Room("Test Level")
+level = grid.Room("Test")
 editor = editor.Editor(level)
 
 main_cam = camera.Camera()
