@@ -65,7 +65,7 @@ def screen_update(fps):
 
 
 def test_level():
-    room = grid.Room()
+    room = grid.Room("Test Level")
     room.add_rect(0, 20, 40, 1, grid.Wall)
     room.add_rect(20, 0, 1, 20, grid.Deathlock)
     room.add_tile(17, 17, grid.PunchBox(const.RIGHT))
@@ -89,7 +89,8 @@ def test_level():
     return room
 
 
-level = test_level()
+level = grid.Room("Test Level")
+level.load()
 editor = editor.Editor(level)
 
 main_cam = camera.Camera()

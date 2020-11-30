@@ -26,6 +26,7 @@ class Editor:
     right_key = events.Keybind([pygame.K_d, pygame.K_RIGHT])
     up_key = events.Keybind([pygame.K_w, pygame.K_UP])
     down_key = events.Keybind([pygame.K_s, pygame.K_DOWN])
+    save_key = events.Keybind([pygame.K_u])
 
     def __init__(self, level):
         self.level = level
@@ -108,6 +109,9 @@ class Editor:
             self._input_place_block()
         elif self.mode == self.RECT:
             self._input_place_rect()
+
+        if self.save_key.is_pressed:
+            self.level.save()
 
     def update(self):
         self._take_inputs()
