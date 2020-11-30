@@ -20,6 +20,7 @@ def mouse_row():
 
 class Editor:
     PLACE = 0
+    RECT = 1
 
     left_key = events.Keybind([pygame.K_a, pygame.K_LEFT])
     right_key = events.Keybind([pygame.K_d, pygame.K_RIGHT])
@@ -31,6 +32,16 @@ class Editor:
         self.mode = self.PLACE
         self._direction = const.LEFT
         self._tile = None
+
+        self.rect_start_col = 0
+        self.rect_start_row = 0
+
+    @property
+    def _mode_string(self):
+        if self.mode == self.PLACE:
+            return "PLACE"
+        elif self.mode == self.RECT:
+            return "RECT"
 
     def _input_direction(self):
         if self.left_key.is_pressed:
@@ -60,22 +71,55 @@ class Editor:
             elif self._tile == grid.Checkpoint:
                 self.level.add_checkpoint(col, row, self._direction)
 
+    def _input_switch_mode(self):
+        if events.keys.pressed_key == pygame.K_TAB:
+            if self.mode == self.PLACE:
+                self.mode = self.RECT
+            elif self.mode == self.RECT:
+                self.mode = self.PLACE
+
+    def _input_place_rect(self):
+        if events.mouse.clicked:
+            self.rect_start_col = mouse_col()
+            self.rect_start_row = mouse_row()
+        if events.mouse.released:
+            left = min(self.rect_start_col, mouse_col())
+            top = min(self.rect_start_row, mouse_row())
+            right = max(self.rect_start_col, mouse_col())
+            bottom = max(self.rect_start_row, mouse_row())
+            width = right - left + 1
+            height = bottom - top + 1
+
+            self.level.clear_rect(left, top, width, height)
+            if self._tile in basic_tiles:
+                self.level.add_rect(left, top, width, height, self._tile)
+            elif self._tile == grid.PunchBox:
+                constructor = lambda: grid.PunchBox(self._direction)
+                self.level.add_rect(left, top, width, height, constructor)
+            elif self._tile == grid.Checkpoint:
+                constructor = lambda: grid.Checkpoint(left, top, self._direction)
+                self.level.add_rect(left, top, width, height, constructor)
+
     def _take_inputs(self):
         self._input_direction()
         self._input_selected_tile()
+        self._input_switch_mode()
         if self.mode == self.PLACE:
             self._input_place_block()
+        elif self.mode == self.RECT:
+            self._input_place_rect()
 
     def update(self):
         self._take_inputs()
 
     def _draw_selections(self, surf):
+        mode = self._mode_string
         direction = const.direction_string(self._direction)
         if self._tile:
             tile = str(self._tile.__name__)
         else:
             tile = "Erase"
-        string = "%-6s %s" % (direction, tile)
+        string = "%-6s %-6s %s" % (mode, direction, tile)
 
         text = debug.TAHOMA_LARGE.render(string, False, const.WHITE, const.BLACK)
         surf.blit(text, (10, 10))
