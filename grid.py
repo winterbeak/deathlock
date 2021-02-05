@@ -40,6 +40,10 @@ def id_of(tiles):
             return 9
         if tile.direction == const.DOWN:
             return 10
+    if type(tile) == PlayerSpawn:
+        return 11
+    if type(tile) == PlayerGoal:
+        return 12
     return 0
 
 
@@ -91,6 +95,20 @@ class CheckpointRay(Tile):
 
         self.orientation = orientation
         self.checkpoint = checkpoint
+
+
+class PlayerSpawn(Tile):
+    def __init__(self, col, row):
+        super().__init__(False, False)
+        self.col = col
+        self.row = row
+
+
+class PlayerGoal(Tile):
+    def __init__(self, col, row):
+        super().__init__(False, False)
+        self.col = col
+        self.row = row
 
 
 punch_box_left = graphics.load_image("punch_box", 2)
@@ -148,6 +166,11 @@ class Room:
 
         self.grid = [[[] for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
 
+        self.player_spawn = PlayerSpawn(0, 0)
+        self.player_goal = PlayerGoal(0, 0)
+        self.grid[0][0].append(self.player_spawn)
+        self.grid[0][0].append(self.player_goal)
+
         self.name = name
         self.load()
 
@@ -173,7 +196,17 @@ class Room:
 
     def clear_point(self, col, row):
         if not self.out_of_bounds(col, row):
-            self.grid[col][row] = []
+            new_tile = []
+
+            # Spawn and goal shouldn't be erasable
+            if self.has_tile(PlayerSpawn, col, row):
+                spawn = self.get_tile(PlayerSpawn, col, row)
+                new_tile.append(spawn)
+            if self.has_tile(PlayerGoal, col, row):
+                goal = self.get_tile(PlayerGoal, col, row)
+                new_tile.append(goal)
+
+            self.grid[col][row] = new_tile
 
         else:
             print("clear_point() tried to clear a tile out of bounds")
@@ -195,6 +228,28 @@ class Room:
 
     def add_checkpoint(self, col, row, direction):
         self.add_tile(col, row, Checkpoint(direction, col, row))
+
+    def move_player_spawn(self, col, row):
+        # Remove old spawn
+        old_col = self.player_spawn.col
+        old_row = self.player_spawn.row
+        if self.player_spawn in self.grid[old_col][old_row]:
+            self.grid[old_col][old_row].remove(self.player_spawn)
+
+        # Place new spawn
+        self.player_spawn = PlayerSpawn(col, row)
+        self.add_tile(col, row, self.player_spawn)
+
+    def move_player_goal(self, col, row):
+        # Remove old goal
+        old_col = self.player_goal.col
+        old_row = self.player_goal.row
+        if self.player_goal in self.grid[old_col][old_row]:
+            self.grid[old_col][old_row].remove(self.player_goal)
+
+        # Place new goal
+        self.player_goal = PlayerGoal(col, row)
+        self.add_tile(col, row, self.player_goal)
 
     def tiles_at(self, col, row):
         """returns the tiles at a given point"""
@@ -370,6 +425,13 @@ class Room:
                     if not checkpoint.active:
                         pygame.draw.circle(surf, const.DARK_GREEN, checkpoint_pos, 7)
 
+                if self.has_tile(PlayerSpawn, col, row):
+                    goal_rect = (x, y, TILE_W, TILE_H)
+                    pygame.draw.rect(surf, const.YELLOW, goal_rect)
+                if self.has_tile(PlayerGoal, col, row):
+                    goal_rect = (x, y, TILE_W, TILE_H)
+                    pygame.draw.rect(surf, const.MAGENTA, goal_rect)
+
     def place_tile_from_id(self, col, row, tile_id):
         """These ids are only used for writing and reading levels."""
         if tile_id == 1:
@@ -392,6 +454,12 @@ class Room:
             tile = Checkpoint(const.RIGHT, col, row)
         elif tile_id == 10:
             tile = Checkpoint(const.DOWN, col, row)
+        elif tile_id == 11:
+            self.move_player_spawn(col, row)
+            return
+        elif tile_id == 12:
+            self.move_player_goal(col, row)
+            return
         else:
             return
 
