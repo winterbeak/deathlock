@@ -271,6 +271,7 @@ class Player(collision.PunchableGravityCollision):
     def _deactivate_checkpoint(self):
         if self.checkpoint:
             self.checkpoint.active = False
+            self.checkpoint = None
 
     def _update_animation(self):
         if not self.dead:
