@@ -176,7 +176,7 @@ class Room:
             self.grid[col][row] = []
 
         else:
-            print("clear_point() tried to add a tile out of bounds")
+            print("clear_point() tried to clear a tile out of bounds")
 
     def add_rect(self, col, row, w, h, constructor):
         """places a rectangle of tiles at the given coordinates
