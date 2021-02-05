@@ -96,7 +96,7 @@ main_cam = camera.Camera()
 main_cam.base_x = 0
 main_cam.base_y = 0
 
-player = entities.player.Player(level, 10, 10, main_cam)
+player = entities.player.Player(level, main_cam)
 
 entity_handler = entities.handler.Handler()
 entity_handler.list = [player]

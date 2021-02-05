@@ -107,7 +107,9 @@ class Player(collision.PunchableGravityCollision):
 
     LAND_SOUNDS = sound.load_numbers("land%i", 3)
 
-    def __init__(self, level, x, y, camera):
+    def __init__(self, level, camera):
+        x = grid.x_of(level.player_spawn.col)
+        y = grid.y_of(level.player_spawn.row)
         super().__init__(level, self.WIDTH, self.HEIGHT, self.TERMINAL_VELOCITY,
                          x, y)
         self._health = self.MAX_HEALTH
@@ -122,8 +124,6 @@ class Player(collision.PunchableGravityCollision):
         self.checkpoint = None
         self.respawn_x = x
         self.respawn_y = y
-        self.hard_respawn_x = x
-        self.hard_respawn_y = y
 
         self._coyote_timer = 0
         self._jump_buffer = 0
@@ -136,6 +136,14 @@ class Player(collision.PunchableGravityCollision):
             self.heart_sprites[heart_sprite].set_anim(heart_sprite)
 
         self.run_sound_frame = self.RUN_SOUND_DELAY
+
+    @property
+    def hard_respawn_x(self):
+        return grid.x_of(self.level.player_spawn.col)
+
+    @property
+    def hard_respawn_y(self):
+        return grid.y_of(self.level.player_spawn.row)
 
     @property
     def health(self):
