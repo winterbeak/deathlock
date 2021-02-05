@@ -142,10 +142,6 @@ class Room:
         # Only once the room is added to a level will they be set.
         self.column = 0
         self.row = 0
-        self.leftmost_tile = 0
-        self.topmost_tile = 0
-        self.rightmost_tile = self.leftmost_tile + self.WIDTH - 1
-        self.bottommost_tile = self.topmost_tile + self.HEIGHT - 1
 
         self.x = 0
         self.y = 0
