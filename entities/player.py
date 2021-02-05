@@ -107,7 +107,9 @@ class Player(collision.PunchableGravityCollision):
 
     LAND_SOUNDS = sound.load_numbers("land%i", 3)
 
-    def __init__(self, level, x, y, camera):
+    def __init__(self, level, camera):
+        x = grid.x_of(level.player_spawn.col)
+        y = grid.y_of(level.player_spawn.row)
         super().__init__(level, self.WIDTH, self.HEIGHT, self.TERMINAL_VELOCITY,
                          x, y)
         self._health = self.MAX_HEALTH
@@ -120,10 +122,6 @@ class Player(collision.PunchableGravityCollision):
         self.tumble = False
 
         self.checkpoint = None
-        self.respawn_x = x
-        self.respawn_y = y
-        self.hard_respawn_x = x
-        self.hard_respawn_y = y
 
         self._coyote_timer = 0
         self._jump_buffer = 0
@@ -136,6 +134,26 @@ class Player(collision.PunchableGravityCollision):
             self.heart_sprites[heart_sprite].set_anim(heart_sprite)
 
         self.run_sound_frame = self.RUN_SOUND_DELAY
+
+    @property
+    def respawn_x(self):
+        if self.checkpoint:
+            return grid.x_of(self.checkpoint.col)
+        return self.hard_respawn_x
+
+    @property
+    def respawn_y(self):
+        if self.checkpoint:
+            return grid.y_of(self.checkpoint.row)
+        return self.hard_respawn_y
+
+    @property
+    def hard_respawn_x(self):
+        return grid.x_of(self.level.player_spawn.col)
+
+    @property
+    def hard_respawn_y(self):
+        return grid.y_of(self.level.player_spawn.row)
 
     @property
     def health(self):
@@ -245,8 +263,6 @@ class Player(collision.PunchableGravityCollision):
         self.y = self.respawn_y
 
     def hard_respawn(self):
-        self.respawn_x = self.hard_respawn_x
-        self.respawn_y = self.hard_respawn_y
         self._deactivate_checkpoint()
         self._stop_x()
         self._stop_y()
@@ -397,6 +413,10 @@ class Player(collision.PunchableGravityCollision):
             checkpoint = ray.checkpoint
             checkpoint.active = True
 
-            self.respawn_x = grid.x_of(checkpoint.col)
-            self.respawn_y = grid.y_of(checkpoint.row)
             self.checkpoint = checkpoint
+
+    @property
+    def touching_goal(self):
+        col = grid.col_at(self.center_x)
+        row = grid.row_at(self.center_y)
+        return self._level.has_tile(grid.PlayerGoal, col, row)
