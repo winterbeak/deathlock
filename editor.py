@@ -7,7 +7,8 @@ import debug
 
 
 basic_tiles = [grid.Wall, grid.Deathlock]
-selections = [None, grid.Wall, grid.Deathlock, grid.PunchBox, grid.Checkpoint]
+selections = [None, grid.Wall, grid.Deathlock, grid.PunchBox, grid.Checkpoint,
+              grid.PlayerSpawn, grid.PlayerGoal]
 
 
 def mouse_col():
@@ -71,6 +72,10 @@ class Editor:
                 self.level.add_tile(col, row, self._tile(self._direction))
             elif self._tile == grid.Checkpoint:
                 self.level.add_checkpoint(col, row, self._direction)
+            elif self._tile == grid.PlayerSpawn:
+                self.level.move_player_spawn(col, row)
+            elif self._tile == grid.PlayerGoal:
+                self.level.move_player_goal(col, row)
 
     def _input_switch_mode(self):
         if events.keys.pressed_key == pygame.K_TAB:
