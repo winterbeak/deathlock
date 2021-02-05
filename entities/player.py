@@ -122,8 +122,6 @@ class Player(collision.PunchableGravityCollision):
         self.tumble = False
 
         self.checkpoint = None
-        self.respawn_x = x
-        self.respawn_y = y
 
         self._coyote_timer = 0
         self._jump_buffer = 0
@@ -136,6 +134,18 @@ class Player(collision.PunchableGravityCollision):
             self.heart_sprites[heart_sprite].set_anim(heart_sprite)
 
         self.run_sound_frame = self.RUN_SOUND_DELAY
+
+    @property
+    def respawn_x(self):
+        if self.checkpoint:
+            return grid.x_of(self.checkpoint.col)
+        return self.hard_respawn_x
+
+    @property
+    def respawn_y(self):
+        if self.checkpoint:
+            return grid.y_of(self.checkpoint.row)
+        return self.hard_respawn_y
 
     @property
     def hard_respawn_x(self):
@@ -253,8 +263,6 @@ class Player(collision.PunchableGravityCollision):
         self.y = self.respawn_y
 
     def hard_respawn(self):
-        self.respawn_x = self.hard_respawn_x
-        self.respawn_y = self.hard_respawn_y
         self._deactivate_checkpoint()
         self._stop_x()
         self._stop_y()
@@ -405,6 +413,4 @@ class Player(collision.PunchableGravityCollision):
             checkpoint = ray.checkpoint
             checkpoint.active = True
 
-            self.respawn_x = grid.x_of(checkpoint.col)
-            self.respawn_y = grid.y_of(checkpoint.row)
             self.checkpoint = checkpoint
