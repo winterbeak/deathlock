@@ -7,6 +7,7 @@ import constants as const
 import events
 # import debug
 
+import editor
 import graphics
 import camera
 import grid
@@ -54,10 +55,6 @@ def draw_background(surf, cam):
     surf.blit(background, (x, y))
 
 
-def hard_reset():
-    player.hard_respawn()
-
-
 background = init_background()
 
 
@@ -68,7 +65,7 @@ def screen_update(fps):
 
 
 def test_level():
-    room = grid.Room()
+    room = grid.Room("Test Level")
     room.add_rect(0, 20, 40, 1, grid.Wall)
     room.add_rect(20, 0, 1, 20, grid.Deathlock)
     room.add_tile(17, 17, grid.PunchBox(const.RIGHT))
@@ -92,7 +89,8 @@ def test_level():
     return room
 
 
-level = test_level()
+level = grid.Room("Test")
+editor = editor.Editor(level)
 
 main_cam = camera.Camera()
 main_cam.base_x = 0
@@ -107,9 +105,19 @@ hard_reset_key = events.Keybind([pygame.K_t])
 
 sound.play_music()
 
-while True:
-    events.update()
 
+editor_key = events.Keybind([pygame.K_ESCAPE])
+
+GAME = 0
+EDITOR = 1
+state = GAME
+
+
+def hard_reset():
+    player.hard_respawn()
+
+
+def game_update():
     if hard_reset_key.is_pressed:
         hard_reset()
 
@@ -123,12 +131,43 @@ while True:
     else:
         sound.set_music_volume(sound.MUSIC_VOLUME)
 
-    # Drawing everything
+
+def game_draw():
     draw_background(post_surf, main_cam)
     punchers.draw(post_surf, main_cam)
     level.draw(post_surf, main_cam)
 
     entity_handler.draw_all(post_surf, main_cam)
+
+
+def editor_update():
+    editor.update()
+
+
+def editor_draw():
+    draw_background(post_surf, main_cam)
+    level.draw(post_surf, main_cam)
+    editor.draw(post_surf)
+
+
+while True:
+    events.update()
+
+    if editor_key.is_pressed:
+        if state == GAME:
+            state = EDITOR
+            level.unemit()
+        elif state == EDITOR:
+            state = GAME
+            player.hard_respawn()
+            level.emit()
+
+    if state == GAME:
+        game_update()
+        game_draw()
+    elif state == EDITOR:
+        editor_update()
+        editor_draw()
 
     # debug.debug(clock.get_fps())
     # debug.debug(main_cam.sliding, main_cam.last_slide_frame)

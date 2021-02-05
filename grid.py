@@ -1,3 +1,4 @@
+import os
 import pygame
 
 import graphics
@@ -7,41 +8,77 @@ TILE_W = 20
 TILE_H = 20
 
 
+def level_path(name):
+    return os.path.join("levels", name)
+
+
+def id_of(tiles):
+    """These ids are only used for writing and reading levels."""
+    if len(tiles) == 0:
+        return 0
+
+    tile = tiles[0]
+    if type(tile) == Wall:
+        return 1
+    if type(tile) == Deathlock:
+        return 2
+    if type(tile) == PunchBox:
+        if tile.direction == const.LEFT:
+            return 3
+        if tile.direction == const.UP:
+            return 4
+        if tile.direction == const.RIGHT:
+            return 5
+        if tile.direction == const.DOWN:
+            return 6
+    if type(tile) == Checkpoint:
+        if tile.direction == const.LEFT:
+            return 7
+        if tile.direction == const.UP:
+            return 8
+        if tile.direction == const.RIGHT:
+            return 9
+        if tile.direction == const.DOWN:
+            return 10
+    return 0
+
+
 class Tile:
-    def __init__(self, solid):
+    def __init__(self, solid, emitted):
         self.solid = solid
+        self.emitted = emitted
 
 
 class Void(Tile):
     def __init__(self):
-        super().__init__(True)
+        super().__init__(True, False)
 
 
 class Wall(Tile):
     def __init__(self):
-        super().__init__(True)
+        super().__init__(True, False)
 
 
 class PunchBox(Tile):
     def __init__(self, direction):
-        super().__init__(True)
+        super().__init__(True, False)
         self.direction = direction
 
 
 class PunchZone(Tile):
     def __init__(self, direction):
-        super().__init__(False)
+        super().__init__(False, True)
         self.direction = direction
 
 
 class Deathlock(Tile):
     def __init__(self):
-        super().__init__(False)
+        super().__init__(False, False)
 
 
 class Checkpoint(Tile):
     def __init__(self, direction, col, row):
-        super().__init__(False)
+        super().__init__(False, False)
         self.direction = direction
         self.col = col
         self.row = row
@@ -50,7 +87,7 @@ class Checkpoint(Tile):
 
 class CheckpointRay(Tile):
     def __init__(self, checkpoint, orientation):
-        super().__init__(False)
+        super().__init__(False, True)
 
         self.orientation = orientation
         self.checkpoint = checkpoint
@@ -99,7 +136,8 @@ class Room:
     PIXEL_W = WIDTH * TILE_W
     PIXEL_H = HEIGHT * TILE_H
 
-    def __init__(self):
+    def __init__(self, name):
+        """name is the name of the file in the levels folder"""
         # These values are all default values.
         # Only once the room is added to a level will they be set.
         self.column = 0
@@ -114,6 +152,9 @@ class Room:
 
         self.grid = [[[] for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
 
+        self.name = name
+        self.load()
+
     def out_of_bounds(self, col, row):
         """returns whether or not a tile is outside of the grid"""
         if 0 <= col < self.WIDTH:
@@ -121,6 +162,9 @@ class Room:
                 return False
 
         return True
+
+    def clear(self):
+        self.grid = [[[] for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
 
     def add_tile(self, col, row, tile):
         if not self.out_of_bounds(col, row):
@@ -142,9 +186,14 @@ class Room:
         the tiles changed are relative to the current room,
         not the entire level
         """
-        for col in range(col, col + w):
-            for row in range(row, row + h):
-                self.add_tile(col, row, constructor())
+        for col_index in range(col, col + w):
+            for row_index in range(row, row + h):
+                self.add_tile(col_index, row_index, constructor())
+
+    def clear_rect(self, col, row, w, h):
+        for col_index in range(col, col + w):
+            for row_index in range(row, row + h):
+                self.clear_point(col_index, row_index)
 
     def add_checkpoint(self, col, row, direction):
         self.add_tile(col, row, Checkpoint(direction, col, row))
@@ -194,7 +243,8 @@ class Room:
         return False
 
     def emit(self):
-        """Emits PunchZones from all PunchBoxes"""
+        """Emits PunchZones from all PunchBoxes and CheckpointRays from
+        all Checkpoints"""
         for col in range(self.WIDTH):
             for row in range(self.HEIGHT):
                 for tile in self.tiles_at(col, row):
@@ -203,6 +253,14 @@ class Room:
 
                     elif type(tile) == Checkpoint:
                         self.emit_checkpoint_ray(col, row, tile)
+
+    def unemit(self):
+        """Emits PunchZones from all PunchBoxes"""
+        for col in range(self.WIDTH):
+            for row in range(self.HEIGHT):
+                for tile in reversed(self.tiles_at(col, row)):
+                    if tile.emitted:
+                        self.tiles_at(col, row).remove(tile)
 
     def emit_punch_zone(self, col, row, tile):
         if tile.direction == const.LEFT:
@@ -313,3 +371,60 @@ class Room:
 
                     if not checkpoint.active:
                         pygame.draw.circle(surf, const.DARK_GREEN, checkpoint_pos, 7)
+
+    def place_tile_from_id(self, col, row, tile_id):
+        """These ids are only used for writing and reading levels."""
+        if tile_id == 1:
+            tile = Wall()
+        elif tile_id == 2:
+            tile = Deathlock()
+        elif tile_id == 3:
+            tile = PunchBox(const.LEFT)
+        elif tile_id == 4:
+            tile = PunchBox(const.UP)
+        elif tile_id == 5:
+            tile = PunchBox(const.RIGHT)
+        elif tile_id == 6:
+            tile = PunchBox(const.DOWN)
+        elif tile_id == 7:
+            tile = Checkpoint(const.LEFT, col, row)
+        elif tile_id == 8:
+            tile = Checkpoint(const.UP, col, row)
+        elif tile_id == 9:
+            tile = Checkpoint(const.RIGHT, col, row)
+        elif tile_id == 10:
+            tile = Checkpoint(const.DOWN, col, row)
+        else:
+            return
+
+        self.add_tile(col, row, tile)
+
+    def save(self):
+        strings = []
+        for row in range(self.HEIGHT):
+            row_of_ids = []
+            for col in range(self.WIDTH):
+                tiles = self.tiles_at(col, row)
+                id = id_of(tiles)
+                row_of_ids.append(str(id))
+            strings.append(" ".join(row_of_ids))
+        data = "\n".join(strings)
+
+        with open(level_path(self.name), "w") as file:
+            file.write(data)
+
+    def load(self):
+        self.clear()
+
+        path = level_path(self.name)
+        if not os.path.exists(path):
+            return
+
+        with open(path, "r") as file:
+            data = file.read()
+
+        for row_index, row in enumerate(data.split("\n")):
+            for col_index, tile in enumerate(row.split(" ")):
+                self.place_tile_from_id(col_index, row_index, int(tile))
+
+        self.emit()

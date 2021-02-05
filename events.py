@@ -3,6 +3,10 @@ import pygame
 pygame.init()
 
 
+number_keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5,
+               pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9, pygame.K_0]
+
+
 class Keybind:
     def __init__(self, key_list):
         self.list = key_list
