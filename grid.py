@@ -111,6 +111,11 @@ class PlayerGoal(Tile):
         self.row = row
 
 
+class PlayerGoalZone(Tile):
+    def __init__(self):
+        super().__init__(False, True)
+
+
 punch_box_left = graphics.load_image("punch_box", 2)
 punch_box_up = pygame.transform.rotate(punch_box_left, -90)
 punch_box_right = pygame.transform.rotate(punch_box_left, 180)
@@ -307,6 +312,9 @@ class Room:
                     elif type(tile) == Checkpoint:
                         self.emit_checkpoint_ray(col, row, tile)
 
+                    elif type(tile) == PlayerGoal:
+                        self.emit_player_goal_zone(col, row)
+
     def unemit(self):
         """Emits PunchZones from all PunchBoxes"""
         for col in range(self.WIDTH):
@@ -346,6 +354,13 @@ class Room:
             while not self.stops_checkpoint_ray(col, ray_row):
                 self.add_tile(col, ray_row, CheckpointRay(tile, const.VERT))
                 ray_row += 1
+
+    def emit_player_goal_zone(self, col, row):
+        # Place goal zones in a 3x3 area around the goal tile
+        for x in range(col - 1, col + 2):
+            for y in range(row - 1, row + 2):
+                if not self.out_of_bounds(x, y):
+                    self.add_tile(x, y, PlayerGoalZone())
 
     def stops_checkpoint_ray(self, col, row):
         if self.has_solid(col, row):
@@ -431,6 +446,9 @@ class Room:
                 if self.has_tile(PlayerGoal, col, row):
                     goal_rect = (x, y, TILE_W, TILE_H)
                     pygame.draw.rect(surf, const.MAGENTA, goal_rect)
+                if self.has_tile(PlayerGoalZone, col, row):
+                    goal_rect = (x, y, TILE_W, TILE_H)
+                    pygame.draw.rect(surf, (130, 0, 130), goal_rect)
 
     def place_tile_from_id(self, col, row, tile_id):
         """These ids are only used for writing and reading levels."""
