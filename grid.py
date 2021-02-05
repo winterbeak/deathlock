@@ -160,7 +160,9 @@ class Room:
         return True
 
     def clear(self):
-        self.grid = [[[] for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
+        for col in range(self.WIDTH):
+            for row in range(self.HEIGHT):
+                self.clear_point(col, row)
 
     def add_tile(self, col, row, tile):
         if not self.out_of_bounds(col, row):
