@@ -165,6 +165,9 @@ while True:
     if state == GAME:
         game_update()
         game_draw()
+        if player.touching_goal:
+            state = EDITOR
+            level.unemit()
     elif state == EDITOR:
         editor_update()
         editor_draw()

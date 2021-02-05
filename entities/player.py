@@ -414,3 +414,9 @@ class Player(collision.PunchableGravityCollision):
             checkpoint.active = True
 
             self.checkpoint = checkpoint
+
+    @property
+    def touching_goal(self):
+        col = grid.col_at(self.center_x)
+        row = grid.row_at(self.center_y)
+        return self._level.has_tile(grid.PlayerGoal, col, row)
