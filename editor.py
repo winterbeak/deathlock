@@ -89,10 +89,12 @@ class Editor:
             self.rect_start_col = mouse_col()
             self.rect_start_row = mouse_row()
         if events.mouse.released:
-            left = min(self.rect_start_col, mouse_col())
-            top = min(self.rect_start_row, mouse_row())
-            right = max(self.rect_start_col, mouse_col())
-            bottom = max(self.rect_start_row, mouse_row())
+            current_col = mouse_col()
+            current_row = mouse_row()
+            left = min(self.rect_start_col, current_col)
+            top = min(self.rect_start_row, current_row)
+            right = max(self.rect_start_col, current_col)
+            bottom = max(self.rect_start_row, current_row)
             width = right - left + 1
             height = bottom - top + 1
 
@@ -102,9 +104,16 @@ class Editor:
             elif self._tile == grid.PunchBox:
                 constructor = lambda: grid.PunchBox(self._direction)
                 self.level.add_rect(left, top, width, height, constructor)
+
+            # These tiles shouldn't/can't be placed in a rect, so they are
+            # placed as a single tile at the mouse's current position instead
             elif self._tile == grid.Checkpoint:
-                constructor = lambda: grid.Checkpoint(left, top, self._direction)
-                self.level.add_rect(left, top, width, height, constructor)
+                tile = grid.Checkpoint(self._direction, current_col, current_row)
+                self.level.add_tile(current_col, current_row, tile)
+            elif self._tile == grid.PlayerSpawn:
+                self.level.move_player_spawn(current_col, current_row)
+            elif self._tile == grid.PlayerGoal:
+                self.level.move_player_goal(current_col, current_row)
 
     def _take_inputs(self):
         self._input_direction()
