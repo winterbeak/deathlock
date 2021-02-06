@@ -416,6 +416,18 @@ class Player(collision.PunchableGravityCollision):
 
             self.checkpoint = checkpoint
 
+    def _update_puncher_vel(self):
+        if self.grounded:
+            if self.puncher_x_vel < 0 and not self.left_key.is_held:
+                self.puncher_x_vel += self.puncher_deceleration
+                if self.puncher_x_vel > 0:
+                    self.puncher_x_vel = 0
+
+            elif self.puncher_x_vel > 0 and not self.right_key.is_held:
+                self.puncher_x_vel -= self.puncher_deceleration
+                if self.puncher_x_vel < 0:
+                    self.puncher_x_vel = 0
+
     @property
     def touching_goal(self):
         col = grid.col_at(self.center_x)
