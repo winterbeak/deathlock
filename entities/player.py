@@ -22,7 +22,7 @@ class Player(collision.PunchableGravityCollision):
 
     MAX_HEALTH = 3
     JUMP_SPEED = 9
-    MOVE_SPEED = 4
+    MOVE_SPEED = 4.5
     MOVE_ACC = 0.8
     MOVE_DEC = 1.5
 
