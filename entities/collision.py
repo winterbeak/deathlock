@@ -232,7 +232,7 @@ class PunchableGravityCollision(GravityCollision):
     HIT_SOUNDS = sound.load_numbers("hit%i", 3)
     INVULN_LENGTH = 10
 
-    PUNCHER_X_VEL = 7
+    PUNCHER_X_VEL = 5
     PUNCHER_UP_VEL = 12
     PUNCHER_DOWN_VEL = 7
 
