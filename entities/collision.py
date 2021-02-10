@@ -232,6 +232,10 @@ class PunchableGravityCollision(GravityCollision):
     HIT_SOUNDS = sound.load_numbers("hit%i", 3)
     INVULN_LENGTH = 10
 
+    PUNCHER_X_VEL = 7
+    PUNCHER_UP_VEL = 12
+    PUNCHER_DOWN_VEL = 7
+
     def __init__(self, level, width, height, terminal_velocity,
                  x=0, y=0, extend_x=0, extend_y=0):
         super().__init__(level, width, height, terminal_velocity,
@@ -283,7 +287,7 @@ class PunchableGravityCollision(GravityCollision):
                 if tile.direction == const.LEFT:
                     self._get_hit()
                     punchers.add(center_col, center_row, const.LEFT)
-                    self.puncher_x_vel = -7
+                    self.puncher_x_vel = -self.PUNCHER_X_VEL
 
                     if self.x_vel > 0:
                         self.x_vel = 0
@@ -291,12 +295,12 @@ class PunchableGravityCollision(GravityCollision):
                 elif tile.direction == const.UP:
                     self._get_hit()
                     punchers.add(center_col, center_row, const.UP)
-                    self.y_vel = -12
+                    self.y_vel = -self.PUNCHER_UP_VEL
 
                 elif tile.direction == const.RIGHT:
                     self._get_hit()
                     punchers.add(center_col, center_row, const.RIGHT)
-                    self.puncher_x_vel = 7
+                    self.puncher_x_vel = self.PUNCHER_X_VEL
 
                     if self.x_vel < 0:
                         self.x_vel = 0
@@ -304,7 +308,7 @@ class PunchableGravityCollision(GravityCollision):
                 elif tile.direction == const.DOWN:
                     self._get_hit()
                     punchers.add(center_col, center_row, const.DOWN)
-                    self.y_vel = 7
+                    self.y_vel = self.PUNCHER_DOWN_VEL
 
         elif self.invuln_frames:
             self.invuln_frames -= 1
