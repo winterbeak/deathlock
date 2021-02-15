@@ -89,7 +89,8 @@ def test_level():
     return room
 
 
-level = grid.Room("Test")
+# Current order: Intro, Punchers, RespawnMomentum, FallPunch
+level = grid.Room("RespawnMomentum4")
 editor = editor.Editor(level)
 
 main_cam = camera.Camera()
