@@ -195,7 +195,7 @@ class Collision:
 
     def _against_floor(self):
         x1 = self._x + 1
-        x2 = x1 + self._width - 1
+        x2 = x1 + self._width - 2
         y = self._y + self._height
         return self._level.collide_horiz(x1, x2, y, self.collide_deathlock)
 
