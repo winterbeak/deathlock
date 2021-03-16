@@ -4,6 +4,9 @@ import pygame
 import graphics
 import constants as const
 
+import random
+import math
+
 TILE_W = 20
 TILE_H = 20
 
@@ -109,11 +112,54 @@ class PlayerGoal(Tile):
         super().__init__(False, False)
         self.col = col
         self.row = row
+        self.circles = []
+        for i in range(7, -1, -1):
+            color = (180 + 8 * i, 0, 0)
+            radius = 8 + i * 2
+            x_delta = random.randint(-5, 5)
+            y_delta = random.randint(-5, 5)
+            self.circles.append(
+                PlayerGoalCircle(self, color, radius, (x_delta, y_delta), 5)
+            )
+
+    def update(self):
+        for circle in self.circles:
+            circle.update()
+
+    def draw(self, surf):
+        for circle in self.circles:
+            circle.draw(surf)
 
 
 class PlayerGoalZone(Tile):
     def __init__(self):
         super().__init__(False, True)
+
+
+class PlayerGoalCircle:
+    def __init__(self, goal, color, radius, orbit_center_delta, orbit_radius):
+        self.goal = goal
+        self.color = color
+        self.radius = radius
+        self.orbit_center_delta = orbit_center_delta
+        self.orbit_radius = orbit_radius
+        self.angle = random.random() * math.pi * 2
+        self.delta_angle = self.orbit_radius / random.randint(60, 100)
+
+    @property
+    def position(self):
+        x = center_x_of(self.goal.col) + self.orbit_center_delta[0]
+        y = center_y_of(self.goal.row) + self.orbit_center_delta[1]
+        x += math.cos(self.angle) * self.orbit_radius
+        y += math.sin(self.angle) * self.orbit_radius
+        return int(x), int(y)
+
+    def update(self):
+        self.angle += self.delta_angle
+        self.angle %= math.pi * 2
+
+    def draw(self, surf):
+        pygame.draw.circle(surf, self.color, self.position, self.radius)
 
 
 punch_box_left = graphics.load_image("punch_box", 2)
@@ -150,6 +196,14 @@ def y_of(row, direction=const.UP):
 
     elif direction == const.DOWN:
         return row * TILE_H + TILE_H
+
+
+def center_x_of(col):
+    return x_of(col) + (TILE_W / 2)
+
+
+def center_y_of(row):
+    return y_of(row) + (TILE_H / 2)
 
 
 class Room:
@@ -435,6 +489,9 @@ class Room:
                 self.grid[col][row] = self.grid[col][row - 1]
         self._shift_location_tiles(0, 1)
 
+    def update(self):
+        self.player_goal.update()
+
     def draw(self, surf, camera):
         """draws the entire stage"""
         for row in range(self.HEIGHT):
@@ -451,12 +508,6 @@ class Room:
                 if self.has_tile(Wall, col, row):
                     pygame.draw.rect(surf, const.BLACK, rect)
 
-                elif self.has_tile(PlayerGoalZone, col, row):
-                    goal_rect = (x, y, TILE_W, TILE_H)
-                    pygame.draw.rect(surf, (130, 0, 130), goal_rect)
-                elif self.has_tile(PlayerGoal, col, row):
-                    goal_rect = (x, y, TILE_W, TILE_H)
-                    pygame.draw.rect(surf, const.MAGENTA, goal_rect)
                 elif self.has_tile(PlayerSpawn, col, row):
                     goal_rect = (x, y, TILE_W, TILE_H)
                     pygame.draw.rect(surf, const.YELLOW, goal_rect)
@@ -489,6 +540,7 @@ class Room:
                     elif tile.orientation == const.VERT:
                         ray_rect = (x + TILE_W // 3, y, TILE_W // 3, TILE_H)
                         pygame.draw.rect(surf, const.GREEN, ray_rect)
+        self.player_goal.draw(surf)
 
     def place_tile_from_id(self, col, row, tile_id):
         """These ids are only used for writing and reading levels."""

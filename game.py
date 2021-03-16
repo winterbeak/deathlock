@@ -125,6 +125,8 @@ def game_update():
     entity_handler.update_all()
     punchers.update()
 
+    level.update()
+
     main_cam.update()
 
     if player.dead:
