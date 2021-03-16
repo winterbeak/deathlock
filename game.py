@@ -102,7 +102,7 @@ player = entities.player.Player(level, main_cam)
 entity_handler = entities.handler.Handler()
 entity_handler.list = [player]
 
-hard_reset_key = events.Keybind([pygame.K_t])
+hard_reset_key = events.Keybind([pygame.K_r])
 
 sound.play_music()
 
