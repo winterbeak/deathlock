@@ -14,6 +14,7 @@ class Player(collision.PunchableGravityCollision):
                                pygame.K_UP, pygame.K_SPACE])
     left_key = events.Keybind([pygame.K_a, pygame.K_LEFT])
     right_key = events.Keybind([pygame.K_d, pygame.K_RIGHT])
+    respawn_key = events.Keybind([pygame.K_r])
 
     TERMINAL_VELOCITY = 20.0
 
@@ -215,7 +216,7 @@ class Player(collision.PunchableGravityCollision):
             self.x_vel = 0
             self.puncher_x_vel = 0
 
-        if events.keys.pressed_key == pygame.K_r:
+        if self.respawn_key.is_pressed:
             self.respawn()
 
     def _move_left(self):
@@ -306,8 +307,7 @@ class Player(collision.PunchableGravityCollision):
                 self.tumble = False
 
             # Moving left
-            if (pygame.K_LEFT in events.keys.held_keys or
-                    pygame.K_a in events.keys.held_keys):
+            if self.left_key.is_held:
 
                 if self.grounded:
                     self.sprite.set_anim(self.RUN_LEFT_ID)
@@ -326,8 +326,7 @@ class Player(collision.PunchableGravityCollision):
                             self.run_sound_frame = 0
                             self.RUN_SOUNDS.play_random(random.random() / 4 + 0.75)
 
-            elif (pygame.K_RIGHT in events.keys.held_keys or
-                  pygame.K_d in events.keys.held_keys):
+            elif self.right_key.is_held:
 
                 if self.grounded:
                     self.sprite.set_anim(self.RUN_RIGHT_ID)
