@@ -393,6 +393,48 @@ class Room:
 
         return False
 
+    def _shift_location_tiles(self, col_change, row_change):
+        """Change the position of all things that store their own position.
+
+        Currently, that would only be checkpoints and spawns."""
+        self.player_spawn.col += col_change
+        self.player_spawn.row += row_change
+        self.player_goal.col += col_change
+        self.player_goal.row += row_change
+        for col in range(0, self.WIDTH):
+            for row in range(0, self.HEIGHT):
+                for tile in self.grid[col][row]:
+                    if type(tile) == Checkpoint:
+                        tile.col += col_change
+                        tile.row += row_change
+
+    # Note: these shift functions currently don't erase the very last row/col
+    # so it just becomes a "copy".  This is fine for my purposes since all my
+    # levels never directly touch edge.
+    def shift_left(self):
+        for col in range(0, self.WIDTH - 1):
+            for row in range(0, self.HEIGHT):
+                self.grid[col][row] = self.grid[col + 1][row]
+        self._shift_location_tiles(-1, 0)
+
+    def shift_right(self):
+        for col in range(self.WIDTH - 1, 0, -1):
+            for row in range(0, self.HEIGHT):
+                self.grid[col][row] = self.grid[col - 1][row]
+        self._shift_location_tiles(1, 0)
+
+    def shift_up(self):
+        for row in range(0, self.HEIGHT - 1):
+            for col in range(0, self.WIDTH):
+                self.grid[col][row] = self.grid[col][row + 1]
+        self._shift_location_tiles(0, -1)
+
+    def shift_down(self):
+        for row in range(self.HEIGHT - 1, 0, -1):
+            for col in range(0, self.WIDTH):
+                self.grid[col][row] = self.grid[col][row - 1]
+        self._shift_location_tiles(0, 1)
+
     def draw(self, surf, camera):
         """draws the entire stage"""
         for row in range(self.HEIGHT):

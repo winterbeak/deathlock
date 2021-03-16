@@ -23,11 +23,16 @@ class Editor:
     PLACE = 0
     RECT = 1
 
-    left_key = events.Keybind([pygame.K_a, pygame.K_LEFT])
-    right_key = events.Keybind([pygame.K_d, pygame.K_RIGHT])
-    up_key = events.Keybind([pygame.K_w, pygame.K_UP])
-    down_key = events.Keybind([pygame.K_s, pygame.K_DOWN])
+    left_key = events.Keybind([pygame.K_a])
+    right_key = events.Keybind([pygame.K_d])
+    up_key = events.Keybind([pygame.K_w])
+    down_key = events.Keybind([pygame.K_s])
     save_key = events.Keybind([pygame.K_u])
+
+    shift_left_key = events.Keybind([pygame.K_LEFT])
+    shift_right_key = events.Keybind([pygame.K_RIGHT])
+    shift_up_key = events.Keybind([pygame.K_UP])
+    shift_down_key = events.Keybind([pygame.K_DOWN])
 
     def __init__(self, level):
         self.level = level
@@ -54,6 +59,16 @@ class Editor:
             self._direction = const.UP
         elif self.down_key.is_pressed:
             self._direction = const.DOWN
+
+    def _input_shift_level(self):
+        if self.shift_left_key.is_pressed:
+            self.level.shift_left()
+        elif self.shift_right_key.is_pressed:
+            self.level.shift_right()
+        elif self.shift_up_key.is_pressed:
+            self.level.shift_up()
+        elif self.shift_down_key.is_pressed:
+            self.level.shift_down()
 
     def _input_selected_tile(self):
         if events.keys.pressed_key in events.number_keys:
@@ -117,6 +132,7 @@ class Editor:
 
     def _take_inputs(self):
         self._input_direction()
+        self._input_shift_level()
         self._input_selected_tile()
         self._input_switch_mode()
         if self.mode == self.PLACE:
