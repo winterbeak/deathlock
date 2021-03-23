@@ -101,6 +101,8 @@ class Collision(KinematicsPoint):
 
         self.level = level  # reference to the level layout
 
+        self.ignore_collision = False
+
     @property
     def x(self):
         return self._x
@@ -136,7 +138,8 @@ class Collision(KinematicsPoint):
         return self.center_x, self.center_y
 
     def update(self):
-        self._collide_stage()
+        if not self.ignore_collision:
+            self._collide_stage()
         super().update()
 
     def _snap_x(self, col, side=const.LEFT):
@@ -240,6 +243,7 @@ class GravityCollision(Collision):
                  x=0, y=0, extend_x=0, extend_y=0):
         super().__init__(level, width, height, x, y, extend_x, extend_y)
         self._terminal_velocity = terminal_velocity
+        self.ignore_gravity = False
 
     @property
     def grounded(self):
@@ -248,7 +252,7 @@ class GravityCollision(Collision):
         return self._against_floor()
 
     def update(self):
-        if not self.grounded:
+        if not self.ignore_gravity and not self.grounded:
             self.y_acc = const.GRAVITY
         super().update()
         self.y_vel = min(self.y_vel, self._terminal_velocity)
@@ -273,7 +277,8 @@ class PunchableGravityCollision(GravityCollision):
 
     def update(self):
         super().update()
-        self.collide_punchers()
+        if not self.ignore_collision:
+            self.collide_punchers()
 
     def _stop_x(self):
         super()._stop_x()
