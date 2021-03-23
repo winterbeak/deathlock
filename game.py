@@ -139,6 +139,19 @@ def game_update():
     else:
         sound.set_music_volume(sound.MUSIC_VOLUME)
 
+    if sequence.transitioning:
+        sequence.update()
+    elif sequence.done_transitioning:
+        sequence.done_transitioning = False
+        player.level = sequence.current
+        player.hidden = False
+        player.hard_respawn()
+    elif player.touching_goal:
+        sequence.current.unemit()
+        sequence.start_transition(player)
+        player.hidden = True
+        player.health = player.MAX_HEALTH  # Turns on music again
+
 
 def game_draw():
     draw_background(post_surf, main_cam)
@@ -146,6 +159,9 @@ def game_draw():
     sequence.current.draw(post_surf, main_cam)
 
     entity_handler.draw_all(post_surf, main_cam)
+
+    if sequence.transitioning:
+        sequence.draw(post_surf)
 
 
 def editor_update():
@@ -174,19 +190,6 @@ while True:
         game_update()
         game_draw()
 
-        if sequence.transitioning:
-            sequence.update()
-            sequence.draw(post_surf)
-        elif sequence.done_transitioning:
-            sequence.done_transitioning = False
-            player.level = sequence.current
-            player.hidden = False
-            player.hard_respawn()
-        elif player.touching_goal:
-            sequence.current.unemit()
-            sequence.start_transition(player)
-            player.hidden = True
-            player.health = player.MAX_HEALTH  # Turns on music again
     elif state == EDITOR:
         editor_update()
         editor_draw()
