@@ -10,7 +10,7 @@ class TransitionCircle:
 
 class Sequence:
     CIRCLE_COUNT = 8
-    CIRCLES_SPEEDUP_LENGTH = 40
+    CIRCLES_SPEEDUP_LENGTH = 30
     CIRCLES_SLOWDOWN_LENGTH = 15
 
     def __init__(self, level_names):
@@ -63,6 +63,8 @@ class Sequence:
         t = self.CIRCLES_SPEEDUP_LENGTH + 10
         self._circle_center.x_acc = 2 * (x - vx * t) / (t ** 2)
         self._circle_center.y_acc = 2 * (y - vy * t) / (t ** 2)
+
+        self._circles = player.level.player_goal.circles
 
     def update(self):
         if self._frame == self.CIRCLES_SPEEDUP_LENGTH:
