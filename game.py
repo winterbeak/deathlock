@@ -156,7 +156,10 @@ def game_update():
 def game_draw():
     draw_background(post_surf, main_cam)
     punchers.draw(post_surf, main_cam)
-    sequence.current.draw(post_surf, main_cam)
+    if sequence.transitioning:
+        sequence.draw(post_surf, main_cam)
+    else:
+        sequence.current.draw(post_surf, main_cam)
 
     entity_handler.draw_all(post_surf, main_cam)
 
