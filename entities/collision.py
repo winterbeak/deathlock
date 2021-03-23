@@ -129,9 +129,19 @@ class Collision(KinematicsPoint):
     def center_x(self):
         return self._x + self._width // 2
 
+    @center_x.setter
+    def center_x(self, value):
+        x = int(value) - self._width // 2
+        self.x = x
+
     @property
     def center_y(self):
         return self._y + self._height // 2
+
+    @center_y.setter
+    def center_y(self, value):
+        y = int(value) - self._height // 2
+        self.y = y
 
     @property
     def center_pos(self):
