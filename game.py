@@ -7,6 +7,7 @@ import constants as const
 import events
 # import debug
 
+import sequences
 import editor
 import graphics
 import camera
@@ -90,14 +91,16 @@ def test_level():
 
 
 # Current order: Intro, Punchers, RespawnMomentum, FallPunch
-level = grid.Room("RespawnMomentum4")
-editor = editor.Editor(level)
+sequence = sequences.Sequence([
+    "Deathlock1", "Deathlock2", "Intro3", "Intro4"
+])
+editor = editor.Editor(sequence.current)
 
 main_cam = camera.Camera()
 main_cam.base_x = 0
 main_cam.base_y = 0
 
-player = entities.player.Player(level, main_cam)
+player = entities.player.Player(sequence.current, main_cam)
 
 entity_handler = entities.handler.Handler()
 entity_handler.list = [player]
@@ -125,7 +128,7 @@ def game_update():
     entity_handler.update_all()
     punchers.update()
 
-    level.update()
+    sequence.current.update()
 
     main_cam.update()
 
@@ -138,7 +141,7 @@ def game_update():
 def game_draw():
     draw_background(post_surf, main_cam)
     punchers.draw(post_surf, main_cam)
-    level.draw(post_surf, main_cam)
+    sequence.current.draw(post_surf, main_cam)
 
     entity_handler.draw_all(post_surf, main_cam)
 
@@ -149,7 +152,7 @@ def editor_update():
 
 def editor_draw():
     draw_background(post_surf, main_cam)
-    level.draw(post_surf, main_cam)
+    sequence.current.draw(post_surf, main_cam)
     editor.draw(post_surf)
 
 
@@ -159,18 +162,29 @@ while True:
     if editor_key.is_pressed:
         if state == GAME:
             state = EDITOR
-            level.unemit()
+            sequence.current.unemit()
         elif state == EDITOR:
             state = GAME
             player.hard_respawn()
-            level.emit()
+            sequence.current.emit()
 
     if state == GAME:
         game_update()
         game_draw()
-        if player.touching_goal:
-            state = EDITOR
-            level.unemit()
+
+        if sequence.transitioning:
+            sequence.update()
+            sequence.draw(post_surf)
+        elif sequence.done_transitioning:
+            sequence.done_transitioning = False
+            player.level = sequence.current
+            player.hidden = False
+            player.hard_respawn()
+        elif player.touching_goal:
+            sequence.current.unemit()
+            sequence.start_transition(player)
+            player.hidden = True
+            player.health = player.MAX_HEALTH  # Turns on music again
     elif state == EDITOR:
         editor_update()
         editor_draw()

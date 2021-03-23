@@ -117,7 +117,6 @@ class Player(collision.PunchableGravityCollision):
         self.dead = False
         self.offscreen_direction = 0
 
-        self.level = level  # reference to the level layout
         self.camera = camera
 
         self.tumble = False
@@ -135,6 +134,8 @@ class Player(collision.PunchableGravityCollision):
             self.heart_sprites[heart_sprite].set_anim(heart_sprite)
 
         self.run_sound_frame = self.RUN_SOUND_DELAY
+
+        self.hidden = False
 
     @property
     def respawn_x(self):
@@ -170,6 +171,9 @@ class Player(collision.PunchableGravityCollision):
 
     def draw(self, surf, cam):
         self.sprite.update()
+
+        if self.hidden:
+            return
 
         x = self._gridbox.x - cam.x
         y = self._gridbox.y - cam.y
@@ -406,10 +410,10 @@ class Player(collision.PunchableGravityCollision):
     def _collide_checkpoints(self):
         col = grid.col_at(self.center_x)
         row = grid.row_at(self.center_y)
-        if self._level.has_tile(grid.CheckpointRay, col, row):
+        if self.level.has_tile(grid.CheckpointRay, col, row):
             self._deactivate_checkpoint()
 
-            ray = self._level.get_tile(grid.CheckpointRay, col, row)
+            ray = self.level.get_tile(grid.CheckpointRay, col, row)
             checkpoint = ray.checkpoint
             checkpoint.active = True
 
@@ -431,4 +435,4 @@ class Player(collision.PunchableGravityCollision):
     def touching_goal(self):
         col = grid.col_at(self.center_x)
         row = grid.row_at(self.center_y)
-        return self._level.has_tile(grid.PlayerGoalZone, col, row)
+        return self.level.has_tile(grid.PlayerGoalZone, col, row)
