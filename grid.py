@@ -3,6 +3,7 @@ import pygame
 
 import graphics
 import constants as const
+import entities.collision
 
 import random
 import math
@@ -146,10 +147,14 @@ class PlayerGoalCircle:
         self.angle = random.random() * math.pi * 2
         self.delta_angle = self.orbit_radius / random.randint(60, 100)
 
-    @property
-    def position(self):
         x = center_x_of(self.goal.col) + self.orbit_center_delta[0]
         y = center_y_of(self.goal.row) + self.orbit_center_delta[1]
+        self.center = entities.collision.KinematicsPoint(x, y)
+
+    @property
+    def position(self):
+        x = self.center.x
+        y = self.center.y
         x += math.cos(self.angle) * self.orbit_radius
         y += math.sin(self.angle) * self.orbit_radius
         return int(x), int(y)
