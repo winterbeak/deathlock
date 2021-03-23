@@ -91,9 +91,11 @@ def test_level():
 
 
 # Current order: Intro, Punchers, RespawnMomentum, FallPunch
-sequence = sequences.Sequence([
-    "Deathlock1", "Deathlock2", "Intro3", "Intro4"
-])
+sequence = sequences.Sequence(
+    ["Intro%i" % x for x in range(1, 5)] +
+    ["Punchers%i" % x for x in range(1, 11)] +
+    ["Parkour", "PuncherParkour"]
+)
 editor = editor.Editor(sequence.current)
 
 main_cam = camera.Camera()
