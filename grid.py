@@ -497,54 +497,57 @@ class Room:
     def update(self):
         self.player_goal.update()
 
+    def draw_tile_at(self, surf, camera, col, row):
+        if self.is_empty(col, row):
+            return
+
+        full_col = self.column * self.WIDTH + col
+        full_row = self.row * self.HEIGHT + row
+        x = full_col * TILE_W - camera.x
+        y = full_row * TILE_H - camera.y
+        rect = (x, y, TILE_W, TILE_H)
+
+        if self.has_tile(Wall, col, row):
+            pygame.draw.rect(surf, const.BLACK, rect)
+
+        elif self.has_tile(PlayerSpawn, col, row):
+            goal_rect = (x, y, TILE_W, TILE_H)
+            pygame.draw.rect(surf, const.YELLOW, goal_rect)
+
+        elif self.has_tile(Deathlock, col, row):
+            pygame.draw.rect(surf, const.RED, rect)
+        elif self.has_tile(PunchBox, col, row):
+            punch_box = self.get_tile(PunchBox, col, row)
+            if punch_box.direction == const.LEFT:
+                surf.blit(punch_box_left, (x, y))
+            elif punch_box.direction == const.UP:
+                surf.blit(punch_box_up, (x, y))
+            elif punch_box.direction == const.RIGHT:
+                surf.blit(punch_box_right, (x, y))
+            elif punch_box.direction == const.DOWN:
+                surf.blit(punch_box_down, (x, y))
+
+        elif self.has_tile(Checkpoint, col, row):
+            checkpoint = self.get_tile(Checkpoint, col, row)
+            checkpoint_pos = (x + TILE_W // 2, y + TILE_H // 2)
+            pygame.draw.circle(surf, const.GREEN, checkpoint_pos, 10)
+
+            if not checkpoint.active:
+                pygame.draw.circle(surf, const.DARK_GREEN, checkpoint_pos, 7)
+        elif self.has_tile(CheckpointRay, col, row):
+            tile = self.get_tile(CheckpointRay, col, row)
+            if tile.orientation == const.HORIZ:
+                ray_rect = (x, y + TILE_H // 3, TILE_W, TILE_H // 3)
+                pygame.draw.rect(surf, const.GREEN, ray_rect)
+            elif tile.orientation == const.VERT:
+                ray_rect = (x + TILE_W // 3, y, TILE_W // 3, TILE_H)
+                pygame.draw.rect(surf, const.GREEN, ray_rect)
+
     def draw(self, surf, camera):
         """draws the entire stage"""
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
-                if self.is_empty(col, row):
-                    continue
-
-                full_col = self.column * self.WIDTH + col
-                full_row = self.row * self.HEIGHT + row
-                x = full_col * TILE_W - camera.x
-                y = full_row * TILE_H - camera.y
-                rect = (x, y, TILE_W, TILE_H)
-
-                if self.has_tile(Wall, col, row):
-                    pygame.draw.rect(surf, const.BLACK, rect)
-
-                elif self.has_tile(PlayerSpawn, col, row):
-                    goal_rect = (x, y, TILE_W, TILE_H)
-                    pygame.draw.rect(surf, const.YELLOW, goal_rect)
-
-                elif self.has_tile(Deathlock, col, row):
-                    pygame.draw.rect(surf, const.RED, rect)
-                elif self.has_tile(PunchBox, col, row):
-                    punch_box = self.get_tile(PunchBox, col, row)
-                    if punch_box.direction == const.LEFT:
-                        surf.blit(punch_box_left, (x, y))
-                    elif punch_box.direction == const.UP:
-                        surf.blit(punch_box_up, (x, y))
-                    elif punch_box.direction == const.RIGHT:
-                        surf.blit(punch_box_right, (x, y))
-                    elif punch_box.direction == const.DOWN:
-                        surf.blit(punch_box_down, (x, y))
-
-                elif self.has_tile(Checkpoint, col, row):
-                    checkpoint = self.get_tile(Checkpoint, col, row)
-                    checkpoint_pos = (x + TILE_W // 2, y + TILE_H // 2)
-                    pygame.draw.circle(surf, const.GREEN, checkpoint_pos, 10)
-
-                    if not checkpoint.active:
-                        pygame.draw.circle(surf, const.DARK_GREEN, checkpoint_pos, 7)
-                elif self.has_tile(CheckpointRay, col, row):
-                    tile = self.get_tile(CheckpointRay, col, row)
-                    if tile.orientation == const.HORIZ:
-                        ray_rect = (x, y + TILE_H // 3, TILE_W, TILE_H // 3)
-                        pygame.draw.rect(surf, const.GREEN, ray_rect)
-                    elif tile.orientation == const.VERT:
-                        ray_rect = (x + TILE_W // 3, y, TILE_W // 3, TILE_H)
-                        pygame.draw.rect(surf, const.GREEN, ray_rect)
+                self.draw_tile_at(surf, camera, col, row)
         self.player_goal.draw(surf)
 
     def place_tile_from_id(self, col, row, tile_id):
