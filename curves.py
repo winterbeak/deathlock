@@ -127,5 +127,5 @@ class SineIn(Sine):
         super().__init__(start_value, end_value, length)
         self.k = (2 * math.pi) / ((length - 1) * 4)
         self.a = end_value - start_value
-        self.c = start_value
+        self.c = end_value
         self.d = length
