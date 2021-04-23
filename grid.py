@@ -52,32 +52,32 @@ def id_of(tiles):
 
 
 class Tile:
-    solid = False
-    emitted = False
+    SOLID = False
+    EMITTED = False
 
     def __init__(self):
         pass
 
 
 class Void(Tile):
-    solid = True
-    emitted = False
+    SOLID = True
+    EMITTED = False
 
     def __init__(self):
         super().__init__()
 
 
 class Wall(Tile):
-    solid = True
-    emitted = False
+    SOLID = True
+    EMITTED = False
 
     def __init__(self):
         super().__init__()
 
 
 class PunchBox(Tile):
-    solid = True
-    emitted = False
+    SOLID = True
+    EMITTED = False
 
     def __init__(self, direction):
         super().__init__()
@@ -85,8 +85,8 @@ class PunchBox(Tile):
 
 
 class PunchZone(Tile):
-    solid = False
-    emitted = True
+    SOLID = False
+    EMITTED = True
 
     def __init__(self, direction):
         super().__init__()
@@ -94,16 +94,16 @@ class PunchZone(Tile):
 
 
 class Deathlock(Tile):
-    solid = False
-    emitted = False
+    SOLID = False
+    EMITTED = False
 
     def __init__(self):
         super().__init__()
 
 
 class Checkpoint(Tile):
-    solid = False
-    emitted = False
+    SOLID = False
+    EMITTED = False
 
     def __init__(self, direction, col, row):
         super().__init__()
@@ -114,8 +114,8 @@ class Checkpoint(Tile):
 
 
 class CheckpointRay(Tile):
-    solid = False
-    emitted = True
+    SOLID = False
+    EMITTED = True
 
     def __init__(self, checkpoint, orientation):
         super().__init__()
@@ -125,8 +125,8 @@ class CheckpointRay(Tile):
 
 
 class PlayerSpawn(Tile):
-    solid = False
-    emitted = False
+    SOLID = False
+    EMITTED = False
 
     def __init__(self, col, row):
         super().__init__()
@@ -135,8 +135,8 @@ class PlayerSpawn(Tile):
 
 
 class PlayerGoal(Tile):
-    solid = False
-    emitted = False
+    SOLID = False
+    EMITTED = False
 
     def __init__(self, col, row):
         super().__init__()
@@ -162,8 +162,8 @@ class PlayerGoal(Tile):
 
 
 class PlayerGoalZone(Tile):
-    solid = False
-    emitted = True
+    SOLID = False
+    EMITTED = True
 
     def __init__(self):
         super().__init__()
@@ -386,7 +386,7 @@ class Room:
     def has_solid(self, col, row):
         """returns whether a tile is solid or not"""
         for tile in self.tiles_at(col, row):
-            if tile.solid:
+            if tile.SOLID:
                 return True
 
         return False
@@ -411,7 +411,7 @@ class Room:
         for col in range(self.WIDTH):
             for row in range(self.HEIGHT):
                 for tile in reversed(self.tiles_at(col, row)):
-                    if tile.emitted:
+                    if tile.EMITTED:
                         self.tiles_at(col, row).remove(tile)
 
     def emit_punch_zone(self, col, row, tile):
