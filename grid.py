@@ -52,41 +52,61 @@ def id_of(tiles):
 
 
 class Tile:
-    def __init__(self, solid, emitted):
-        self.solid = solid
-        self.emitted = emitted
+    solid = False
+    emitted = False
+
+    def __init__(self):
+        pass
 
 
 class Void(Tile):
+    solid = True
+    emitted = False
+
     def __init__(self):
-        super().__init__(True, False)
+        super().__init__()
 
 
 class Wall(Tile):
+    solid = True
+    emitted = False
+
     def __init__(self):
-        super().__init__(True, False)
+        super().__init__()
 
 
 class PunchBox(Tile):
+    solid = True
+    emitted = False
+
     def __init__(self, direction):
-        super().__init__(True, False)
+        super().__init__()
         self.direction = direction
 
 
 class PunchZone(Tile):
+    solid = False
+    emitted = True
+
     def __init__(self, direction):
-        super().__init__(False, True)
+        super().__init__()
         self.direction = direction
 
 
 class Deathlock(Tile):
+    solid = False
+    emitted = False
+
     def __init__(self):
-        super().__init__(False, False)
+        super().__init__()
 
 
 class Checkpoint(Tile):
+    solid = False
+    emitted = False
+
     def __init__(self, direction, col, row):
-        super().__init__(False, False)
+        super().__init__()
         self.direction = direction
         self.col = col
         self.row = row
@@ -94,23 +114,32 @@ class Checkpoint(Tile):
 
 
 class CheckpointRay(Tile):
+    solid = False
+    emitted = True
+
     def __init__(self, checkpoint, orientation):
-        super().__init__(False, True)
+        super().__init__()
 
         self.orientation = orientation
         self.checkpoint = checkpoint
 
 
 class PlayerSpawn(Tile):
+    solid = False
+    emitted = False
+
     def __init__(self, col, row):
-        super().__init__(False, False)
+        super().__init__()
         self.col = col
         self.row = row
 
 
 class PlayerGoal(Tile):
+    solid = False
+    emitted = False
+
     def __init__(self, col, row):
-        super().__init__(False, False)
+        super().__init__()
         self.col = col
         self.row = row
         self.circles = []
@@ -133,8 +162,11 @@ class PlayerGoal(Tile):
 
 
 class PlayerGoalZone(Tile):
+    solid = False
+    emitted = True
+
     def __init__(self):
-        super().__init__(False, True)
+        super().__init__()
 
 
 class PlayerGoalCircle:
