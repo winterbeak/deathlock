@@ -20,7 +20,7 @@ import punchers
 
 # INITIALIZATION
 pygame.init()
-post_surf = pygame.display.set_mode((const.SCRN_W, const.SCRN_H))
+main_surf = pygame.display.set_mode((const.SCRN_W, const.SCRN_H))
 pygame.display.set_caption("deathlock")
 
 clock = pygame.time.Clock()
@@ -59,7 +59,7 @@ background = init_background()
 
 def screen_update(fps):
     pygame.display.flip()
-    post_surf.fill(const.WHITE)
+    main_surf.fill(const.WHITE)
     clock.tick(fps)
 
 
@@ -90,6 +90,7 @@ def test_level():
 
 # Current order: Intro, Punchers, RespawnMomentum, FallPunch
 sequence = sequences.Sequence(
+    ["Haul2"] +
     ["Intro%i" % x for x in range(1, 5)] +
     ["Punchers%i" % x for x in range(1, 11)] +
     ["Parkour", "PuncherParkour"]
@@ -158,22 +159,22 @@ def game_update():
 
 def draw_level():
     if sequence.transitioning:
-        post_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
-        punchers.draw(post_surf, main_cam)
-        sequence.draw_pinhole(post_surf)
-        sequence.draw_player_circle(post_surf)
+        main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+        punchers.draw(main_surf, main_cam)
+        sequence.draw_pinhole(main_surf)
+        sequence.draw_player_circle(main_surf)
     else:
-        post_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
-        punchers.draw(post_surf, main_cam)
-        sequence.current.draw_dynamic(post_surf, main_cam)
+        main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+        punchers.draw(main_surf, main_cam)
+        sequence.current.draw_dynamic(main_surf, main_cam)
 
 
 def game_draw():
-    draw_background(post_surf)
+    draw_background(main_surf)
 
     draw_level()
 
-    entity_handler.draw_all(post_surf, main_cam)
+    entity_handler.draw_all(main_surf, main_cam)
 
 
 def editor_update():
@@ -181,9 +182,9 @@ def editor_update():
 
 
 def editor_draw():
-    draw_background(post_surf)
+    draw_background(main_surf)
     draw_level()
-    editor.draw(post_surf)
+    editor.draw(main_surf)
 
 
 while True:
