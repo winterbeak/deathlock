@@ -97,6 +97,10 @@ sequence = sequences.Sequence(
 )
 editor = editor.Editor(sequence)
 
+SWAP_TO_EDITOR = 0
+NEXT_LEVEL = 1
+level_beat_mode = SWAP_TO_EDITOR
+
 main_cam = camera.Camera()
 main_cam.base_x = 0
 main_cam.base_y = 0
@@ -150,11 +154,14 @@ def game_update():
         player.hidden = False
         player.hard_respawn()
     elif player.touching_goal:
-        sequence.current.unemit()
-        draw_background(sequence.pinhole_surf)
-        sequence.start_transition(player, static_level_surf)
-        player.hidden = True
-        player.health = player.MAX_HEALTH  # Turns on music again
+        if level_beat_mode == SWAP_TO_EDITOR:
+            swap_to_editor()
+        elif level_beat_mode == NEXT_LEVEL:
+            sequence.current.unemit()
+            draw_background(sequence.pinhole_surf)
+            sequence.start_transition(player, static_level_surf)
+            player.hidden = True
+            player.health = player.MAX_HEALTH  # Turns on music again
 
 
 def draw_level():
@@ -188,17 +195,28 @@ def editor_draw():
     editor.draw(main_surf)
 
 
+def swap_to_editor():
+    global state
+    state = EDITOR
+    sequence.current.unemit()
+
+
+def swap_to_game():
+    global state
+    state = GAME
+    player.hard_respawn()
+    sequence.current.emit()
+    sequence.current.draw_static(static_level_surf, main_cam)
+
+
 while True:
     events.update()
 
     if editor_key.is_pressed:
         if state == GAME:
-            state = EDITOR
-            sequence.current.unemit()
+            swap_to_editor()
         elif state == EDITOR:
-            state = GAME
-            player.hard_respawn()
-            sequence.current.emit()
+            swap_to_game()
 
     if state == GAME:
         game_update()
