@@ -54,6 +54,7 @@ def id_of(tiles):
 class Tile:
     SOLID = False
     EMITTED = False
+    DRAWN_STATICALLY = True
 
     def __init__(self):
         pass
@@ -62,6 +63,7 @@ class Tile:
 class Void(Tile):
     SOLID = True
     EMITTED = False
+    DRAWN_STATICALLY = True
 
     def __init__(self):
         super().__init__()
@@ -70,6 +72,7 @@ class Void(Tile):
 class Wall(Tile):
     SOLID = True
     EMITTED = False
+    DRAWN_STATICALLY = True
 
     def __init__(self):
         super().__init__()
@@ -78,6 +81,7 @@ class Wall(Tile):
 class PunchBox(Tile):
     SOLID = True
     EMITTED = False
+    DRAWN_STATICALLY = False
 
     def __init__(self, direction):
         super().__init__()
@@ -87,6 +91,7 @@ class PunchBox(Tile):
 class PunchZone(Tile):
     SOLID = False
     EMITTED = True
+    DRAWN_STATICALLY = True
 
     def __init__(self, direction):
         super().__init__()
@@ -96,6 +101,7 @@ class PunchZone(Tile):
 class Deathlock(Tile):
     SOLID = False
     EMITTED = False
+    DRAWN_STATICALLY = True
 
     def __init__(self):
         super().__init__()
@@ -104,6 +110,7 @@ class Deathlock(Tile):
 class Checkpoint(Tile):
     SOLID = False
     EMITTED = False
+    DRAWN_STATICALLY = False
 
     def __init__(self, direction, col, row):
         super().__init__()
@@ -116,6 +123,7 @@ class Checkpoint(Tile):
 class CheckpointRay(Tile):
     SOLID = False
     EMITTED = True
+    DRAWN_STATICALLY = True
 
     def __init__(self, checkpoint, orientation):
         super().__init__()
@@ -127,6 +135,7 @@ class CheckpointRay(Tile):
 class PlayerSpawn(Tile):
     SOLID = False
     EMITTED = False
+    DRAWN_STATICALLY = True
 
     def __init__(self, col, row):
         super().__init__()
@@ -137,6 +146,7 @@ class PlayerSpawn(Tile):
 class PlayerGoal(Tile):
     SOLID = False
     EMITTED = False
+    DRAWN_STATICALLY = True
 
     def __init__(self, col, row):
         super().__init__()
@@ -164,6 +174,7 @@ class PlayerGoal(Tile):
 class PlayerGoalZone(Tile):
     SOLID = False
     EMITTED = True
+    DRAWN_STATICALLY = True
 
     def __init__(self):
         super().__init__()
@@ -252,14 +263,6 @@ class Room:
 
     def __init__(self, name):
         """name is the name of the file in the levels folder"""
-        # These values are all default values.
-        # Only once the room is added to a level will they be set.
-        self.column = 0
-        self.row = 0
-
-        self.x = 0
-        self.y = 0
-
         self.grid = [[[] for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
 
         self.player_spawn = PlayerSpawn(0, 0)
@@ -529,22 +532,19 @@ class Room:
     def update(self):
         self.player_goal.update()
 
-    def draw_tile_at(self, surf, camera, col, row):
-        if self.is_empty(col, row):
-            return
-
-        full_col = self.column * self.WIDTH + col
-        full_row = self.row * self.HEIGHT + row
-        x = full_col * TILE_W - camera.x
-        y = full_row * TILE_H - camera.y
+    def draw_tile_at(self, surf, camera, col, row, transparent_background=True):
+        x = col * TILE_W - int(camera.x)
+        y = row * TILE_H - int(camera.y)
         rect = (x, y, TILE_W, TILE_H)
+
+        if transparent_background:
+            pygame.draw.rect(surf, const.TRANSPARENT, rect)
 
         if self.has_tile(Wall, col, row):
             pygame.draw.rect(surf, const.BLACK, rect)
 
         elif self.has_tile(PlayerSpawn, col, row):
-            goal_rect = (x, y, TILE_W, TILE_H)
-            pygame.draw.rect(surf, const.YELLOW, goal_rect)
+            pygame.draw.rect(surf, const.YELLOW, rect)
 
         elif self.has_tile(Deathlock, col, row):
             pygame.draw.rect(surf, const.RED, rect)
@@ -575,11 +575,17 @@ class Room:
                 ray_rect = (x + TILE_W // 3, y, TILE_W // 3, TILE_H)
                 pygame.draw.rect(surf, const.GREEN, ray_rect)
 
-    def draw(self, surf, camera):
+    def draw_static(self, surf, camera, transparent_background=True):
         """draws the entire stage"""
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
-                self.draw_tile_at(surf, camera, col, row)
+                self.draw_tile_at(surf, camera, col, row, transparent_background)
+
+    def draw_dynamic(self, surf, camera):
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                if self.grid[col][row] and not self.grid[col][row][0].DRAWN_STATICALLY:
+                    self.draw_tile_at(surf, camera, col, row, False)
         self.player_goal.draw(surf)
 
     def place_tile_from_id(self, col, row, tile_id):

@@ -93,7 +93,10 @@ class Camera:
         self.shake_intensity = intensity
 
     def move_point(self, point):
-        return (point[0] - self.x, point[1] - self.y)
+        return point[0] - self.x, point[1] - self.y
 
     def move_rect(self, rect):
-        return (rect.x - self.x, rect.y - self.y, rect.w, rect.h)
+        return rect.x - self.x, rect.y - self.y, rect.w, rect.h
+
+
+zero_camera = Camera()

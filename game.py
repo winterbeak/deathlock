@@ -50,10 +50,8 @@ def init_background():
     return surf
 
 
-def draw_background(surf, cam):
-    x = -(cam.x % (grid.TILE_W * 2)) - 10
-    y = -(cam.y % (grid.TILE_H * 2)) - 10
-    surf.blit(background, (x, y))
+def draw_background(surf):
+    surf.blit(background, (0, 0))
 
 
 background = init_background()
@@ -109,6 +107,10 @@ entity_handler.list = [player]
 
 hard_reset_key = events.Keybind([pygame.K_r])
 
+static_level_surf = pygame.Surface((const.SCRN_W, const.SCRN_H))
+static_level_surf.set_colorkey(const.TRANSPARENT)
+sequence.current.draw_static(static_level_surf, main_cam)
+
 sound.play_music()
 
 
@@ -148,23 +150,30 @@ def game_update():
         player.hard_respawn()
     elif player.touching_goal:
         sequence.current.unemit()
-        sequence.start_transition(player)
+        draw_background(sequence.pinhole_surf)
+        sequence.start_transition(player, static_level_surf)
         player.hidden = True
         player.health = player.MAX_HEALTH  # Turns on music again
 
 
-def game_draw():
-    draw_background(post_surf, main_cam)
-    punchers.draw(post_surf, main_cam)
+def draw_level():
     if sequence.transitioning:
-        sequence.draw(post_surf, main_cam)
+        post_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+        punchers.draw(post_surf, main_cam)
+        sequence.draw_pinhole(post_surf)
+        sequence.draw_player_circle(post_surf)
     else:
-        sequence.current.draw(post_surf, main_cam)
+        post_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+        punchers.draw(post_surf, main_cam)
+        sequence.current.draw_dynamic(post_surf, main_cam)
+
+
+def game_draw():
+    draw_background(post_surf)
+
+    draw_level()
 
     entity_handler.draw_all(post_surf, main_cam)
-
-    if sequence.transitioning:
-        sequence.draw(post_surf)
 
 
 def editor_update():
@@ -172,8 +181,8 @@ def editor_update():
 
 
 def editor_draw():
-    draw_background(post_surf, main_cam)
-    sequence.current.draw(post_surf, main_cam)
+    draw_background(post_surf)
+    draw_level()
     editor.draw(post_surf)
 
 

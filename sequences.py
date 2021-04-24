@@ -1,15 +1,18 @@
 import math
 
 import pygame
+import camera
 import grid
 import curves
 import constants as const
 import entities.collision
 
+
 class TransitionCircle:
     def __init__(self, color):
         self.color = color
         self.radius = 0
+
 
 class Sequence:
     CIRCLE_COUNT = 8
@@ -30,9 +33,12 @@ class Sequence:
         self._circles = []
         self._emitted_circles = 0
 
-        t = 20
+        t = 30
         self._pinhole_radius = 0
-        self._pinhole_radius_curve = curves.SineIn(0, 1280, t)
+        scrn_diagonal = math.sqrt(const.SCRN_W ** 2 + const.SCRN_H ** 2)
+        self._pinhole_radius_curve = curves.SineIn(0, scrn_diagonal, t)
+        self.pinhole_surf = pygame.Surface((const.SCRN_W, const.SCRN_H))
+        self.pinhole_surf.set_colorkey(const.TRANSPARENT)
 
         # Same amount of circles as grid PlayerGoal
         for i in range(self.CIRCLE_COUNT):
@@ -44,10 +50,13 @@ class Sequence:
         self.current = self.next
         self.next = grid.Room(self.level_names[self._level_num + 1])
 
-    def start_transition(self, player):
+    def start_transition(self, player, static_level_surf):
         self.transitioning = True
         self._pinhole_radius_curve.restart()
         self._start_circles(player)
+
+        self.current.draw_static(self.pinhole_surf, camera.zero_camera, False)
+        self.next.draw_static(static_level_surf, camera.zero_camera)
 
     def _end_transition(self):
         self._circle_slowdown_x = None
@@ -98,29 +107,24 @@ class Sequence:
         self._frame += 1
         self._circle_center.update()
 
-        if self._frame > 20:
+        if self._frame > 10:
             self._pinhole_radius_curve.update()
 
-    def draw(self, surf, camera):
+    def draw_pinhole(self, surf):
         goal_x = grid.center_x_of(self.current.player_goal.col)
         goal_y = grid.center_y_of(self.current.player_goal.row)
-        pinhole_radius = self._pinhole_radius_curve.current_value
-        for row in range(grid.Room.HEIGHT):
-            for col in range(grid.Room.WIDTH):
-                dx = grid.center_x_of(col) - goal_x
-                dy = grid.center_y_of(row) - goal_y
-                distance = math.sqrt(dx * dx + dy * dy)
 
-                if distance < pinhole_radius:
-                    self.next.draw_tile_at(surf, camera, col, row)
-                else:
-                    self.current.draw_tile_at(surf, camera, col, row)
+        pinhole_radius = self._pinhole_radius_curve.current_value
 
         center = (int(goal_x), int(goal_y))
         radius = int(pinhole_radius) + grid.TILE_W
         width = min(radius // 10 + 5 + grid.TILE_W, radius)
+        pygame.draw.circle(self.pinhole_surf, const.TRANSPARENT, center, radius)
+        surf.blit(self.pinhole_surf, (0, 0))
+
         pygame.draw.circle(surf, const.RED, center, radius, width)
 
+    def draw_player_circle(self, surf):
         x = self._circle_center.x
         y = self._circle_center.y
         pygame.draw.circle(surf, (255, 0, 0), (int(x), int(y)), 50)
