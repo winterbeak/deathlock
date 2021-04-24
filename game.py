@@ -99,7 +99,7 @@ editor = editor.Editor(sequence)
 
 SWAP_TO_EDITOR = 0
 NEXT_LEVEL = 1
-level_beat_mode = SWAP_TO_EDITOR
+level_beat_mode = NEXT_LEVEL
 
 main_cam = camera.Camera()
 main_cam.base_x = 0
@@ -114,7 +114,8 @@ hard_reset_key = events.Keybind([pygame.K_r])
 
 static_level_surf = pygame.Surface((const.SCRN_W, const.SCRN_H))
 static_level_surf.set_colorkey(const.TRANSPARENT)
-sequence.current.draw_static(static_level_surf, main_cam)
+draw_background(static_level_surf)
+sequence.current.draw_static(static_level_surf, main_cam, False)
 
 sound.play_music()
 
@@ -159,6 +160,7 @@ def game_update():
         elif level_beat_mode == NEXT_LEVEL:
             sequence.current.unemit()
             draw_background(sequence.pinhole_surf)
+            draw_background(static_level_surf)
             sequence.start_transition(player, static_level_surf)
             player.hidden = True
             player.health = player.MAX_HEALTH  # Turns on music again
@@ -177,8 +179,6 @@ def draw_level():
 
 
 def game_draw():
-    draw_background(main_surf)
-
     draw_level()
 
     entity_handler.draw_all(main_surf, main_cam)
@@ -206,7 +206,8 @@ def swap_to_game():
     state = GAME
     player.hard_respawn()
     sequence.current.emit()
-    sequence.current.draw_static(static_level_surf, main_cam)
+    draw_background(static_level_surf)
+    sequence.current.draw_static(static_level_surf, main_cam, False)
 
 
 while True:

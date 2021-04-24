@@ -56,7 +56,7 @@ class Sequence:
         self._start_circles(player)
 
         self.current.draw_static(self.pinhole_surf, camera.zero_camera, False)
-        self.next.draw_static(static_level_surf, camera.zero_camera)
+        self.next.draw_static(static_level_surf, camera.zero_camera, False)
 
     def _end_transition(self):
         self._circle_slowdown_x = None
