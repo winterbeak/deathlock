@@ -161,7 +161,6 @@ def game_update():
 def draw_level():
     if sequence.transitioning:
         main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
-        punchers.draw(main_surf, main_cam)
         sequence.draw_pinhole(main_surf)
         sequence.draw_player_circle(main_surf)
     else:
