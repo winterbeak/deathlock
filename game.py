@@ -95,7 +95,7 @@ sequence = sequences.Sequence(
     ["Punchers%i" % x for x in range(1, 11)] +
     ["Parkour", "PuncherParkour"]
 )
-editor = editor.Editor(sequence.current)
+editor = editor.Editor(sequence)
 
 main_cam = camera.Camera()
 main_cam.base_x = 0
@@ -183,7 +183,8 @@ def editor_update():
 
 def editor_draw():
     draw_background(main_surf)
-    draw_level()
+    sequence.current.draw_static(main_surf, main_cam, False)
+    sequence.current.draw_dynamic(main_surf, main_cam)
     editor.draw(main_surf)
 
 
