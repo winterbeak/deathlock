@@ -127,4 +127,4 @@ class Sequence:
     def draw_player_circle(self, surf):
         x = self._circle_center.x
         y = self._circle_center.y
-        pygame.draw.circle(surf, (255, 0, 0), (int(x), int(y)), 50)
+        pygame.draw.circle(surf, const.PLAYER_BODY, (int(x), int(y)), 50)
