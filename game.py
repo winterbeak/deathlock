@@ -5,7 +5,7 @@ import pygame
 
 import constants as const
 import events
-# import debug
+import debug
 
 import sequences
 import editor
@@ -235,7 +235,7 @@ while True:
         editor_update()
         editor_draw()
 
-    # debug.debug(clock.get_fps())
+    debug.debug(clock.get_fps())
     # debug.debug(main_cam.sliding, main_cam.last_slide_frame)
     # debug.debug(main_cam.slide_x_frame, main_cam.slide_y_frame, main_cam.SLIDE_LENGTH)
     # debug.debug(level.active_column, level.active_row)
@@ -244,7 +244,7 @@ while True:
     # debug.debug(float(player.x_vel), float(player.ext_x_vel))
     # debug.debug(player.health, player.dead)
 
-    # debug.draw(post_surf)
+    debug.draw(main_surf)
 
     if pygame.K_f in events.keys.held_keys:
         screen_update(2)
