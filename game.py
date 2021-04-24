@@ -150,20 +150,12 @@ def game_update():
     if sequence.transitioning:
         sequence.update()
     elif sequence.done_transitioning:
-        sequence.done_transitioning = False
-        player.level = sequence.current
-        player.hidden = False
-        player.hard_respawn()
+        end_transition()
     elif player.touching_goal:
         if level_beat_mode == SWAP_TO_EDITOR:
             swap_to_editor()
         elif level_beat_mode == NEXT_LEVEL:
-            sequence.current.unemit()
-            draw_background(sequence.pinhole_surf)
-            draw_background(static_level_surf)
-            sequence.start_transition(player, static_level_surf)
-            player.hidden = True
-            player.health = player.MAX_HEALTH  # Turns on music again
+            next_level()
 
 
 def draw_level():
@@ -208,6 +200,22 @@ def swap_to_game():
     sequence.current.emit()
     draw_background(static_level_surf)
     sequence.current.draw_static(static_level_surf, main_cam, False)
+
+
+def next_level():
+    sequence.current.unemit()
+    draw_background(sequence.pinhole_surf)
+    draw_background(static_level_surf)
+    sequence.start_transition(player, static_level_surf)
+    player.hidden = True
+    player.health = player.MAX_HEALTH  # Turns on music again
+
+
+def end_transition():
+    sequence.done_transitioning = False
+    player.level = sequence.current
+    player.hidden = False
+    player.hard_respawn()
 
 
 while True:
