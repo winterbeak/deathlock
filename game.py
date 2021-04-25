@@ -32,29 +32,11 @@ CREDITS_TEXT = graphics.load_image("credits", 2)
 CREDITS_TEXT.set_colorkey(const.TRANSPARENT)
 
 
-def init_background():
-    surf = pygame.Surface((const.SCRN_W + grid.TILE_W * 2,
-                           const.SCRN_H + grid.TILE_H * 2))
-    width = grid.TILE_W
-    height = grid.TILE_H
-    for row in range(surf.get_height() // height):
-        for col in range(surf.get_width() // width):
-            x = col * width
-            y = row * height
-
-            if (col + row) % 2 == 0:
-                pygame.draw.rect(surf, const.BACKGROUND_GREY, (x, y, width, height))
-            else:
-                pygame.draw.rect(surf, const.WHITE, (x, y, width, height))
-
-    return surf
+background = graphics.load_image("background", 1)
 
 
 def draw_background(surf):
     surf.blit(background, (0, 0))
-
-
-background = init_background()
 
 
 def screen_update(fps):
