@@ -88,12 +88,40 @@ def test_level():
     return room
 
 
-# Current order: Intro, Punchers, RespawnMomentum, FallPunch
+def levels_with_number(shared_name, first, last):
+    """Returns a list of levels with increasing numbers attached.
+
+    levels_with_number("Intro", 2, 5) returns the list
+    ["Intro2", "Intro3", "Intro4", "Intro5"]
+    """
+    shared_name += "%i"
+    return [shared_name % x for x in range(first, last + 1)]
+
+
 sequence = sequences.Sequence(
-    ["Haul2"] +
-    ["Intro%i" % x for x in range(1, 5)] +
-    ["Punchers%i" % x for x in range(1, 11)] +
-    ["Parkour", "PuncherParkour"]
+    levels_with_number("Intro", 1, 4) +
+
+    levels_with_number("PunchersIntro", 1, 5) +
+    levels_with_number("PunchersMomentum", 1, 5) +
+    ["PuncherParkour"] +
+    levels_with_number("RespawnMomentum", 1, 5) +
+    levels_with_number("FallPunch", 1, 2) +
+
+    levels_with_number("CheckpointsIntro", 1, 3) +
+    ["CheckpointTiming"] +
+    levels_with_number("CheckpointsMomentum", 1, 4) +
+    ["Teleport1", "TeleportDown", "Parkour", "LaserMaze", "EarlyJump",
+     "SpamRespawn"] +
+    levels_with_number("Escalator", 1, 3) +
+
+    levels_with_number("DeathlockIntro", 1, 4) +
+    levels_with_number("DeathlockMomentum", 1, 5) +
+    ["DeadMansTrampoline", "DeadMansRightPuncher", "AvoidTheFirst"] +
+    levels_with_number("Pole", 1, 2) +
+    levels_with_number("DoubleFallPunch", 1, 2) +
+    levels_with_number("Ledge", 1, 2) +
+    ["DeathlockHeadBonk", "DeathlockPuzzle", "DeathlockBlock", "DoubleTriple"] +
+    levels_with_number("Haul", 1, 4)
 )
 editor = editor.Editor(sequence)
 
@@ -235,6 +263,7 @@ while True:
         editor_draw()
 
     debug.debug(clock.get_fps())
+    debug.debug(sequence.current.name)
     # debug.debug(main_cam.sliding, main_cam.last_slide_frame)
     # debug.debug(main_cam.slide_x_frame, main_cam.slide_y_frame, main_cam.SLIDE_LENGTH)
     # debug.debug(level.active_column, level.active_row)
