@@ -33,6 +33,7 @@ CREDITS_TEXT.set_colorkey(const.TRANSPARENT)
 
 
 background = graphics.load_image("background", 1)
+player_glow = graphics.load_image("player_gradient", 1)
 
 
 def draw_background(surf):
@@ -177,6 +178,11 @@ def draw_level():
         main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
         punchers.draw(main_surf, main_cam)
         sequence.current.draw_dynamic(main_surf, main_cam)
+
+    glow_x = int(player.center_x - player_glow.get_width() / 2)
+    glow_y = int(player.center_y - player_glow.get_height() / 2)
+
+    main_surf.blit(player_glow, (glow_x, glow_y), special_flags=pygame.BLEND_ADD)
 
 
 def game_draw():
