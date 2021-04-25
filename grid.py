@@ -211,9 +211,12 @@ class PlayerGoalCircle:
 
 
 punch_box_left = graphics.load_image("punch_box", 2)
+punch_box_left.set_colorkey(const.TRANSPARENT)
 punch_box_up = pygame.transform.rotate(punch_box_left, -90)
 punch_box_right = pygame.transform.rotate(punch_box_left, 180)
 punch_box_down = pygame.transform.rotate(punch_box_left, 90)
+punch_box_gradient = graphics.load_image("punch_box_gradient", 1)
+punch_box_glow = graphics.load_image("punch_box_glow", 1)
 
 
 def col_at(x):
@@ -575,8 +578,27 @@ class Room:
                 ray_rect = (x + TILE_W // 3, y, TILE_W // 3, TILE_H)
                 pygame.draw.rect(surf, const.GREEN, ray_rect)
 
+    def draw_glow_at(self, surf, col, row):
+        center_x = center_x_of(col)
+        center_y = center_y_of(row)
+
+        if self.has_tile(PunchBox, col, row):
+            glow_x = int(center_x - (punch_box_glow.get_width() / 2))
+            glow_y = int(center_y - (punch_box_glow.get_height() / 2))
+            surf.blit(punch_box_glow, (glow_x, glow_y), special_flags=pygame.BLEND_MAX)
+
+            gradient_x = int(center_x - (punch_box_gradient.get_width() / 2))
+            gradient_y = int(center_y - (punch_box_gradient.get_height() / 2))
+            surf.blit(punch_box_gradient, (gradient_x, gradient_y), special_flags=pygame.BLEND_MAX)
+
     def draw_static(self, surf, camera, transparent_background=True):
         """draws the entire stage"""
+        glow_surf = pygame.Surface(surf.get_size())
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                self.draw_glow_at(glow_surf, col, row)
+        surf.blit(glow_surf, (0, 0), special_flags=pygame.BLEND_ADD)
+
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
                 self.draw_tile_at(surf, camera, col, row, transparent_background)
