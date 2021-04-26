@@ -546,9 +546,9 @@ class Room:
         elif self.has_tile(CheckpointRay, col, row):
             tile = self.get_tile(CheckpointRay, col, row)
             if tile.checkpoint.active:
-                color = (66, 150, 66)
-            else:
                 color = (81, 255, 113)
+            else:
+                color = (71, 158, 71)
             if tile.orientation == const.HORIZ:
                 ray_rect = (x, y + TILE_H // 3, TILE_W, TILE_H // 3 + 2)
                 pygame.draw.rect(surf, color, ray_rect)
