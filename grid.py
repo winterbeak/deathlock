@@ -179,6 +179,9 @@ checkpoint_ray_vert_gradient = pygame.transform.rotate(checkpoint_ray_horiz_grad
 checkpoint_ray_horiz_glow = graphics.load_image("checkpoint_ray_horiz_glow", 1)
 checkpoint_ray_vert_glow = pygame.transform.rotate(checkpoint_ray_horiz_glow, 90)
 
+player_goal_glow = graphics.load_image("player_goal_glow", 1)
+player_goal_gradient = graphics.load_image("player_goal_gradient", 1)
+
 def col_at(x):
     """returns the tile column at pixel position x"""
     return int(x // TILE_W)
@@ -539,6 +542,9 @@ class Room:
                 ray_rect = (x + TILE_W // 3, y, TILE_W // 3 + 2, TILE_H)
                 pygame.draw.rect(surf, color, ray_rect)
 
+        elif self.has_tile(PlayerGoalZone, col, row):
+            pygame.draw.rect(surf, (250, 250, 250), rect)
+
     def draw_glow_at(self, surf, col, row):
         center_x = center_x_of(col)
         center_y = center_y_of(row)
@@ -576,6 +582,21 @@ class Room:
                 gradient_x = int(center_x - (checkpoint_ray_vert_gradient.get_width() / 2))
                 surf.blit(checkpoint_ray_vert_gradient, (gradient_x, glow_y), special_flags=pygame.BLEND_MAX)
 
+    def draw_goal_glow(self, surf):
+        glow_surf = pygame.Surface(surf.get_size())
+        for col in range(self.player_goal.col - 1, self.player_goal.col + 2):
+            for row in range(self.player_goal.row - 1, self.player_goal.row + 2):
+                center_x = center_x_of(col)
+                center_y = center_y_of(row)
+                glow_x = int(center_x - (player_goal_glow.get_width() / 2))
+                glow_y = int(center_y - (player_goal_glow.get_height() / 2))
+                glow_surf.blit(player_goal_glow, (glow_x, glow_y), special_flags=pygame.BLEND_MAX)
+
+                gradient_x = int(center_x - (player_goal_gradient.get_width() / 2))
+                gradient_y = int(center_y - (player_goal_gradient.get_height() / 2))
+                glow_surf.blit(player_goal_gradient, (gradient_x, gradient_y), special_flags=pygame.BLEND_MAX)
+        surf.blit(glow_surf, (0, 0), special_flags=pygame.BLEND_ADD)
+
     def draw_static(self, surf, camera, transparent_background=True):
         """draws the entire stage"""
         glow_surf = pygame.Surface(surf.get_size())
@@ -587,6 +608,8 @@ class Room:
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
                 self.draw_tile_at(surf, camera, col, row, transparent_background)
+
+        self.draw_goal_glow(surf)
 
     def draw_dynamic(self, surf, camera):
         for row in range(self.HEIGHT):
