@@ -97,7 +97,7 @@ class PunchZone(Tile):
 class Deathlock(Tile):
     SOLID = False
     EMITTED = False
-    DRAWN_STATICALLY = True
+    DRAWN_STATICALLY = False
 
     def __init__(self):
         super().__init__()
@@ -504,7 +504,7 @@ class Room:
                 self.grid[col][row] = self.grid[col][row - 1]
         self._shift_location_tiles(0, 1)
 
-    def draw_tile_at(self, surf, camera, col, row, transparent_background=True):
+    def draw_tile_at(self, surf, camera, col, row, transparent_background=True, player_dead=False):
         x = col * TILE_W - int(camera.x)
         y = row * TILE_H - int(camera.y)
         rect = (x, y, TILE_W, TILE_H)
@@ -519,7 +519,11 @@ class Room:
             pygame.draw.rect(surf, const.YELLOW, rect)
 
         elif self.has_tile(Deathlock, col, row):
-            pygame.draw.rect(surf, (109, 112, 255), rect)
+            if player_dead:
+                color = (88, 91, 173)
+            else:
+                color = (109, 112, 255)
+            pygame.draw.rect(surf, color, rect)
 
         elif self.has_tile(PunchBox, col, row):
             punch_box = self.get_tile(PunchBox, col, row)
@@ -606,15 +610,16 @@ class Room:
 
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
-                self.draw_tile_at(surf, camera, col, row, transparent_background)
+                if self.grid[col][row] and self.grid[col][row][0].DRAWN_STATICALLY:
+                    self.draw_tile_at(surf, camera, col, row, transparent_background)
 
         self.draw_goal_glow(surf)
 
-    def draw_dynamic(self, surf, camera):
+    def draw_dynamic(self, surf, camera, player_dead):
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
                 if self.grid[col][row] and not self.grid[col][row][0].DRAWN_STATICALLY:
-                    self.draw_tile_at(surf, camera, col, row, False)
+                    self.draw_tile_at(surf, camera, col, row, False, player_dead)
 
     def place_tile_from_id(self, col, row, tile_id):
         """These ids are only used for writing and reading levels."""
