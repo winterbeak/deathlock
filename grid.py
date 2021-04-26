@@ -182,6 +182,9 @@ checkpoint_ray_vert_glow = pygame.transform.rotate(checkpoint_ray_horiz_glow, 90
 player_goal_glow = graphics.load_image("player_goal_glow", 1)
 player_goal_gradient = graphics.load_image("player_goal_gradient", 1)
 
+deathlock_glow = graphics.load_image("deathlock_glow", 1)
+deathlock_gradient = graphics.load_image("deathlock_gradient", 1)
+
 def col_at(x):
     """returns the tile column at pixel position x"""
     return int(x // TILE_W)
@@ -516,7 +519,8 @@ class Room:
             pygame.draw.rect(surf, const.YELLOW, rect)
 
         elif self.has_tile(Deathlock, col, row):
-            pygame.draw.rect(surf, const.RED, rect)
+            pygame.draw.rect(surf, (109, 112, 255), rect)
+
         elif self.has_tile(PunchBox, col, row):
             punch_box = self.get_tile(PunchBox, col, row)
             if punch_box.direction == const.LEFT:
@@ -558,6 +562,10 @@ class Room:
         if self.has_tile(PunchBox, col, row):
             draw_glow_centered(surf, punch_box_glow, center_x, center_y)
             draw_glow_centered(surf, punch_box_gradient, center_x, center_y)
+
+        elif self.has_tile(Deathlock, col, row):
+            draw_glow_centered(surf, deathlock_glow, center_x, center_y)
+            draw_glow_centered(surf, deathlock_gradient, center_x, center_y)
 
         elif self.has_tile(Checkpoint, col, row):
             draw_glow_centered(surf, checkpoint_glow, center_x, center_y)
