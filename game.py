@@ -149,8 +149,6 @@ def game_update():
     entity_handler.update_all()
     punchers.update()
 
-    sequence.current.update()
-
     main_cam.update()
 
     if player.dead:
@@ -172,8 +170,6 @@ def game_update():
 def draw_level():
     if sequence.transitioning:
         main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
-        sequence.draw_pinhole(main_surf)
-        sequence.draw_player_circle(main_surf)
     else:
         main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
         punchers.draw(main_surf, main_cam)
@@ -219,9 +215,8 @@ def swap_to_game():
 
 def next_level():
     sequence.current.unemit()
-    draw_background(sequence.pinhole_surf)
     draw_background(static_level_surf)
-    sequence.start_transition(player, static_level_surf)
+    sequence.start_transition(static_level_surf)
     player.hidden = True
     player.health = player.MAX_HEALTH  # Turns on music again
 

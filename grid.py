@@ -3,10 +3,6 @@ import pygame
 
 import graphics
 import constants as const
-import entities.collision
-
-import random
-import math
 
 TILE_W = 20
 TILE_H = 20
@@ -152,23 +148,6 @@ class PlayerGoal(Tile):
         super().__init__()
         self.col = col
         self.row = row
-        self.circles = []
-        for i in range(7, -1, -1):
-            color = (180 + 8 * i, 0, 0)
-            radius = 8 + i * 2
-            x_delta = random.randint(-5, 5)
-            y_delta = random.randint(-5, 5)
-            self.circles.append(
-                PlayerGoalCircle(self, color, radius, (x_delta, y_delta), 5)
-            )
-
-    def update(self):
-        for circle in self.circles:
-            circle.update()
-
-    def draw(self, surf):
-        for circle in self.circles:
-            circle.draw(surf)
 
 
 class PlayerGoalZone(Tile):
@@ -178,36 +157,6 @@ class PlayerGoalZone(Tile):
 
     def __init__(self):
         super().__init__()
-
-
-class PlayerGoalCircle:
-    def __init__(self, goal, color, radius, orbit_center_delta, orbit_radius):
-        self.goal = goal
-        self.color = color
-        self.radius = radius
-        self.orbit_center_delta = orbit_center_delta
-        self.orbit_radius = orbit_radius
-        self.angle = random.random() * math.pi * 2
-        self.delta_angle = self.orbit_radius / random.randint(60, 100)
-
-        x = center_x_of(self.goal.col) + self.orbit_center_delta[0]
-        y = center_y_of(self.goal.row) + self.orbit_center_delta[1]
-        self.center = entities.collision.KinematicsPoint(x, y)
-
-    @property
-    def position(self):
-        x = self.center.x
-        y = self.center.y
-        x += math.cos(self.angle) * self.orbit_radius
-        y += math.sin(self.angle) * self.orbit_radius
-        return int(x), int(y)
-
-    def update(self):
-        self.angle += self.delta_angle
-        self.angle %= math.pi * 2
-
-    def draw(self, surf):
-        pygame.draw.circle(surf, self.color, self.position, self.radius)
 
 
 punch_box_left = graphics.load_image("punch_box", 2)
@@ -543,9 +492,6 @@ class Room:
                 self.grid[col][row] = self.grid[col][row - 1]
         self._shift_location_tiles(0, 1)
 
-    def update(self):
-        self.player_goal.update()
-
     def draw_tile_at(self, surf, camera, col, row, transparent_background=True):
         x = col * TILE_W - int(camera.x)
         y = row * TILE_H - int(camera.y)
@@ -647,7 +593,6 @@ class Room:
             for col in range(self.WIDTH):
                 if self.grid[col][row] and not self.grid[col][row][0].DRAWN_STATICALLY:
                     self.draw_tile_at(surf, camera, col, row, False)
-        self.player_goal.draw(surf)
 
     def place_tile_from_id(self, col, row, tile_id):
         """These ids are only used for writing and reading levels."""
