@@ -220,6 +220,12 @@ def center_y_of(row):
     return y_of(row) + (TILE_H / 2)
 
 
+def draw_glow_centered(surf, glow, center_x, center_y):
+    glow_x = int(center_x - (glow.get_width() / 2))
+    glow_y = int(center_y - (glow.get_height() / 2))
+    surf.blit(glow, (glow_x, glow_y), special_flags=pygame.BLEND_MAX)
+
+
 class Room:
     """the grid where all the tiles on a single screen are placed"""
     WIDTH = const.SCRN_W // TILE_W  # the amount of tiles across the room
@@ -550,37 +556,22 @@ class Room:
         center_y = center_y_of(row)
 
         if self.has_tile(PunchBox, col, row):
-            glow_x = int(center_x - (punch_box_glow.get_width() / 2))
-            glow_y = int(center_y - (punch_box_glow.get_height() / 2))
-            surf.blit(punch_box_glow, (glow_x, glow_y), special_flags=pygame.BLEND_MAX)
-
-            gradient_x = int(center_x - (punch_box_gradient.get_width() / 2))
-            gradient_y = int(center_y - (punch_box_gradient.get_height() / 2))
-            surf.blit(punch_box_gradient, (gradient_x, gradient_y), special_flags=pygame.BLEND_MAX)
+            draw_glow_centered(surf, punch_box_glow, center_x, center_y)
+            draw_glow_centered(surf, punch_box_gradient, center_x, center_y)
 
         elif self.has_tile(Checkpoint, col, row):
-            glow_x = int(center_x - (checkpoint_glow.get_width() / 2))
-            glow_y = int(center_y - (checkpoint_glow.get_height() / 2))
-            surf.blit(checkpoint_glow, (glow_x, glow_y), special_flags=pygame.BLEND_MAX)
-
-            gradient_x = int(center_x - (checkpoint_gradient.get_width() / 2))
-            gradient_y = int(center_y - (checkpoint_gradient.get_height() / 2))
-            surf.blit(checkpoint_gradient, (gradient_x, gradient_y), special_flags=pygame.BLEND_MAX)
+            draw_glow_centered(surf, checkpoint_glow, center_x, center_y)
+            draw_glow_centered(surf, checkpoint_gradient, center_x, center_y)
 
         elif self.has_tile(CheckpointRay, col, row):
             tile = self.get_tile(CheckpointRay, col, row)
-            glow_x = x_of(col)
-            glow_y = y_of(row)
             if tile.orientation == const.HORIZ:
-                surf.blit(checkpoint_ray_horiz_glow, (glow_x, glow_y), special_flags=pygame.BLEND_MAX)
+                draw_glow_centered(surf, checkpoint_ray_horiz_glow, center_x, center_y)
+                draw_glow_centered(surf, checkpoint_ray_horiz_gradient, center_x, center_y)
 
-                gradient_y = int(center_y - (checkpoint_ray_horiz_gradient.get_height() / 2))
-                surf.blit(checkpoint_ray_horiz_gradient, (glow_x, gradient_y), special_flags=pygame.BLEND_MAX)
             elif tile.orientation == const.VERT:
-                surf.blit(checkpoint_ray_vert_glow, (glow_x, glow_y), special_flags=pygame.BLEND_MAX)
-
-                gradient_x = int(center_x - (checkpoint_ray_vert_gradient.get_width() / 2))
-                surf.blit(checkpoint_ray_vert_gradient, (gradient_x, glow_y), special_flags=pygame.BLEND_MAX)
+                draw_glow_centered(surf, checkpoint_ray_vert_glow, center_x, center_y)
+                draw_glow_centered(surf, checkpoint_ray_vert_gradient, center_x, center_y)
 
     def draw_goal_glow(self, surf):
         glow_surf = pygame.Surface(surf.get_size())
