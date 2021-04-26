@@ -123,7 +123,7 @@ class Checkpoint(Tile):
 class CheckpointRay(Tile):
     SOLID = False
     EMITTED = True
-    DRAWN_STATICALLY = True
+    DRAWN_STATICALLY = False
 
     def __init__(self, checkpoint, orientation):
         super().__init__()
@@ -218,6 +218,17 @@ punch_box_down = pygame.transform.rotate(punch_box_left, 90)
 punch_box_gradient = graphics.load_image("punch_box_gradient", 1)
 punch_box_glow = graphics.load_image("punch_box_glow", 1)
 
+checkpoint_activated = graphics.load_image("checkpoint_activated", 2)
+checkpoint_activated.set_colorkey(const.TRANSPARENT)
+checkpoint_deactivated = graphics.load_image("checkpoint_deactivated", 2)
+checkpoint_deactivated.set_colorkey(const.TRANSPARENT)
+checkpoint_gradient = graphics.load_image("checkpoint_gradient", 1)
+checkpoint_glow = graphics.load_image("checkpoint_glow", 1)
+
+checkpoint_ray_horiz_gradient = graphics.load_image("checkpoint_ray_horiz_gradient", 1)
+checkpoint_ray_vert_gradient = pygame.transform.rotate(checkpoint_ray_horiz_gradient, 90)
+checkpoint_ray_horiz_glow = graphics.load_image("checkpoint_ray_horiz_glow", 1)
+checkpoint_ray_vert_glow = pygame.transform.rotate(checkpoint_ray_horiz_glow, 90)
 
 def col_at(x):
     """returns the tile column at pixel position x"""
@@ -564,19 +575,23 @@ class Room:
 
         elif self.has_tile(Checkpoint, col, row):
             checkpoint = self.get_tile(Checkpoint, col, row)
-            checkpoint_pos = (x + TILE_W // 2, y + TILE_H // 2)
-            pygame.draw.circle(surf, const.GREEN, checkpoint_pos, 10)
+            if checkpoint.active:
+                surf.blit(checkpoint_activated, (x, y))
+            else:
+                surf.blit(checkpoint_deactivated, (x, y))
 
-            if not checkpoint.active:
-                pygame.draw.circle(surf, const.DARK_GREEN, checkpoint_pos, 7)
         elif self.has_tile(CheckpointRay, col, row):
             tile = self.get_tile(CheckpointRay, col, row)
+            if tile.checkpoint.active:
+                color = (66, 150, 66)
+            else:
+                color = (81, 255, 113)
             if tile.orientation == const.HORIZ:
-                ray_rect = (x, y + TILE_H // 3, TILE_W, TILE_H // 3)
-                pygame.draw.rect(surf, const.GREEN, ray_rect)
+                ray_rect = (x, y + TILE_H // 3, TILE_W, TILE_H // 3 + 2)
+                pygame.draw.rect(surf, color, ray_rect)
             elif tile.orientation == const.VERT:
-                ray_rect = (x + TILE_W // 3, y, TILE_W // 3, TILE_H)
-                pygame.draw.rect(surf, const.GREEN, ray_rect)
+                ray_rect = (x + TILE_W // 3, y, TILE_W // 3 + 2, TILE_H)
+                pygame.draw.rect(surf, color, ray_rect)
 
     def draw_glow_at(self, surf, col, row):
         center_x = center_x_of(col)
@@ -590,6 +605,30 @@ class Room:
             gradient_x = int(center_x - (punch_box_gradient.get_width() / 2))
             gradient_y = int(center_y - (punch_box_gradient.get_height() / 2))
             surf.blit(punch_box_gradient, (gradient_x, gradient_y), special_flags=pygame.BLEND_MAX)
+
+        elif self.has_tile(Checkpoint, col, row):
+            glow_x = int(center_x - (checkpoint_glow.get_width() / 2))
+            glow_y = int(center_y - (checkpoint_glow.get_height() / 2))
+            surf.blit(checkpoint_glow, (glow_x, glow_y), special_flags=pygame.BLEND_MAX)
+
+            gradient_x = int(center_x - (checkpoint_gradient.get_width() / 2))
+            gradient_y = int(center_y - (checkpoint_gradient.get_height() / 2))
+            surf.blit(checkpoint_gradient, (gradient_x, gradient_y), special_flags=pygame.BLEND_MAX)
+
+        elif self.has_tile(CheckpointRay, col, row):
+            tile = self.get_tile(CheckpointRay, col, row)
+            glow_x = x_of(col)
+            glow_y = y_of(row)
+            if tile.orientation == const.HORIZ:
+                surf.blit(checkpoint_ray_horiz_glow, (glow_x, glow_y), special_flags=pygame.BLEND_MAX)
+
+                gradient_y = int(center_y - (checkpoint_ray_horiz_gradient.get_height() / 2))
+                surf.blit(checkpoint_ray_horiz_gradient, (glow_x, gradient_y), special_flags=pygame.BLEND_MAX)
+            elif tile.orientation == const.VERT:
+                surf.blit(checkpoint_ray_vert_glow, (glow_x, glow_y), special_flags=pygame.BLEND_MAX)
+
+                gradient_x = int(center_x - (checkpoint_ray_vert_gradient.get_width() / 2))
+                surf.blit(checkpoint_ray_vert_gradient, (gradient_x, glow_y), special_flags=pygame.BLEND_MAX)
 
     def draw_static(self, surf, camera, transparent_background=True):
         """draws the entire stage"""
