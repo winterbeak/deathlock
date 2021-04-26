@@ -173,7 +173,8 @@ def draw_level():
     else:
         main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
         punchers.draw(main_surf, main_cam)
-        sequence.current.draw_dynamic(main_surf, main_cam, player.dead)
+        sequence.current.draw_dynamic(main_surf, main_cam,
+                                      player.dead, player.checkpoint is None)
 
     glow_x = int(player.center_x - player_glow.get_width() / 2)
     glow_y = int(player.center_y - player_glow.get_height() / 2)
@@ -194,7 +195,8 @@ def editor_update():
 def editor_draw():
     draw_background(main_surf)
     sequence.current.draw_static(main_surf, main_cam, False)
-    sequence.current.draw_dynamic(main_surf, main_cam, player.dead)
+    sequence.current.draw_dynamic(main_surf, main_cam,
+                                  player.dead, player.checkpoint is None)
     editor.draw(main_surf)
 
 

@@ -131,7 +131,7 @@ class CheckpointRay(Tile):
 class PlayerSpawn(Tile):
     SOLID = False
     EMITTED = False
-    DRAWN_STATICALLY = True
+    DRAWN_STATICALLY = False
 
     def __init__(self, col, row):
         super().__init__()
@@ -184,6 +184,10 @@ player_goal_gradient = graphics.load_image("player_goal_gradient", 1)
 
 deathlock_glow = graphics.load_image("deathlock_glow", 1)
 deathlock_gradient = graphics.load_image("deathlock_gradient", 1)
+
+player_spawn_gradient = checkpoint_gradient
+player_spawn_glow = graphics.load_image("player_spawn_glow", 1)
+
 
 def col_at(x):
     """returns the tile column at pixel position x"""
@@ -504,7 +508,8 @@ class Room:
                 self.grid[col][row] = self.grid[col][row - 1]
         self._shift_location_tiles(0, 1)
 
-    def draw_tile_at(self, surf, camera, col, row, transparent_background=True, player_dead=False):
+    def draw_tile_at(self, surf, camera, col, row, transparent_background=True,
+                     player_dead=False, original_spawn=False):
         x = col * TILE_W - int(camera.x)
         y = row * TILE_H - int(camera.y)
         rect = (x, y, TILE_W, TILE_H)
@@ -516,7 +521,11 @@ class Room:
             pygame.draw.rect(surf, const.BLACK, rect)
 
         elif self.has_tile(PlayerSpawn, col, row):
-            pygame.draw.rect(surf, const.YELLOW, rect)
+            if original_spawn:
+                color = (81, 255, 113)
+            else:
+                color = (71, 158, 71)
+            pygame.draw.rect(surf, color, rect)
 
         elif self.has_tile(Deathlock, col, row):
             if player_dead:
@@ -585,6 +594,10 @@ class Room:
                 draw_glow_centered(surf, checkpoint_ray_vert_glow, center_x, center_y)
                 draw_glow_centered(surf, checkpoint_ray_vert_gradient, center_x, center_y)
 
+        elif self.has_tile(PlayerSpawn, col, row):
+            draw_glow_centered(surf, player_spawn_glow, center_x, center_y)
+            draw_glow_centered(surf, player_spawn_gradient, center_x, center_y)
+
     def draw_goal_glow(self, surf):
         glow_surf = pygame.Surface(surf.get_size())
         for col in range(self.player_goal.col - 1, self.player_goal.col + 2):
@@ -615,11 +628,12 @@ class Room:
 
         self.draw_goal_glow(surf)
 
-    def draw_dynamic(self, surf, camera, player_dead):
+    def draw_dynamic(self, surf, camera, player_dead, original_spawn):
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
                 if self.grid[col][row] and not self.grid[col][row][0].DRAWN_STATICALLY:
-                    self.draw_tile_at(surf, camera, col, row, False, player_dead)
+                    self.draw_tile_at(surf, camera, col, row, False,
+                                      player_dead, original_spawn)
 
     def place_tile_from_id(self, col, row, tile_id):
         """These ids are only used for writing and reading levels."""
