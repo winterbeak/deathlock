@@ -1,5 +1,7 @@
 import camera
 import grid
+import flicker
+import constants as const
 
 
 class Sequence:
@@ -12,22 +14,28 @@ class Sequence:
         self.done_transitioning = False
         self._frame = 0
 
+    @property
+    def frame(self):
+        return self._frame
+
     def next_level(self):
         self._level_num += 1
         self.current = self.next
         self.next = grid.Room(self.level_names[self._level_num + 1])
 
     def start_transition(self, static_level_surf):
+        self._frame = 0
         self.transitioning = True
 
-        self.next.draw_static(static_level_surf, camera.zero_camera, False)
+        static_level_surf.fill(const.TRANSPARENT)
+        self.next.draw_silhouette(static_level_surf)
 
     def _end_transition(self):
         self.transitioning = False
         self.done_transitioning = True
 
     def update(self):
-        if self._frame > 20:
+        if self._frame >= flicker.TOTAL_LENGTH:
             self._end_transition()
             self.next_level()
 

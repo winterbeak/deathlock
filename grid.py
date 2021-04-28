@@ -4,6 +4,8 @@ import pygame
 import graphics
 import constants as const
 
+import flicker
+
 TILE_W = 20
 TILE_H = 20
 
@@ -82,6 +84,7 @@ class PunchBox(Tile):
     def __init__(self, direction):
         super().__init__()
         self.direction = direction
+        self.flicker_sequence = flicker.FlickerSequence()
 
 
 class PunchZone(Tile):
@@ -101,6 +104,7 @@ class Deathlock(Tile):
 
     def __init__(self):
         super().__init__()
+        self.flicker_sequence = flicker.FlickerSequence()
 
 
 class Checkpoint(Tile):
@@ -114,6 +118,7 @@ class Checkpoint(Tile):
         self.col = col
         self.row = row
         self.active = False
+        self.flicker_sequence = flicker.FlickerSequence()
 
 
 class CheckpointRay(Tile):
@@ -137,6 +142,7 @@ class PlayerSpawn(Tile):
         super().__init__()
         self.col = col
         self.row = row
+        self.flicker_sequence = flicker.FlickerSequence()
 
 
 class PlayerGoal(Tile):
@@ -508,6 +514,15 @@ class Room:
                 self.grid[col][row] = self.grid[col][row - 1]
         self._shift_location_tiles(0, 1)
 
+    def draw_silhouette(self, surf):
+        for col in range(self.WIDTH):
+            for row in range(self.HEIGHT):
+                x = col * TILE_W
+                y = row * TILE_H
+                rect = (x, y, TILE_W, TILE_H)
+                if self.has_solid(col, row):
+                    pygame.draw.rect(surf, const.BLACK, rect)
+
     def draw_tile_at(self, surf, camera, col, row, transparent_background=True,
                      player_dead=False, original_spawn=False):
         x = col * TILE_W - int(camera.x)
@@ -568,6 +583,67 @@ class Room:
         elif self.has_tile(PlayerGoalZone, col, row):
             pygame.draw.rect(surf, (250, 250, 250), rect)
 
+    def draw_flicker_glow(self, surf, frame):
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                if self.grid[col][row]:
+                    tile = self.grid[col][row][0]
+                    if hasattr(tile, "flicker_sequence"):
+                        brightness = tile.flicker_sequence.brightness(frame)
+                        if brightness >= flicker.BRIGHT:
+                            self.draw_glow_at(surf, col, row)
+                    elif type(tile) is CheckpointRay:
+                        brightness = tile.checkpoint.flicker_sequence.brightness(frame)
+                        if brightness >= flicker.BRIGHT:
+                            self.draw_glow_at(surf, col, row)
+
+    shade_soft = pygame.Surface((TILE_W, TILE_H))
+    shade_soft.fill((25, 25, 25))
+    shade_medium = pygame.Surface((TILE_W, TILE_H))
+    shade_medium.fill((50, 50, 50))
+    shade_bright = pygame.Surface((TILE_W, TILE_H))
+    shade_bright.fill((100, 100, 100))
+
+    def draw_flicker_tiles(self, surf, camera, frame):
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                if self.grid[col][row]:
+                    tile = self.grid[col][row][0]
+                    is_ray = type(tile) is CheckpointRay
+                    if hasattr(tile, "flicker_sequence") or is_ray:
+                        if is_ray:
+                            brightness = tile.checkpoint.flicker_sequence.brightness(frame)
+                        else:
+                            brightness = tile.flicker_sequence.brightness(frame)
+
+                        if brightness != flicker.NONE:
+                            self.draw_tile_at(surf, camera, col, row, False)
+                        if brightness == flicker.SOFT:
+                            shade = self.shade_soft
+                        elif brightness == flicker.MEDIUM:
+                            shade = self.shade_medium
+                        elif brightness == flicker.BRIGHT:
+                            shade = self.shade_bright
+                        else:  # Skip FULL brightness, since no shade is drawn
+                            continue
+
+                        if is_ray:
+                            if tile.orientation == const.HORIZ:
+                                pos = (x_of(col), y_of(row) + TILE_H // 3)
+                                rect = (0, 0, TILE_W, TILE_H // 3 + 2)
+                            else:
+                                pos = (x_of(col) + TILE_W // 3, y_of(row))
+                                rect = (0, 0, TILE_W // 3 + 2, TILE_H)
+                            surf.blit(shade, pos, rect, special_flags=pygame.BLEND_MULT)
+                        else:
+                            pos = (x_of(col), y_of(row))
+                            surf.blit(shade, pos, special_flags=pygame.BLEND_MULT)
+
+    def draw_glow(self, surf):
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                self.draw_glow_at(surf, col, row)
+
     def draw_glow_at(self, surf, col, row):
         center_x = center_x_of(col)
         center_y = center_y_of(row)
@@ -616,9 +692,7 @@ class Room:
     def draw_static(self, surf, camera, transparent_background=True):
         """draws the entire stage"""
         glow_surf = pygame.Surface(surf.get_size())
-        for row in range(self.HEIGHT):
-            for col in range(self.WIDTH):
-                self.draw_glow_at(glow_surf, col, row)
+        self.draw_glow(glow_surf)
         surf.blit(glow_surf, (0, 0), special_flags=pygame.BLEND_ADD)
 
         for row in range(self.HEIGHT):

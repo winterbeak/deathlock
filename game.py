@@ -12,6 +12,7 @@ import editor
 import graphics
 import camera
 import grid
+import flicker
 import entities.player
 import entities.handler
 
@@ -37,12 +38,13 @@ player_glow = graphics.load_image("player_gradient", 1)
 
 
 def draw_background(surf):
+    surf.fill((20, 20, 20))
     surf.blit(background, (0, 0))
 
 
 def screen_update(fps):
     pygame.display.flip()
-    main_surf.fill(const.WHITE)
+    main_surf.fill(const.BLACK)
     clock.tick(fps)
 
 
@@ -158,7 +160,7 @@ def game_update():
 
     if sequence.transitioning:
         sequence.update()
-    elif sequence.done_transitioning:
+    if sequence.done_transitioning:
         end_transition()
     elif player.touching_goal:
         if level_beat_mode == SWAP_TO_EDITOR:
@@ -169,17 +171,31 @@ def game_update():
 
 def draw_level():
     if sequence.transitioning:
-        main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+        if sequence.frame >= flicker.STOP_FLICKERING_FRAME:
+            if sequence.frame == flicker.STOP_FLICKERING_FRAME:
+                static_level_surf.fill(const.BLACK)
+                sequence.next.draw_flicker_glow(static_level_surf, 1000)
+                sequence.next.draw_silhouette(static_level_surf)
+                sequence.next.draw_flicker_tiles(static_level_surf, main_cam, 1000)
+            main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+        elif sequence.frame >= flicker.START_DELAY:
+            frame = sequence.frame - flicker.START_DELAY
+            sequence.next.draw_flicker_glow(main_surf, frame)
+
+            main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+
+            sequence.next.draw_flicker_tiles(main_surf, main_cam, frame)
+
     else:
         main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
         punchers.draw(main_surf, main_cam)
         sequence.current.draw_dynamic(main_surf, main_cam,
                                       player.dead, player.checkpoint is None)
 
-    glow_x = int(player.center_x - player_glow.get_width() / 2)
-    glow_y = int(player.center_y - player_glow.get_height() / 2)
+        glow_x = int(player.center_x - player_glow.get_width() / 2)
+        glow_y = int(player.center_y - player_glow.get_height() / 2)
 
-    main_surf.blit(player_glow, (glow_x, glow_y), special_flags=pygame.BLEND_ADD)
+        main_surf.blit(player_glow, (glow_x, glow_y), special_flags=pygame.BLEND_ADD)
 
 
 def game_draw():
@@ -225,6 +241,8 @@ def next_level():
 
 def end_transition():
     sequence.done_transitioning = False
+    draw_background(static_level_surf)
+    sequence.current.draw_static(static_level_surf, main_cam, False)
     player.level = sequence.current
     player.hidden = False
     player.hard_respawn()
