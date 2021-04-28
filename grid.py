@@ -680,9 +680,6 @@ class Room:
             for row in range(self.player_goal.row - 1, self.player_goal.row + 2):
                 center_x = center_x_of(col)
                 center_y = center_y_of(row)
-                glow_x = int(center_x - (player_goal_glow.get_width() / 2))
-                glow_y = int(center_y - (player_goal_glow.get_height() / 2))
-                glow_surf.blit(player_goal_glow, (glow_x, glow_y), special_flags=pygame.BLEND_MAX)
 
                 gradient_x = int(center_x - (player_goal_gradient.get_width() / 2))
                 gradient_y = int(center_y - (player_goal_gradient.get_height() / 2))

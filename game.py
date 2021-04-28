@@ -192,11 +192,14 @@ def draw_level():
         sequence.current.draw_dynamic(main_surf, main_cam,
                                       player.dead, player.checkpoint is None)
 
+        x = grid.x_of(sequence.current.player_goal.col) - grid.TILE_W * 2
+        y = grid.y_of(sequence.current.player_goal.row) - grid.TILE_H * 2
+        main_surf.blit(grid.player_goal_glow, (x, y), special_flags=pygame.BLEND_ADD)
+
         glow_x = int(player.center_x - player_glow.get_width() / 2)
         glow_y = int(player.center_y - player_glow.get_height() / 2)
 
         main_surf.blit(player_glow, (glow_x, glow_y), special_flags=pygame.BLEND_ADD)
-
 
 def game_draw():
     draw_level()
