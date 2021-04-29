@@ -92,6 +92,12 @@ class Player(collision.PunchableGravityCollision):
     JUMP_RIGHT = graphics.flip_column(JUMP_LEFT)
     JUMP_RIGHT_ID = 19
 
+    LAND_LEFT = graphics.AnimColumn("land", 2, 2)
+    LAND_LEFT.set_delay(0xbeef)
+    LAND_LEFT_ID = 20
+    LAND_RIGHT = graphics.flip_column(LAND_LEFT)
+    LAND_RIGHT_ID = 21
+
     ANIMSHEET = graphics.AnimSheet((RUN_LEFT, RUN_RIGHT,
                                     IDLE_LEFT, IDLE_RIGHT,
                                     TUMBLE_LEFT, TUMBLE_RIGHT,
@@ -101,10 +107,12 @@ class Player(collision.PunchableGravityCollision):
                                     WALL_PUSH_JUMP_LEFT, WALL_PUSH_JUMP_RIGHT,
                                     WALL_PUSH_START_LEFT, WALL_PUSH_START_RIGHT,
                                     WALL_PUSH_END_LEFT, WALL_PUSH_END_RIGHT,
-                                    JUMP_LEFT, JUMP_RIGHT))
+                                    JUMP_LEFT, JUMP_RIGHT,
+                                    LAND_LEFT, LAND_RIGHT))
 
     MAX_PUSH_FRAME = 6
     MAX_UNPUSH_FRAME = 4
+    MAX_GROUND_FRAME = 4
 
     MIDDLE_HEART = graphics.AnimColumn("heart_middle", 2, 2)
     LEFT_HEART = graphics.AnimColumn("heart_left", 2, 2)
@@ -164,6 +172,8 @@ class Player(collision.PunchableGravityCollision):
         self.previous_frame_anim = self.IDLE_RIGHT_ID
         self.push_frames = 0
         self.unpush_frames = self.MAX_UNPUSH_FRAME
+
+        self.land_frames = 0
 
     @property
     def respawn_x(self):
@@ -309,6 +319,7 @@ class Player(collision.PunchableGravityCollision):
     def _update_animation(self):
         if not self.dead:
             if not self.grounded:
+                self.ground_frames = 0
                 if self.facing == const.LEFT:
                     self.sprite.set_anim(self.JUMP_LEFT_ID)
                 else:
@@ -399,6 +410,19 @@ class Player(collision.PunchableGravityCollision):
                         else:
                             self.sprite.frame = 1
                         self.unpush_frames += 1
+
+            if self.grounded and self.ground_frames < self.MAX_GROUND_FRAME:
+                if self.facing == const.LEFT:
+                    self.sprite.set_anim(self.LAND_LEFT_ID)
+                else:
+                    self.sprite.set_anim(self.LAND_RIGHT_ID)
+
+                if self.ground_frames < 2:
+                    self.sprite.frame = 0
+                else:
+                    self.sprite.frame = 1
+
+                self.ground_frames += 1
 
         elif self.dead and self.grounded:
             if self.facing == const.LEFT:
