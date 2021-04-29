@@ -104,6 +104,12 @@ class Player(collision.PunchableGravityCollision):
     TURN_RIGHT = graphics.flip_column(TURN_LEFT)
     TURN_RIGHT_ID = 23
 
+    RUN_END_LEFT = graphics.AnimColumn("run_end", 4, 2)
+    RUN_END_LEFT.set_delay(0xbeef)
+    RUN_END_LEFT_ID = 24
+    RUN_END_RIGHT = graphics.flip_column(RUN_END_LEFT)
+    RUN_END_RIGHT_ID = 25
+
     ANIMSHEET = graphics.AnimSheet((RUN_LEFT, RUN_RIGHT,
                                     IDLE_LEFT, IDLE_RIGHT,
                                     TUMBLE_LEFT, TUMBLE_RIGHT,
@@ -115,12 +121,14 @@ class Player(collision.PunchableGravityCollision):
                                     WALL_PUSH_END_LEFT, WALL_PUSH_END_RIGHT,
                                     JUMP_LEFT, JUMP_RIGHT,
                                     LAND_LEFT, LAND_RIGHT,
-                                    TURN_LEFT, TURN_RIGHT))
+                                    TURN_LEFT, TURN_RIGHT,
+                                    RUN_END_LEFT, RUN_END_RIGHT))
 
     MAX_PUSH_FRAME = 6
     MAX_UNPUSH_FRAME = 4
     MAX_GROUND_FRAME = 4
     MAX_TURN_FRAME = 6
+    MAX_RUN_END_FRAME = 8
 
     MIDDLE_HEART = graphics.AnimColumn("heart_middle", 2, 2)
     LEFT_HEART = graphics.AnimColumn("heart_left", 2, 2)
@@ -185,6 +193,8 @@ class Player(collision.PunchableGravityCollision):
 
         self.turn_left_frames = self.MAX_TURN_FRAME
         self.turn_right_frames = self.MAX_TURN_FRAME
+
+        self.run_end_frames = self.MAX_RUN_END_FRAME
 
     @property
     def respawn_x(self):
@@ -371,6 +381,7 @@ class Player(collision.PunchableGravityCollision):
             if self.left_key.is_held:
 
                 self.turn_right_frames = 0
+                self.run_end_frames = 0
 
                 if self.grounded:
                     if self.turn_left_frames < self.MAX_TURN_FRAME:
@@ -393,6 +404,7 @@ class Player(collision.PunchableGravityCollision):
             elif self.right_key.is_held:
 
                 self.turn_left_frames = 0
+                self.run_end_frames = 0
 
                 if self.grounded:
                     if self.turn_right_frames < self.MAX_TURN_FRAME:
@@ -417,15 +429,15 @@ class Player(collision.PunchableGravityCollision):
                     if self.facing == const.LEFT:
                         if self.unpush_frames < self.MAX_UNPUSH_FRAME:
                             self.sprite.set_anim(self.WALL_PUSH_END_LEFT_ID)
-                        elif self.turn_left_frames < self.MAX_TURN_FRAME:
-                            self._handle_turn_left_animation()
+                        elif self.run_end_frames < self.MAX_RUN_END_FRAME:
+                            self._handle_run_end_anim()
                         else:
                             self.sprite.set_anim(self.IDLE_LEFT_ID)
                     elif self.facing == const.RIGHT:
                         if self.unpush_frames < self.MAX_UNPUSH_FRAME:
                             self.sprite.set_anim(self.WALL_PUSH_END_RIGHT_ID)
-                        elif self.turn_right_frames < self.MAX_TURN_FRAME:
-                            self._handle_turn_right_animation()
+                        elif self.run_end_frames < self.MAX_RUN_END_FRAME:
+                            self._handle_run_end_anim()
                         else:
                             self.sprite.set_anim(self.IDLE_RIGHT_ID)
 
@@ -492,6 +504,15 @@ class Player(collision.PunchableGravityCollision):
                         self.sprite.frame = 10
 
         self.previous_frame_anim = self.sprite.anim
+
+    def _handle_run_end_anim(self):
+        if self.facing == const.LEFT:
+            self.sprite.set_anim(self.RUN_END_LEFT_ID)
+        else:
+            self.sprite.set_anim(self.RUN_END_RIGHT_ID)
+        self.sprite.frame = self.run_end_frames // 2
+
+        self.run_end_frames += 1
 
     def _handle_turn_left_animation(self):
         self.sprite.set_anim(self.TURN_LEFT_ID)
