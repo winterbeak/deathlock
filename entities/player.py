@@ -281,46 +281,38 @@ class Player(collision.PunchableGravityCollision):
     def _update_animation(self):
         if not self.dead:
             if not self.grounded:
-                if self.tumble:
-                    if self.facing == const.LEFT:
-                        self.sprite.set_anim(self.TUMBLE_LEFT_ID)
-                    else:
-                        self.sprite.set_anim(self.TUMBLE_RIGHT_ID)
-
-                # Jumping
+                if self.facing == const.LEFT:
+                    self.sprite.set_anim(self.JUMP_LEFT_ID)
                 else:
-                    if self.facing == const.LEFT:
-                        self.sprite.set_anim(self.JUMP_LEFT_ID)
-                    else:
-                        self.sprite.set_anim(self.JUMP_RIGHT_ID)
+                    self.sprite.set_anim(self.JUMP_RIGHT_ID)
 
-                    if self.y_vel < -self.JUMP_SPEED + 0.5:
-                        self.sprite.frame = 0
-                    elif self.y_vel < -self.JUMP_SPEED + 1.0:
-                        self.sprite.frame = 1
-                    elif self.y_vel < -self.JUMP_SPEED + 2.0:
-                        self.sprite.frame = 2
-                    elif self.y_vel < -self.JUMP_SPEED + 3.5:
-                        self.sprite.frame = 3
-                    elif self.y_vel < -self.JUMP_SPEED + 5:
-                        self.sprite.frame = 4
-                    elif self.y_vel < -self.JUMP_SPEED + 6.25:
-                        self.sprite.frame = 5
-                    elif self.y_vel < -self.JUMP_SPEED + 7.5:
-                        self.sprite.frame = 6
-                    elif self.y_vel < 0:
-                        self.sprite.frame = 7
-                    elif self.y_vel < 2.5:
-                        self.sprite.frame = 8
-                    elif self.y_vel < 10.0:
-                        self.sprite.frame = 9
-                    elif self.y_vel < 14.5:
-                        self.sprite.frame = 10
+                if self.y_vel < -self.JUMP_SPEED + 0.5:
+                    self.sprite.frame = 0
+                elif self.y_vel < -self.JUMP_SPEED + 1.0:
+                    self.sprite.frame = 1
+                elif self.y_vel < -self.JUMP_SPEED + 2.0:
+                    self.sprite.frame = 2
+                elif self.y_vel < -self.JUMP_SPEED + 3.5:
+                    self.sprite.frame = 3
+                elif self.y_vel < -self.JUMP_SPEED + 5:
+                    self.sprite.frame = 4
+                elif self.y_vel < -self.JUMP_SPEED + 6.25:
+                    self.sprite.frame = 5
+                elif self.y_vel < -self.JUMP_SPEED + 7.5:
+                    self.sprite.frame = 6
+                elif self.y_vel < 0:
+                    self.sprite.frame = 7
+                elif self.y_vel < 2.5:
+                    self.sprite.frame = 8
+                elif self.y_vel < 10.0:
+                    self.sprite.frame = 9
+                elif self.y_vel < 14.5:
+                    self.sprite.frame = 10
+                else:
+                    if self.y_vel % 2.6 < 1.3:
+                        self.sprite.frame = 11
                     else:
-                        if self.y_vel % 2.6 < 1.3:
-                            self.sprite.frame = 11
-                        else:
-                            self.sprite.frame = 12
+                        self.sprite.frame = 12
 
             else:
                 self.tumble = False
@@ -331,9 +323,7 @@ class Player(collision.PunchableGravityCollision):
                 if self.grounded:
                     self.sprite.set_anim(self.RUN_LEFT_ID)
 
-                if not self.tumble:
-                    self.facing = const.LEFT
-
+                self.facing = const.LEFT
                 self._update_wall_push(const.LEFT)
 
                 # Plays running sound
@@ -350,9 +340,7 @@ class Player(collision.PunchableGravityCollision):
                 if self.grounded:
                     self.sprite.set_anim(self.RUN_RIGHT_ID)
 
-                if not self.tumble:
-                    self.facing = const.RIGHT
-
+                self.facing = const.RIGHT
                 self._update_wall_push(const.RIGHT)
 
                 if self.sprite.anim != self.WALL_PUSH_RIGHT_ID:
