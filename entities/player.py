@@ -448,6 +448,7 @@ class Player(collision.PunchableGravityCollision):
         if self.facing == const.LEFT:
             if self.unpush_frames < self.MAX_UNPUSH_FRAME:
                 self.sprite.set_anim(self.WALL_PUSH_END_LEFT_ID)
+                self.run_end_frames = self.MAX_RUN_END_FRAME
             elif self.run_end_frames < self.MAX_RUN_END_FRAME:
                 self._run_end_anim()
             else:
@@ -455,6 +456,7 @@ class Player(collision.PunchableGravityCollision):
         elif self.facing == const.RIGHT:
             if self.unpush_frames < self.MAX_UNPUSH_FRAME:
                 self.sprite.set_anim(self.WALL_PUSH_END_RIGHT_ID)
+                self.run_end_frames = self.MAX_RUN_END_FRAME
             elif self.run_end_frames < self.MAX_RUN_END_FRAME:
                 self._run_end_anim()
             else:
