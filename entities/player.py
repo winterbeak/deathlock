@@ -33,7 +33,7 @@ class Player(collision.PunchableGravityCollision):
     HEIGHT = 20
 
     RUN_LEFT = graphics.AnimColumn("run", 6, 2)
-    RUN_LEFT.set_delay(4)
+    RUN_LEFT.set_delay(2)
     RUN_LEFT_ID = 0
     RUN_RIGHT = graphics.flip_column(RUN_LEFT)
     RUN_RIGHT_ID = 1
@@ -44,8 +44,8 @@ class Player(collision.PunchableGravityCollision):
     IDLE_RIGHT = graphics.flip_column(IDLE_LEFT)
     IDLE_RIGHT_ID = 3
 
-    TUMBLE_LEFT = graphics.AnimColumn("tumble", 6, 2)
-    TUMBLE_LEFT.set_delay(4)
+    TUMBLE_LEFT = graphics.AnimColumn("tumble", 8, 2)
+    TUMBLE_LEFT.set_delay(3)
     TUMBLE_LEFT_ID = 4
     TUMBLE_RIGHT = graphics.flip_column(TUMBLE_LEFT)
     TUMBLE_RIGHT_ID = 5
@@ -56,7 +56,7 @@ class Player(collision.PunchableGravityCollision):
     DEAD_GROUNDED_RIGHT = graphics.flip_column(DEAD_GROUNDED_LEFT)
     DEAD_GROUNDED_RIGHT_ID = 7
 
-    DEAD_FALL_LEFT = graphics.AnimColumn("dead_fall", 7, 2)
+    DEAD_FALL_LEFT = graphics.AnimColumn("dead_fall", 12, 2)
     DEAD_FALL_LEFT.set_delay(0xbeef)
     DEAD_FALL_LEFT_ID = 8
     DEAD_FALL_RIGHT = graphics.flip_column(DEAD_FALL_LEFT)
@@ -68,7 +68,7 @@ class Player(collision.PunchableGravityCollision):
     WALL_PUSH_RIGHT = graphics.flip_column(WALL_PUSH_LEFT)
     WALL_PUSH_RIGHT_ID = 11
 
-    JUMP_LEFT = graphics.AnimColumn("jump", 6, 2)
+    JUMP_LEFT = graphics.AnimColumn("jump", 13, 2)
     JUMP_LEFT.set_delay(0xbeef)
     JUMP_LEFT_ID = 12
     JUMP_RIGHT = graphics.flip_column(JUMP_LEFT)
@@ -294,18 +294,33 @@ class Player(collision.PunchableGravityCollision):
                     else:
                         self.sprite.set_anim(self.JUMP_RIGHT_ID)
 
-                    if self.y_vel < -self.JUMP_SPEED + 2.5:
+                    if self.y_vel < -self.JUMP_SPEED + 0.5:
                         self.sprite.frame = 0
-                    elif self.y_vel < -self.JUMP_SPEED + 5:
+                    elif self.y_vel < -self.JUMP_SPEED + 1.0:
                         self.sprite.frame = 1
-                    elif self.y_vel < -self.JUMP_SPEED + 7.5:
+                    elif self.y_vel < -self.JUMP_SPEED + 2.0:
                         self.sprite.frame = 2
-                    elif self.y_vel < 0:
+                    elif self.y_vel < -self.JUMP_SPEED + 3.5:
                         self.sprite.frame = 3
-                    elif self.y_vel < 2.5:
+                    elif self.y_vel < -self.JUMP_SPEED + 5:
                         self.sprite.frame = 4
-                    else:
+                    elif self.y_vel < -self.JUMP_SPEED + 6.25:
                         self.sprite.frame = 5
+                    elif self.y_vel < -self.JUMP_SPEED + 7.5:
+                        self.sprite.frame = 6
+                    elif self.y_vel < 0:
+                        self.sprite.frame = 7
+                    elif self.y_vel < 2.5:
+                        self.sprite.frame = 8
+                    elif self.y_vel < 10.0:
+                        self.sprite.frame = 9
+                    elif self.y_vel < 14.5:
+                        self.sprite.frame = 10
+                    else:
+                        if self.y_vel % 2.6 < 1.3:
+                            self.sprite.frame = 11
+                        else:
+                            self.sprite.frame = 12
 
             else:
                 self.tumble = False
@@ -367,27 +382,41 @@ class Player(collision.PunchableGravityCollision):
             else:
                 self.sprite.set_anim(self.DEAD_FALL_RIGHT_ID)
 
-            if self.y_vel < -self.JUMP_SPEED + 2.5:
+            if self.y_vel < -self.JUMP_SPEED:
                 self.sprite.frame = 0
-            elif self.y_vel < -self.JUMP_SPEED + 5:
+            elif self.y_vel < -self.JUMP_SPEED + 1.0:
                 self.sprite.frame = 1
-            elif self.y_vel < -self.JUMP_SPEED + 7.5:
+            elif self.y_vel < -self.JUMP_SPEED + 3.0:
                 self.sprite.frame = 2
-            elif self.y_vel < 0:
+            elif self.y_vel < -self.JUMP_SPEED + 5.0:
                 self.sprite.frame = 3
-            elif self.y_vel < 2.5:
+            elif self.y_vel < -self.JUMP_SPEED + 6.5:
                 self.sprite.frame = 4
+            elif self.y_vel < -self.JUMP_SPEED + 8.0:
+                self.sprite.frame = 5
+            elif self.y_vel < 1.0:
+                self.sprite.frame = 6
+            elif self.y_vel < 2.0:
+                self.sprite.frame = 7
+            elif self.y_vel < 5.0:
+                self.sprite.frame = 7
+            elif self.y_vel < 8.0:
+                self.sprite.frame = 8
             else:
                 self.sprite.frame_delay += 1
                 if self.sprite.frame_delay > 1:
                     self.sprite.frame_delay = 0
 
                     if self.sprite.frame == 5:
-                        self.sprite.frame = 6
+                        self.sprite.frame = 9
                     else:
-                        self.sprite.frame = 5
+                        self.sprite.frame = 10
 
     def _update_wall_push(self, direction):
+        if self.sprite.anim == self.TUMBLE_LEFT_ID:
+            return
+        if self.sprite.anim == self.TUMBLE_RIGHT_ID:
+            return
         top_y = self.y
         bottom_y = top_y + self.HEIGHT - 1
 
