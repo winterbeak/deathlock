@@ -10,12 +10,15 @@ import graphics
 
 
 class Player(collision.PunchableGravityCollision):
+
+    # Controls
     jump_key = events.Keybind([pygame.K_p, pygame.K_z, pygame.K_w,
                                pygame.K_UP, pygame.K_SPACE])
     left_key = events.Keybind([pygame.K_a, pygame.K_LEFT])
     right_key = events.Keybind([pygame.K_d, pygame.K_RIGHT])
     respawn_key = events.Keybind([pygame.K_o])
 
+    # Physics/Gameplay constants
     TERMINAL_VELOCITY = 20.0
 
     COYOTE_TIME = 5
@@ -32,6 +35,7 @@ class Player(collision.PunchableGravityCollision):
     WIDTH = 20
     HEIGHT = 20
 
+    # Graphics/Sprites
     RUN_LEFT = graphics.AnimColumn("run", 6, 2)
     RUN_LEFT.set_delay(2)
     RUN_LEFT_ID = 0
@@ -50,6 +54,7 @@ class Player(collision.PunchableGravityCollision):
     TUMBLE_RIGHT = graphics.flip_column(TUMBLE_LEFT)
     TUMBLE_RIGHT_ID = 5
 
+    # 0xbeef is a joke.  Any other big number would work as well.
     DEAD_GROUNDED_LEFT = graphics.AnimColumn("dead_grounded", 1, 2)
     DEAD_GROUNDED_LEFT.set_delay(0xbeef)
     DEAD_GROUNDED_LEFT_ID = 6
@@ -130,6 +135,7 @@ class Player(collision.PunchableGravityCollision):
     MAX_TURN_FRAME = TURN_LEFT.frame_count * 2
     MAX_RUN_END_FRAME = RUN_END_LEFT.frame_count * 2
 
+    # Old unused heart graphics
     MIDDLE_HEART = graphics.AnimColumn("heart_middle", 2, 2)
     LEFT_HEART = graphics.AnimColumn("heart_left", 2, 2)
     RIGHT_HEART = graphics.flip_column(LEFT_HEART)
@@ -143,6 +149,7 @@ class Player(collision.PunchableGravityCollision):
     HEART_X = [MIDDLE_HEART_X, MIDDLE_HEART_X - 50, MIDDLE_HEART_X + 50]
     HEART_Y = -3
 
+    # Sounds
     RUN_SOUNDS = sound.load_numbers("run%i", 5)
     RUN_SOUND_DELAY = 5
 
