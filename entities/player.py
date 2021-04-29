@@ -124,11 +124,11 @@ class Player(collision.PunchableGravityCollision):
                                     TURN_LEFT, TURN_RIGHT,
                                     RUN_END_LEFT, RUN_END_RIGHT))
 
-    MAX_PUSH_FRAME = 6
-    MAX_UNPUSH_FRAME = 4
-    MAX_GROUND_FRAME = 4
-    MAX_TURN_FRAME = 6
-    MAX_RUN_END_FRAME = 8
+    MAX_PUSH_FRAME = WALL_PUSH_START_LEFT.frame_count * 2
+    MAX_UNPUSH_FRAME = WALL_PUSH_END_LEFT.frame_count * 2
+    MAX_GROUND_FRAME = LAND_LEFT.frame_count * 2
+    MAX_TURN_FRAME = TURN_LEFT.frame_count * 2
+    MAX_RUN_END_FRAME = RUN_END_LEFT.frame_count * 2
 
     MIDDLE_HEART = graphics.AnimColumn("heart_middle", 2, 2)
     LEFT_HEART = graphics.AnimColumn("heart_left", 2, 2)
@@ -442,10 +442,7 @@ class Player(collision.PunchableGravityCollision):
                             self.sprite.set_anim(self.IDLE_RIGHT_ID)
 
                     if self.unpush_frames < self.MAX_UNPUSH_FRAME:
-                        if self.unpush_frames < 2:
-                            self.sprite.frame = 0
-                        else:
-                            self.sprite.frame = 1
+                        self.sprite.frame = self.unpush_frames // 2
                         self.unpush_frames += 1
 
             if self.grounded and self.ground_frames < self.MAX_GROUND_FRAME:
@@ -454,11 +451,7 @@ class Player(collision.PunchableGravityCollision):
                 else:
                     self.sprite.set_anim(self.LAND_RIGHT_ID)
 
-                if self.ground_frames < 2:
-                    self.sprite.frame = 0
-                else:
-                    self.sprite.frame = 1
-
+                self.sprite.frame = self.ground_frames // 2
                 self.ground_frames += 1
 
         elif self.dead and self.grounded:
@@ -516,24 +509,12 @@ class Player(collision.PunchableGravityCollision):
 
     def _handle_turn_left_animation(self):
         self.sprite.set_anim(self.TURN_LEFT_ID)
-        if self.turn_left_frames < 2:
-            self.sprite.frame = 0
-        elif self.turn_left_frames < 4:
-            self.sprite.frame = 1
-        else:
-            self.sprite.frame = 2
-
+        self.sprite.frame = self.turn_left_frames // 2
         self.turn_left_frames += 1
 
     def _handle_turn_right_animation(self):
         self.sprite.set_anim(self.TURN_RIGHT_ID)
-        if self.turn_right_frames < 2:
-            self.sprite.frame = 0
-        elif self.turn_right_frames < 4:
-            self.sprite.frame = 1
-        else:
-            self.sprite.frame = 2
-
+        self.sprite.frame = self.turn_right_frames // 2
         self.turn_right_frames += 1
 
     def _update_wall_push(self, direction):
@@ -563,12 +544,7 @@ class Player(collision.PunchableGravityCollision):
                         self.sprite.set_anim(self.WALL_PUSH_RIGHT_ID)
 
                 if self.push_frames < self.MAX_PUSH_FRAME:
-                    if self.push_frames < 2:
-                        self.sprite.frame = 0
-                    elif self.push_frames < 4:
-                        self.sprite.frame = 1
-                    else:
-                        self.sprite.frame = 2
+                    self.sprite.frame = self.push_frames // 2
                     self.push_frames += 1
             else:
                 self.push_frames = self.MAX_PUSH_FRAME
