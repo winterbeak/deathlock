@@ -380,6 +380,11 @@ class Player(collision.PunchableGravityCollision):
 
     def _alive_air_anim(self):
         self.ground_frames = 0
+
+        if self.unpush_frames < self.MAX_UNPUSH_FRAME:
+            self._unpush_anim()
+            return
+
         if self.facing == const.LEFT:
             self.sprite.set_anim(self.JUMP_LEFT_ID)
         else:
@@ -460,25 +465,29 @@ class Player(collision.PunchableGravityCollision):
 
     def _idle_anim(self):
         if self.facing == const.LEFT:
-            if self.unpush_frames < self.MAX_UNPUSH_FRAME:
-                self.sprite.set_anim(self.WALL_PUSH_END_LEFT_ID)
-                self.run_end_frames = self.MAX_RUN_END_FRAME
-            elif self.run_end_frames < self.MAX_RUN_END_FRAME:
+            if self.run_end_frames < self.MAX_RUN_END_FRAME:
                 self._run_end_anim()
             else:
                 self.sprite.set_anim(self.IDLE_LEFT_ID)
         elif self.facing == const.RIGHT:
-            if self.unpush_frames < self.MAX_UNPUSH_FRAME:
-                self.sprite.set_anim(self.WALL_PUSH_END_RIGHT_ID)
-                self.run_end_frames = self.MAX_RUN_END_FRAME
-            elif self.run_end_frames < self.MAX_RUN_END_FRAME:
+            if self.run_end_frames < self.MAX_RUN_END_FRAME:
                 self._run_end_anim()
             else:
                 self.sprite.set_anim(self.IDLE_RIGHT_ID)
 
         if self.unpush_frames < self.MAX_UNPUSH_FRAME:
-            self.sprite.frame = self.unpush_frames // 2
-            self.unpush_frames += 1
+            self._unpush_anim()  # Priority over other animations in this method
+
+    def _unpush_anim(self):
+        if self.facing == const.LEFT:
+            self.sprite.set_anim(self.WALL_PUSH_END_LEFT_ID)
+            self.run_end_frames = self.MAX_RUN_END_FRAME
+        if self.facing == const.RIGHT:
+            self.sprite.set_anim(self.WALL_PUSH_END_RIGHT_ID)
+            self.run_end_frames = self.MAX_RUN_END_FRAME
+
+        self.sprite.frame = self.unpush_frames // 2
+        self.unpush_frames += 1
 
     def _landing_anim(self):
         if self.facing == const.LEFT:
@@ -587,26 +596,35 @@ class Player(collision.PunchableGravityCollision):
                     self.sprite.frame = self.push_frames // 2
                     self.push_frames += 1
             else:
-                self.push_frames = self.MAX_PUSH_FRAME
                 if direction == const.LEFT:
-                    self.sprite.set_anim(self.WALL_PUSH_JUMP_LEFT_ID)
+                    if self.push_frames < self.MAX_PUSH_FRAME:
+                        self.sprite.set_anim(self.WALL_PUSH_START_LEFT_ID)
+                    else:
+                        self.sprite.set_anim(self.WALL_PUSH_JUMP_LEFT_ID)
                 elif direction == const.RIGHT:
-                    self.sprite.set_anim(self.WALL_PUSH_JUMP_RIGHT_ID)
+                    if self.push_frames < self.MAX_PUSH_FRAME:
+                        self.sprite.set_anim(self.WALL_PUSH_START_RIGHT_ID)
+                    else:
+                        self.sprite.set_anim(self.WALL_PUSH_JUMP_RIGHT_ID)
 
-                if self.y_vel < -self.JUMP_SPEED + 0.5:
-                    self.sprite.frame = 0
-                elif self.y_vel < -self.JUMP_SPEED + 1.0:
-                    self.sprite.frame = 1
-                elif self.y_vel < -self.JUMP_SPEED + 3.0:
-                    self.sprite.frame = 2
-                elif self.y_vel < -self.JUMP_SPEED + 6.0:
-                    self.sprite.frame = 3
-                elif self.y_vel < 10.0:
-                    self.sprite.frame = 4
-                elif self.y_vel < 14.5:
-                    self.sprite.frame = 5
+                if self.push_frames < self.MAX_PUSH_FRAME:
+                    self.sprite.frame = self.push_frames // 2
+                    self.push_frames += 1
                 else:
-                    self.sprite.frame = 6
+                    if self.y_vel < -self.JUMP_SPEED + 0.5:
+                        self.sprite.frame = 0
+                    elif self.y_vel < -self.JUMP_SPEED + 1.0:
+                        self.sprite.frame = 1
+                    elif self.y_vel < -self.JUMP_SPEED + 3.0:
+                        self.sprite.frame = 2
+                    elif self.y_vel < -self.JUMP_SPEED + 6.0:
+                        self.sprite.frame = 3
+                    elif self.y_vel < 10.0:
+                        self.sprite.frame = 4
+                    elif self.y_vel < 14.5:
+                        self.sprite.frame = 5
+                    else:
+                        self.sprite.frame = 6
 
         else:
             self.push_frames = 0
