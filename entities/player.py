@@ -518,23 +518,23 @@ class Player(collision.PunchableGravityCollision):
 
         if self.y_vel < -self.JUMP_SPEED:
             self.sprite.frame = 0
-        elif self.y_vel < -self.JUMP_SPEED + 1.0:
-            self.sprite.frame = 1
         elif self.y_vel < -self.JUMP_SPEED + 3.0:
+            self.sprite.frame = 1
+        elif self.y_vel < -self.JUMP_SPEED + 5.5:
             self.sprite.frame = 2
-        elif self.y_vel < -self.JUMP_SPEED + 5.0:
+        elif self.y_vel < -self.JUMP_SPEED + 7.0:
             self.sprite.frame = 3
-        elif self.y_vel < -self.JUMP_SPEED + 6.5:
-            self.sprite.frame = 4
         elif self.y_vel < -self.JUMP_SPEED + 8.0:
+            self.sprite.frame = 4
+        elif self.y_vel < 1.5:
             self.sprite.frame = 5
-        elif self.y_vel < 1.0:
-            self.sprite.frame = 6
         elif self.y_vel < 2.0:
+            self.sprite.frame = 6
+        elif self.y_vel < 4.0:
             self.sprite.frame = 7
-        elif self.y_vel < 5.0:
+        elif self.y_vel < 7.0:
             self.sprite.frame = 7
-        elif self.y_vel < 8.0:
+        elif self.y_vel < 12.0:
             self.sprite.frame = 8
         else:
             self.sprite.frame_delay += 1
