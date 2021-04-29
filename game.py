@@ -27,12 +27,6 @@ pygame.display.set_caption("deathlock")
 clock = pygame.time.Clock()
 
 
-TUTORIAL_TEXT = graphics.load_image("tutorial", 2)
-TUTORIAL_TEXT.set_colorkey(const.TRANSPARENT)
-CREDITS_TEXT = graphics.load_image("credits", 2)
-CREDITS_TEXT.set_colorkey(const.TRANSPARENT)
-
-
 background = graphics.load_image("background", 1)
 player_glow = graphics.load_image("player_gradient", 1)
 
