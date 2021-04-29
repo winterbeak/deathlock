@@ -74,11 +74,23 @@ class Player(collision.PunchableGravityCollision):
     WALL_PUSH_JUMP_RIGHT = graphics.flip_column(WALL_PUSH_JUMP_LEFT)
     WALL_PUSH_JUMP_RIGHT_ID = 13
 
+    WALL_PUSH_START_LEFT = graphics.AnimColumn("wall_push_start", 3, 2)
+    WALL_PUSH_START_LEFT.set_delay(0xbeef)
+    WALL_PUSH_START_LEFT_ID = 14
+    WALL_PUSH_START_RIGHT = graphics.flip_column(WALL_PUSH_START_LEFT)
+    WALL_PUSH_START_RIGHT_ID = 15
+
+    WALL_PUSH_END_LEFT = graphics.AnimColumn("wall_push_end", 2, 2)
+    WALL_PUSH_END_LEFT.set_delay(0xbeef)
+    WALL_PUSH_END_LEFT_ID = 16
+    WALL_PUSH_END_RIGHT = graphics.flip_column(WALL_PUSH_END_LEFT)
+    WALL_PUSH_END_RIGHT_ID = 17
+
     JUMP_LEFT = graphics.AnimColumn("jump", 13, 2)
     JUMP_LEFT.set_delay(0xbeef)
-    JUMP_LEFT_ID = 14
+    JUMP_LEFT_ID = 18
     JUMP_RIGHT = graphics.flip_column(JUMP_LEFT)
-    JUMP_RIGHT_ID = 15
+    JUMP_RIGHT_ID = 19
 
     ANIMSHEET = graphics.AnimSheet((RUN_LEFT, RUN_RIGHT,
                                     IDLE_LEFT, IDLE_RIGHT,
@@ -87,7 +99,12 @@ class Player(collision.PunchableGravityCollision):
                                     DEAD_FALL_LEFT, DEAD_FALL_RIGHT,
                                     WALL_PUSH_LEFT, WALL_PUSH_RIGHT,
                                     WALL_PUSH_JUMP_LEFT, WALL_PUSH_JUMP_RIGHT,
+                                    WALL_PUSH_START_LEFT, WALL_PUSH_START_RIGHT,
+                                    WALL_PUSH_END_LEFT, WALL_PUSH_END_RIGHT,
                                     JUMP_LEFT, JUMP_RIGHT))
+
+    MAX_PUSH_FRAME = 6
+    MAX_UNPUSH_FRAME = 4
 
     MIDDLE_HEART = graphics.AnimColumn("heart_middle", 2, 2)
     LEFT_HEART = graphics.AnimColumn("heart_left", 2, 2)
@@ -143,6 +160,10 @@ class Player(collision.PunchableGravityCollision):
         self.run_sound_frame = self.RUN_SOUND_DELAY
 
         self.hidden = False
+
+        self.previous_frame_anim = self.IDLE_RIGHT_ID
+        self.push_frames = 0
+        self.unpush_frames = self.MAX_UNPUSH_FRAME
 
     @property
     def respawn_x(self):
@@ -359,11 +380,25 @@ class Player(collision.PunchableGravityCollision):
                             self.RUN_SOUNDS.play_random(random.random() / 2 + 0.5)
 
             else:
+                self.push_frames = 0
                 if self.grounded:
                     if self.facing == const.LEFT:
-                        self.sprite.set_anim(self.IDLE_LEFT_ID)
+                        if self.unpush_frames < self.MAX_UNPUSH_FRAME:
+                            self.sprite.set_anim(self.WALL_PUSH_END_LEFT_ID)
+                        else:
+                            self.sprite.set_anim(self.IDLE_LEFT_ID)
                     elif self.facing == const.RIGHT:
-                        self.sprite.set_anim(self.IDLE_RIGHT_ID)
+                        if self.unpush_frames < self.MAX_UNPUSH_FRAME:
+                            self.sprite.set_anim(self.WALL_PUSH_END_RIGHT_ID)
+                        else:
+                            self.sprite.set_anim(self.IDLE_RIGHT_ID)
+
+                    if self.unpush_frames < self.MAX_UNPUSH_FRAME:
+                        if self.unpush_frames < 2:
+                            self.sprite.frame = 0
+                        else:
+                            self.sprite.frame = 1
+                        self.unpush_frames += 1
 
         elif self.dead and self.grounded:
             if self.facing == const.LEFT:
@@ -407,11 +442,9 @@ class Player(collision.PunchableGravityCollision):
                     else:
                         self.sprite.frame = 10
 
+        self.previous_frame_anim = self.sprite.anim
+
     def _update_wall_push(self, direction):
-        if self.sprite.anim == self.TUMBLE_LEFT_ID:
-            return
-        if self.sprite.anim == self.TUMBLE_RIGHT_ID:
-            return
         top_y = self.y
         bottom_y = top_y + self.HEIGHT - 1
 
@@ -423,12 +456,30 @@ class Player(collision.PunchableGravityCollision):
             return
 
         if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
+            self.unpush_frames = 0
+
             if self.grounded:
                 if direction == const.LEFT:
-                    self.sprite.set_anim(self.WALL_PUSH_LEFT_ID)
+                    if self.push_frames < self.MAX_PUSH_FRAME:
+                        self.sprite.set_anim(self.WALL_PUSH_START_LEFT_ID)
+                    else:
+                        self.sprite.set_anim(self.WALL_PUSH_LEFT_ID)
                 elif direction == const.RIGHT:
-                    self.sprite.set_anim(self.WALL_PUSH_RIGHT_ID)
+                    if self.push_frames < self.MAX_PUSH_FRAME:
+                        self.sprite.set_anim(self.WALL_PUSH_START_RIGHT_ID)
+                    else:
+                        self.sprite.set_anim(self.WALL_PUSH_RIGHT_ID)
+
+                if self.push_frames < self.MAX_PUSH_FRAME:
+                    if self.push_frames < 2:
+                        self.sprite.frame = 0
+                    elif self.push_frames < 4:
+                        self.sprite.frame = 1
+                    else:
+                        self.sprite.frame = 2
+                    self.push_frames += 1
             else:
+                self.push_frames = self.MAX_PUSH_FRAME
                 if direction == const.LEFT:
                     self.sprite.set_anim(self.WALL_PUSH_JUMP_LEFT_ID)
                 elif direction == const.RIGHT:
@@ -448,6 +499,10 @@ class Player(collision.PunchableGravityCollision):
                     self.sprite.frame = 5
                 else:
                     self.sprite.frame = 6
+
+        else:
+            self.push_frames = 0
+            self.unpush_frames = self.MAX_UNPUSH_FRAME
 
     def _get_hit(self):
         super()._get_hit()
