@@ -68,11 +68,17 @@ class Player(collision.PunchableGravityCollision):
     WALL_PUSH_RIGHT = graphics.flip_column(WALL_PUSH_LEFT)
     WALL_PUSH_RIGHT_ID = 11
 
+    WALL_PUSH_JUMP_LEFT = graphics.AnimColumn("wall_push_jump", 7, 2)
+    WALL_PUSH_JUMP_LEFT.set_delay(0xbeef)
+    WALL_PUSH_JUMP_LEFT_ID = 12
+    WALL_PUSH_JUMP_RIGHT = graphics.flip_column(WALL_PUSH_JUMP_LEFT)
+    WALL_PUSH_JUMP_RIGHT_ID = 13
+
     JUMP_LEFT = graphics.AnimColumn("jump", 13, 2)
     JUMP_LEFT.set_delay(0xbeef)
-    JUMP_LEFT_ID = 12
+    JUMP_LEFT_ID = 14
     JUMP_RIGHT = graphics.flip_column(JUMP_LEFT)
-    JUMP_RIGHT_ID = 13
+    JUMP_RIGHT_ID = 15
 
     ANIMSHEET = graphics.AnimSheet((RUN_LEFT, RUN_RIGHT,
                                     IDLE_LEFT, IDLE_RIGHT,
@@ -80,6 +86,7 @@ class Player(collision.PunchableGravityCollision):
                                     DEAD_GROUNDED_LEFT, DEAD_GROUNDED_RIGHT,
                                     DEAD_FALL_LEFT, DEAD_FALL_RIGHT,
                                     WALL_PUSH_LEFT, WALL_PUSH_RIGHT,
+                                    WALL_PUSH_JUMP_LEFT, WALL_PUSH_JUMP_RIGHT,
                                     JUMP_LEFT, JUMP_RIGHT))
 
     MIDDLE_HEART = graphics.AnimColumn("heart_middle", 2, 2)
@@ -410,13 +417,37 @@ class Player(collision.PunchableGravityCollision):
 
         if direction == const.LEFT:
             x = self.x - 1
-            if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
-                self.sprite.set_anim(self.WALL_PUSH_LEFT_ID)
-
         elif direction == const.RIGHT:
             x = self.x + self.WIDTH
-            if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
-                self.sprite.set_anim(self.WALL_PUSH_RIGHT_ID)
+        else:
+            return
+
+        if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
+            if self.grounded:
+                if direction == const.LEFT:
+                    self.sprite.set_anim(self.WALL_PUSH_LEFT_ID)
+                elif direction == const.RIGHT:
+                    self.sprite.set_anim(self.WALL_PUSH_RIGHT_ID)
+            else:
+                if direction == const.LEFT:
+                    self.sprite.set_anim(self.WALL_PUSH_JUMP_LEFT_ID)
+                elif direction == const.RIGHT:
+                    self.sprite.set_anim(self.WALL_PUSH_JUMP_RIGHT_ID)
+
+                if self.y_vel < -self.JUMP_SPEED + 0.5:
+                    self.sprite.frame = 0
+                elif self.y_vel < -self.JUMP_SPEED + 1.0:
+                    self.sprite.frame = 1
+                elif self.y_vel < -self.JUMP_SPEED + 3.0:
+                    self.sprite.frame = 2
+                elif self.y_vel < -self.JUMP_SPEED + 6.0:
+                    self.sprite.frame = 3
+                elif self.y_vel < 10.0:
+                    self.sprite.frame = 4
+                elif self.y_vel < 14.5:
+                    self.sprite.frame = 5
+                else:
+                    self.sprite.frame = 6
 
     def _get_hit(self):
         super()._get_hit()
