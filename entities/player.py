@@ -185,7 +185,6 @@ class Player(collision.PunchableGravityCollision):
 
         self.hidden = False
 
-        self.previous_frame_anim = self.IDLE_RIGHT_ID
         self.push_frames = 0
         self.unpush_frames = self.MAX_UNPUSH_FRAME
 
@@ -361,8 +360,6 @@ class Player(collision.PunchableGravityCollision):
 
         elif self.dead:
             self._dead_air_anim()
-
-        self.previous_frame_anim = self.sprite.anim
 
     def _alive_air_anim(self):
         self.ground_frames = 0
