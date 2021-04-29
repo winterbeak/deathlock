@@ -340,165 +340,182 @@ class Player(collision.PunchableGravityCollision):
     def _update_animation(self):
         if not self.dead:
             if not self.grounded:
-                self.ground_frames = 0
-                if self.facing == const.LEFT:
-                    self.sprite.set_anim(self.JUMP_LEFT_ID)
-                else:
-                    self.sprite.set_anim(self.JUMP_RIGHT_ID)
-
-                if self.y_vel < -self.JUMP_SPEED + 0.5:
-                    self.sprite.frame = 0
-                elif self.y_vel < -self.JUMP_SPEED + 1.0:
-                    self.sprite.frame = 1
-                elif self.y_vel < -self.JUMP_SPEED + 2.0:
-                    self.sprite.frame = 2
-                elif self.y_vel < -self.JUMP_SPEED + 3.5:
-                    self.sprite.frame = 3
-                elif self.y_vel < -self.JUMP_SPEED + 5:
-                    self.sprite.frame = 4
-                elif self.y_vel < -self.JUMP_SPEED + 6.25:
-                    self.sprite.frame = 5
-                elif self.y_vel < -self.JUMP_SPEED + 7.5:
-                    self.sprite.frame = 6
-                elif self.y_vel < 0:
-                    self.sprite.frame = 7
-                elif self.y_vel < 2.5:
-                    self.sprite.frame = 8
-                elif self.y_vel < 10.0:
-                    self.sprite.frame = 9
-                elif self.y_vel < 14.5:
-                    self.sprite.frame = 10
-                else:
-                    if self.y_vel % 2.6 < 1.3:
-                        self.sprite.frame = 11
-                    else:
-                        self.sprite.frame = 12
-
+                self._alive_air_anim()
             else:
                 self.tumble = False
 
-            # Moving left
             if self.left_key.is_held:
-
-                self.turn_right_frames = 0
-                self.run_end_frames = 0
-
-                if self.grounded:
-                    if self.turn_left_frames < self.MAX_TURN_FRAME:
-                        self._handle_turn_left_animation()
-                    else:
-                        self.sprite.set_anim(self.RUN_LEFT_ID)
-
-                self.facing = const.LEFT
-                self._update_wall_push(const.LEFT)
-
-                # Plays running sound
-                if self.sprite.anim != self.WALL_PUSH_LEFT_ID:
-                    if self.grounded:
-                        if self.run_sound_frame < self.RUN_SOUND_DELAY:
-                            self.run_sound_frame += 1
-                        else:
-                            self.run_sound_frame = 0
-                            self.RUN_SOUNDS.play_random(random.random() / 4 + 0.75)
-
+                self._move_left_anim()
             elif self.right_key.is_held:
-
-                self.turn_left_frames = 0
-                self.run_end_frames = 0
-
-                if self.grounded:
-                    if self.turn_right_frames < self.MAX_TURN_FRAME:
-                        self._handle_turn_right_animation()
-                    else:
-                        self.sprite.set_anim(self.RUN_RIGHT_ID)
-
-                self.facing = const.RIGHT
-                self._update_wall_push(const.RIGHT)
-
-                if self.sprite.anim != self.WALL_PUSH_RIGHT_ID:
-                    if self.grounded:
-                        if self.run_sound_frame < self.RUN_SOUND_DELAY:
-                            self.run_sound_frame += 1
-                        else:
-                            self.run_sound_frame = 0
-                            self.RUN_SOUNDS.play_random(random.random() / 2 + 0.5)
-
+                self._move_right_anim()
             else:
                 self.push_frames = 0
                 if self.grounded:
-                    if self.facing == const.LEFT:
-                        if self.unpush_frames < self.MAX_UNPUSH_FRAME:
-                            self.sprite.set_anim(self.WALL_PUSH_END_LEFT_ID)
-                        elif self.run_end_frames < self.MAX_RUN_END_FRAME:
-                            self._handle_run_end_anim()
-                        else:
-                            self.sprite.set_anim(self.IDLE_LEFT_ID)
-                    elif self.facing == const.RIGHT:
-                        if self.unpush_frames < self.MAX_UNPUSH_FRAME:
-                            self.sprite.set_anim(self.WALL_PUSH_END_RIGHT_ID)
-                        elif self.run_end_frames < self.MAX_RUN_END_FRAME:
-                            self._handle_run_end_anim()
-                        else:
-                            self.sprite.set_anim(self.IDLE_RIGHT_ID)
-
-                    if self.unpush_frames < self.MAX_UNPUSH_FRAME:
-                        self.sprite.frame = self.unpush_frames // 2
-                        self.unpush_frames += 1
+                    self._idle_anim()
 
             if self.grounded and self.ground_frames < self.MAX_GROUND_FRAME:
-                if self.facing == const.LEFT:
-                    self.sprite.set_anim(self.LAND_LEFT_ID)
-                else:
-                    self.sprite.set_anim(self.LAND_RIGHT_ID)
-
-                self.sprite.frame = self.ground_frames // 2
-                self.ground_frames += 1
+                self._landing_anim()
 
         elif self.dead and self.grounded:
-            if self.facing == const.LEFT:
-                self.sprite.set_anim(self.DEAD_GROUNDED_LEFT_ID)
-            elif self.facing == const.RIGHT:
-                self.sprite.set_anim(self.DEAD_GROUNDED_RIGHT_ID)
+            self._dead_grounded_anim()
 
         elif self.dead:
-            if self.facing == const.LEFT:
-                self.sprite.set_anim(self.DEAD_FALL_LEFT_ID)
-            else:
-                self.sprite.set_anim(self.DEAD_FALL_RIGHT_ID)
-
-            if self.y_vel < -self.JUMP_SPEED:
-                self.sprite.frame = 0
-            elif self.y_vel < -self.JUMP_SPEED + 1.0:
-                self.sprite.frame = 1
-            elif self.y_vel < -self.JUMP_SPEED + 3.0:
-                self.sprite.frame = 2
-            elif self.y_vel < -self.JUMP_SPEED + 5.0:
-                self.sprite.frame = 3
-            elif self.y_vel < -self.JUMP_SPEED + 6.5:
-                self.sprite.frame = 4
-            elif self.y_vel < -self.JUMP_SPEED + 8.0:
-                self.sprite.frame = 5
-            elif self.y_vel < 1.0:
-                self.sprite.frame = 6
-            elif self.y_vel < 2.0:
-                self.sprite.frame = 7
-            elif self.y_vel < 5.0:
-                self.sprite.frame = 7
-            elif self.y_vel < 8.0:
-                self.sprite.frame = 8
-            else:
-                self.sprite.frame_delay += 1
-                if self.sprite.frame_delay > 1:
-                    self.sprite.frame_delay = 0
-
-                    if self.sprite.frame == 5:
-                        self.sprite.frame = 9
-                    else:
-                        self.sprite.frame = 10
+            self._dead_air_anim()
 
         self.previous_frame_anim = self.sprite.anim
 
-    def _handle_run_end_anim(self):
+    def _alive_air_anim(self):
+        self.ground_frames = 0
+        if self.facing == const.LEFT:
+            self.sprite.set_anim(self.JUMP_LEFT_ID)
+        else:
+            self.sprite.set_anim(self.JUMP_RIGHT_ID)
+
+        if self.y_vel < -self.JUMP_SPEED + 0.5:
+            self.sprite.frame = 0
+        elif self.y_vel < -self.JUMP_SPEED + 1.0:
+            self.sprite.frame = 1
+        elif self.y_vel < -self.JUMP_SPEED + 2.0:
+            self.sprite.frame = 2
+        elif self.y_vel < -self.JUMP_SPEED + 3.5:
+            self.sprite.frame = 3
+        elif self.y_vel < -self.JUMP_SPEED + 5:
+            self.sprite.frame = 4
+        elif self.y_vel < -self.JUMP_SPEED + 6.25:
+            self.sprite.frame = 5
+        elif self.y_vel < -self.JUMP_SPEED + 7.5:
+            self.sprite.frame = 6
+        elif self.y_vel < 0:
+            self.sprite.frame = 7
+        elif self.y_vel < 2.5:
+            self.sprite.frame = 8
+        elif self.y_vel < 10.0:
+            self.sprite.frame = 9
+        elif self.y_vel < 14.5:
+            self.sprite.frame = 10
+        else:
+            if self.y_vel % 2.6 < 1.3:
+                self.sprite.frame = 11
+            else:
+                self.sprite.frame = 12
+
+    def _move_left_anim(self):
+        self.turn_right_frames = 0
+        self.run_end_frames = 0
+
+        if self.grounded:
+            if self.turn_left_frames < self.MAX_TURN_FRAME:
+                self._turn_left_anim()
+            else:
+                self.sprite.set_anim(self.RUN_LEFT_ID)
+
+        self.facing = const.LEFT
+        self._update_wall_push(const.LEFT)
+
+        # Plays running sound
+        if self.sprite.anim != self.WALL_PUSH_LEFT_ID:
+            if self.grounded:
+                if self.run_sound_frame < self.RUN_SOUND_DELAY:
+                    self.run_sound_frame += 1
+                else:
+                    self.run_sound_frame = 0
+                    self.RUN_SOUNDS.play_random(random.random() / 4 + 0.75)
+
+    def _move_right_anim(self):
+
+        self.turn_left_frames = 0
+        self.run_end_frames = 0
+
+        if self.grounded:
+            if self.turn_right_frames < self.MAX_TURN_FRAME:
+                self._turn_right_anim()
+            else:
+                self.sprite.set_anim(self.RUN_RIGHT_ID)
+
+        self.facing = const.RIGHT
+        self._update_wall_push(const.RIGHT)
+
+        # Plays running sound
+        if self.sprite.anim != self.WALL_PUSH_RIGHT_ID:
+            if self.grounded:
+                if self.run_sound_frame < self.RUN_SOUND_DELAY:
+                    self.run_sound_frame += 1
+                else:
+                    self.run_sound_frame = 0
+                    self.RUN_SOUNDS.play_random(random.random() / 2 + 0.5)
+
+    def _idle_anim(self):
+        if self.facing == const.LEFT:
+            if self.unpush_frames < self.MAX_UNPUSH_FRAME:
+                self.sprite.set_anim(self.WALL_PUSH_END_LEFT_ID)
+            elif self.run_end_frames < self.MAX_RUN_END_FRAME:
+                self._run_end_anim()
+            else:
+                self.sprite.set_anim(self.IDLE_LEFT_ID)
+        elif self.facing == const.RIGHT:
+            if self.unpush_frames < self.MAX_UNPUSH_FRAME:
+                self.sprite.set_anim(self.WALL_PUSH_END_RIGHT_ID)
+            elif self.run_end_frames < self.MAX_RUN_END_FRAME:
+                self._run_end_anim()
+            else:
+                self.sprite.set_anim(self.IDLE_RIGHT_ID)
+
+        if self.unpush_frames < self.MAX_UNPUSH_FRAME:
+            self.sprite.frame = self.unpush_frames // 2
+            self.unpush_frames += 1
+
+    def _landing_anim(self):
+        if self.facing == const.LEFT:
+            self.sprite.set_anim(self.LAND_LEFT_ID)
+        else:
+            self.sprite.set_anim(self.LAND_RIGHT_ID)
+
+        self.sprite.frame = self.ground_frames // 2
+        self.ground_frames += 1
+
+    def _dead_grounded_anim(self):
+        if self.facing == const.LEFT:
+            self.sprite.set_anim(self.DEAD_GROUNDED_LEFT_ID)
+        elif self.facing == const.RIGHT:
+            self.sprite.set_anim(self.DEAD_GROUNDED_RIGHT_ID)
+
+    def _dead_air_anim(self):
+        if self.facing == const.LEFT:
+            self.sprite.set_anim(self.DEAD_FALL_LEFT_ID)
+        else:
+            self.sprite.set_anim(self.DEAD_FALL_RIGHT_ID)
+
+        if self.y_vel < -self.JUMP_SPEED:
+            self.sprite.frame = 0
+        elif self.y_vel < -self.JUMP_SPEED + 1.0:
+            self.sprite.frame = 1
+        elif self.y_vel < -self.JUMP_SPEED + 3.0:
+            self.sprite.frame = 2
+        elif self.y_vel < -self.JUMP_SPEED + 5.0:
+            self.sprite.frame = 3
+        elif self.y_vel < -self.JUMP_SPEED + 6.5:
+            self.sprite.frame = 4
+        elif self.y_vel < -self.JUMP_SPEED + 8.0:
+            self.sprite.frame = 5
+        elif self.y_vel < 1.0:
+            self.sprite.frame = 6
+        elif self.y_vel < 2.0:
+            self.sprite.frame = 7
+        elif self.y_vel < 5.0:
+            self.sprite.frame = 7
+        elif self.y_vel < 8.0:
+            self.sprite.frame = 8
+        else:
+            self.sprite.frame_delay += 1
+            if self.sprite.frame_delay > 1:
+                self.sprite.frame_delay = 0
+
+                if self.sprite.frame == 5:
+                    self.sprite.frame = 9
+                else:
+                    self.sprite.frame = 10
+
+    def _run_end_anim(self):
         if self.facing == const.LEFT:
             self.sprite.set_anim(self.RUN_END_LEFT_ID)
         else:
@@ -507,12 +524,12 @@ class Player(collision.PunchableGravityCollision):
 
         self.run_end_frames += 1
 
-    def _handle_turn_left_animation(self):
+    def _turn_left_anim(self):
         self.sprite.set_anim(self.TURN_LEFT_ID)
         self.sprite.frame = self.turn_left_frames // 2
         self.turn_left_frames += 1
 
-    def _handle_turn_right_animation(self):
+    def _turn_right_anim(self):
         self.sprite.set_anim(self.TURN_RIGHT_ID)
         self.sprite.frame = self.turn_right_frames // 2
         self.turn_right_frames += 1
