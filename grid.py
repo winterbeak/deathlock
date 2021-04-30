@@ -671,15 +671,15 @@ class Room:
 
         if self.has_tile(PunchBox, col, row):
             draw_glow_centered(surf, punch_box_glow, center_x, center_y)
-            draw_glow_centered(surf, punch_box_gradient, center_x, center_y)
+            self._draw_gradient_efficient(surf, PunchBox, punch_box_gradient, col, row)
 
         elif self.has_tile(Deathlock, col, row):
             draw_glow_centered(surf, deathlock_glow, center_x, center_y)
-            draw_glow_centered(surf, deathlock_gradient, center_x, center_y)
+            self._draw_gradient_efficient(surf, Deathlock, deathlock_gradient, col, row)
 
         elif self.has_tile(Checkpoint, col, row):
             draw_glow_centered(surf, checkpoint_glow, center_x, center_y)
-            draw_glow_centered(surf, checkpoint_gradient, center_x, center_y)
+            self._draw_gradient_efficient(surf, Checkpoint, checkpoint_gradient, col, row)
 
         elif self.has_tile(CheckpointRay, col, row):
             tile = self.get_tile(CheckpointRay, col, row)
@@ -694,6 +694,39 @@ class Room:
         elif self.has_tile(PlayerSpawn, col, row):
             draw_glow_centered(surf, player_spawn_glow, center_x, center_y)
             draw_glow_centered(surf, player_spawn_gradient, center_x, center_y)
+
+    def _draw_gradient_efficient(self, surf, type_, gradient, col, row):
+        gradient_width = gradient.get_width()
+        gradient_height = gradient.get_height()
+        x_to_center = gradient_width // 2 - TILE_W // 2
+        y_to_center = gradient_height // 2 - TILE_H // 2
+        x_remainder = gradient_width - x_to_center
+        y_remainder = gradient_height - y_to_center
+
+        if self.has_tile(type_, col - 1, row):
+            x = x_of(col)
+            slice_x = x_to_center
+            slice_width = x_remainder
+        else:
+            x = x_of(col) - x_to_center
+            slice_x = 0
+            slice_width = gradient_width
+        if self.has_tile(type_, col + 1, row):
+            slice_width -= x_to_center
+
+        if self.has_tile(type_, col, row - 1):
+            y = y_of(row)
+            slice_y = y_to_center
+            slice_height = y_remainder
+        else:
+            y = y_of(row) - y_to_center
+            slice_y = 0
+            slice_height = gradient_height
+        if self.has_tile(type_, col, row + 1):
+            slice_height -= y_to_center
+
+        rect = (slice_x, slice_y, slice_width, slice_height)
+        surf.blit(gradient, (x, y), rect, special_flags=pygame.BLEND_MAX)
 
     def draw_goal_glow(self, surf):
         glow_surf = pygame.Surface(surf.get_size())
