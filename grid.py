@@ -529,9 +529,6 @@ class Room:
         y = row * TILE_H - int(camera.y)
         rect = (x, y, TILE_W, TILE_H)
 
-        if transparent_background:
-            pygame.draw.rect(surf, const.TRANSPARENT, rect)
-
         if self.has_tile(Wall, col, row):
             pygame.draw.rect(surf, const.BLACK, rect)
 
@@ -640,9 +637,11 @@ class Room:
                             surf.blit(shade, pos, special_flags=pygame.BLEND_MULT)
 
     def draw_glow(self, surf):
+        glow_surf = pygame.Surface(surf.get_size())
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
-                self.draw_glow_at(surf, col, row)
+                self.draw_glow_at(glow_surf, col, row)
+        surf.blit(glow_surf, (0, 0), special_flags=pygame.BLEND_ADD)
 
     def draw_glow_at(self, surf, col, row):
         center_x = center_x_of(col)
@@ -688,16 +687,15 @@ class Room:
 
     def draw_static(self, surf, camera, transparent_background=True):
         """draws the entire stage"""
-        glow_surf = pygame.Surface(surf.get_size())
-        self.draw_glow(glow_surf)
-        surf.blit(glow_surf, (0, 0), special_flags=pygame.BLEND_ADD)
+        self.draw_glow(surf)
+        self.draw_tiles(surf, camera, transparent_background)
+        self.draw_goal_glow(surf)
 
+    def draw_tiles(self, surf, camera, transparent_background):
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
                 if self.grid[col][row] and self.grid[col][row][0].DRAWN_STATICALLY:
                     self.draw_tile_at(surf, camera, col, row, transparent_background)
-
-        self.draw_goal_glow(surf)
 
     def draw_dynamic(self, surf, camera, player_dead, original_spawn):
         for row in range(self.HEIGHT):

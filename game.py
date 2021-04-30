@@ -207,7 +207,7 @@ def editor_update():
 
 def editor_draw():
     draw_background(main_surf)
-    sequence.current.draw_static(main_surf, main_cam, False)
+    sequence.current.draw_tiles(main_surf, main_cam, False)
     sequence.current.draw_dynamic(main_surf, main_cam,
                                   player.dead, player.checkpoint is None)
     editor.draw(main_surf)
