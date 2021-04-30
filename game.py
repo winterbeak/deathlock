@@ -122,7 +122,7 @@ hard_reset_key = events.Keybind([pygame.K_r])
 static_level_surf = pygame.Surface((const.SCRN_W, const.SCRN_H))
 static_level_surf.set_colorkey(const.TRANSPARENT)
 draw_background(static_level_surf)
-sequence.current.draw_static(static_level_surf, main_cam, False)
+sequence.current.draw_static(static_level_surf, main_cam)
 
 sound.play_music()
 
@@ -208,7 +208,7 @@ def editor_update():
 
 def editor_draw():
     draw_background(main_surf)
-    sequence.current.draw_tiles(main_surf, main_cam, False)
+    sequence.current.draw_tiles(main_surf, main_cam)
     sequence.current.draw_dynamic(main_surf, main_cam,
                                   player.dead, player.checkpoint is None)
     editor.draw(main_surf)
@@ -226,7 +226,7 @@ def swap_to_game():
     player.hard_respawn()
     sequence.current.emit()
     draw_background(static_level_surf)
-    sequence.current.draw_static(static_level_surf, main_cam, False)
+    sequence.current.draw_static(static_level_surf, main_cam)
 
 
 def next_level():
@@ -240,7 +240,7 @@ def next_level():
 def end_transition():
     sequence.done_transitioning = False
     draw_background(static_level_surf)
-    sequence.current.draw_static(static_level_surf, main_cam, False)
+    sequence.current.draw_static(static_level_surf, main_cam)
     player.level = sequence.current
     player.hidden = False
     player.hard_respawn()

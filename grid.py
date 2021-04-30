@@ -527,7 +527,7 @@ class Room:
                 if self.has_solid(col, row):
                     pygame.draw.rect(surf, const.BLACK, rect)
 
-    def draw_tile_at(self, surf, camera, col, row, transparent_background=True,
+    def draw_tile_at(self, surf, camera, col, row,
                      player_dead=False, original_spawn=False):
         x = col * TILE_W - int(camera.x)
         y = row * TILE_H - int(camera.y)
@@ -562,9 +562,6 @@ class Room:
                 surf.blit(punch_box_down, (x, y))
 
         elif self.has_tile(Checkpoint, col, row):
-            if transparent_background:
-                pygame.draw.rect(surf, const.TRANSPARENT, rect)
-
             checkpoint = self.get_tile(Checkpoint, col, row)
             if checkpoint.active:
                 surf.blit(checkpoint_activated, (x, y))
@@ -572,9 +569,6 @@ class Room:
                 surf.blit(checkpoint_deactivated, (x, y))
 
         elif self.has_tile(CheckpointRay, col, row):
-            if transparent_background:
-                pygame.draw.rect(surf, const.TRANSPARENT, rect)
-
             tile = self.get_tile(CheckpointRay, col, row)
             if tile.checkpoint.active:
                 color = (81, 255, 113)
@@ -643,7 +637,7 @@ class Room:
                             brightness = tile.flicker_sequence.brightness(frame)
 
                         if brightness != flicker.NONE:
-                            self.draw_tile_at(surf, camera, col, row, False)
+                            self.draw_tile_at(surf, camera, col, row)
                         if brightness == flicker.SOFT:
                             shade = self.shade_soft
                         elif brightness == flicker.MEDIUM:
@@ -804,23 +798,23 @@ class Room:
                 glow_surf.blit(player_goal_gradient, (gradient_x, gradient_y), special_flags=pygame.BLEND_MAX)
         surf.blit(glow_surf, (0, 0), special_flags=pygame.BLEND_ADD)
 
-    def draw_static(self, surf, camera, transparent_background=True):
+    def draw_static(self, surf, camera):
         """draws the entire stage"""
         self.draw_glow(surf)
-        self.draw_tiles(surf, camera, transparent_background)
+        self.draw_tiles(surf, camera)
         self.draw_goal_glow(surf)
 
-    def draw_tiles(self, surf, camera, transparent_background):
+    def draw_tiles(self, surf, camera):
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
                 if self.grid[col][row] and self.grid[col][row][0].DRAWN_STATICALLY:
-                    self.draw_tile_at(surf, camera, col, row, transparent_background)
+                    self.draw_tile_at(surf, camera, col, row)
 
     def draw_dynamic(self, surf, camera, player_dead, original_spawn):
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
                 if self.grid[col][row] and not self.grid[col][row][0].DRAWN_STATICALLY:
-                    self.draw_tile_at(surf, camera, col, row, False,
+                    self.draw_tile_at(surf, camera, col, row,
                                       player_dead, original_spawn)
 
     def place_tile_from_id(self, col, row, tile_id):
