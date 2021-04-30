@@ -385,14 +385,18 @@ class Room:
         for col in range(self.WIDTH):
             for row in range(self.HEIGHT):
                 for tile in self.tiles_at(col, row):
+                    if type(tile) == PlayerGoal:
+                        self.emit_player_goal_zone(col, row)
+        for col in range(self.WIDTH):
+            for row in range(self.HEIGHT):
+                for tile in self.tiles_at(col, row):
+                    if type(tile) == Checkpoint:
+                        self.emit_checkpoint_ray(col, row, tile)
+        for col in range(self.WIDTH):
+            for row in range(self.HEIGHT):
+                for tile in self.tiles_at(col, row):
                     if type(tile) == PunchBox:
                         self.emit_punch_zone(col, row, tile)
-
-                    elif type(tile) == Checkpoint:
-                        self.emit_checkpoint_ray(col, row, tile)
-
-                    elif type(tile) == PlayerGoal:
-                        self.emit_player_goal_zone(col, row)
 
     def unemit(self):
         """Emits PunchZones from all PunchBoxes"""
