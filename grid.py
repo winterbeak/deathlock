@@ -606,6 +606,9 @@ class Room:
     shade_medium.fill((50, 50, 50))
     shade_bright = pygame.Surface((TILE_W, TILE_H))
     shade_bright.fill((100, 100, 100))
+    checkpoint_shade_soft = graphics.load_image("checkpoint_shade_soft", 2)
+    checkpoint_shade_medium = graphics.load_image("checkpoint_shade_medium", 2)
+    checkpoint_shade_bright = graphics.load_image("checkpoint_shade_bright", 2)
 
     def draw_flicker_tiles(self, surf, camera, frame):
         for row in range(self.HEIGHT):
@@ -639,6 +642,13 @@ class Room:
                                 rect = (0, 0, TILE_W // 3 + 2, TILE_H)
                             surf.blit(shade, pos, rect, special_flags=pygame.BLEND_MULT)
                         else:
+                            if type(tile) is Checkpoint:
+                                if brightness == flicker.SOFT:
+                                    shade = self.checkpoint_shade_soft
+                                elif brightness == flicker.MEDIUM:
+                                    shade = self.checkpoint_shade_medium
+                                elif brightness == flicker.BRIGHT:
+                                    shade = self.checkpoint_shade_bright
                             pos = (x_of(col), y_of(row))
                             surf.blit(shade, pos, special_flags=pygame.BLEND_MULT)
 
