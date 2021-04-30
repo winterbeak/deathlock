@@ -195,6 +195,7 @@ def draw_level():
 
         main_surf.blit(player_glow, (glow_x, glow_y), special_flags=pygame.BLEND_ADD)
 
+
 def game_draw():
     draw_level()
 
