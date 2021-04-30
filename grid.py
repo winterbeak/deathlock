@@ -652,12 +652,14 @@ class Room:
                             pos = (x_of(col), y_of(row))
                             surf.blit(shade, pos, special_flags=pygame.BLEND_MULT)
 
+    glow_surf = pygame.Surface((const.SCRN_W, const.SCRN_H))
+
     def draw_glow(self, surf):
-        glow_surf = pygame.Surface(surf.get_size())
+        self.glow_surf.fill(const.BLACK)
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
-                self.draw_glow_at(glow_surf, col, row)
-        surf.blit(glow_surf, (0, 0), special_flags=pygame.BLEND_ADD)
+                self.draw_glow_at(self.glow_surf, col, row)
+        surf.blit(self.glow_surf, (0, 0), special_flags=pygame.BLEND_ADD)
 
     def draw_glow_at(self, surf, col, row):
         center_x = center_x_of(col)
