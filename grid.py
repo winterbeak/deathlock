@@ -593,16 +593,32 @@ class Room:
     def draw_flicker_glow(self, surf, frame):
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
-                if self.grid[col][row]:
-                    tile = self.grid[col][row][0]
-                    if hasattr(tile, "flicker_sequence"):
-                        brightness = tile.flicker_sequence.brightness(frame)
-                        if brightness >= flicker.BRIGHT:
-                            self.draw_glow_at(surf, col, row)
-                    elif type(tile) is CheckpointRay:
-                        brightness = tile.checkpoint.flicker_sequence.brightness(frame)
-                        if brightness >= flicker.BRIGHT:
-                            self.draw_glow_at(surf, col, row)
+                if self._flicker_bright_enough_for_gradient(col, row, frame):
+                    self.draw_glow_at(surf, col, row, frame)
+
+    def _flicker_bright_enough_for_gradient(self, col, row, frame):
+        if self.grid[col][row]:
+            tile = self.grid[col][row][0]
+            is_ray = type(tile) is CheckpointRay
+            if hasattr(tile, "flicker_sequence") or is_ray:
+                if is_ray:
+                    brightness = tile.checkpoint.flicker_sequence.brightness(frame)
+                else:
+                    brightness = tile.flicker_sequence.brightness(frame)
+                if brightness >= flicker.BRIGHT:
+                    return True
+
+        return False
+
+    def _stops_flicker_gradient(self, type_, col, row, frame):
+        if self.out_of_bounds(col, row):
+            return True
+
+        if self.grid[col][row]:
+            if type(self.grid[col][row][0]) is type_:
+                return self._flicker_bright_enough_for_gradient(col, row, frame)
+
+        return False
 
     shade_soft = pygame.Surface((TILE_W, TILE_H))
     shade_soft.fill((25, 25, 25))
@@ -665,21 +681,29 @@ class Room:
                 self.draw_glow_at(self.glow_surf, col, row)
         surf.blit(self.glow_surf, (0, 0), special_flags=pygame.BLEND_ADD)
 
-    def draw_glow_at(self, surf, col, row):
+    def draw_glow_at(self, surf, col, row, flicker_frame=-1):
         center_x = center_x_of(col)
         center_y = center_y_of(row)
 
         if self.has_tile(PunchBox, col, row):
             draw_glow_centered(surf, punch_box_glow, center_x, center_y)
-            self._draw_gradient_efficient(surf, PunchBox, punch_box_gradient, col, row)
-
+            if flicker_frame == -1:
+                self._draw_gradient_efficient(surf, PunchBox, punch_box_gradient, col, row)
+            else:
+                self._draw_flicker_gradient_efficient(surf, PunchBox, punch_box_gradient, col, row, flicker_frame)
         elif self.has_tile(Deathlock, col, row):
             draw_glow_centered(surf, deathlock_glow, center_x, center_y)
-            self._draw_gradient_efficient(surf, Deathlock, deathlock_gradient, col, row)
+            if flicker_frame == -1:
+                self._draw_gradient_efficient(surf, Deathlock, deathlock_gradient, col, row)
+            else:
+                self._draw_flicker_gradient_efficient(surf, Deathlock, deathlock_gradient, col, row, flicker_frame)
 
         elif self.has_tile(Checkpoint, col, row):
             draw_glow_centered(surf, checkpoint_glow, center_x, center_y)
-            self._draw_gradient_efficient(surf, Checkpoint, checkpoint_gradient, col, row)
+            if flicker_frame == -1:
+                self._draw_gradient_efficient(surf, Checkpoint, checkpoint_gradient, col, row)
+            else:
+                self._draw_flicker_gradient_efficient(surf, Checkpoint, checkpoint_gradient, col, row, flicker_frame)
 
         elif self.has_tile(CheckpointRay, col, row):
             tile = self.get_tile(CheckpointRay, col, row)
@@ -726,6 +750,46 @@ class Room:
             slice_height -= y_to_center
 
         rect = (slice_x, slice_y, slice_width, slice_height)
+        surf.blit(gradient, (x, y), rect, special_flags=pygame.BLEND_MAX)
+
+    MAX_SEARCH = (deathlock_gradient.get_width() // TILE_W - 1) // 2 + 1
+
+    def _draw_flicker_gradient_efficient(self, surf, type_, gradient, col, row, frame):
+        x_to_center = gradient.get_width() // 2 - TILE_W // 2
+        y_to_center = gradient.get_height() // 2 - TILE_H // 2
+
+        space_left = 0
+        for c in range(1, self.MAX_SEARCH + 1):
+            if self._stops_flicker_gradient(type_, col - c, row, frame):
+                break
+            space_left += 1
+
+        space_right = 0
+        for c in range(1, self.MAX_SEARCH + 1):
+            if self._stops_flicker_gradient(type_, col + c, row, frame):
+                break
+            space_right += 1
+
+        space_up = 0
+        for r in range(1, self.MAX_SEARCH + 1):
+            if self._stops_flicker_gradient(type_, col, row - r, frame):
+                break
+            space_up += 1
+
+        space_down = 0
+        for r in range(1, self.MAX_SEARCH + 1):
+            if self._stops_flicker_gradient(type_, col, row + r, frame):
+                break
+            space_down += 1
+
+        x = x_of(col) - space_left * TILE_W
+        y = y_of(row) - space_up * TILE_H
+        slice_x = x_to_center - space_left * TILE_W
+        slice_y = y_to_center - space_up * TILE_H
+        slice_width = (space_left + space_right + 1) * TILE_W
+        slice_height = (space_up + space_down + 1) * TILE_H
+        rect = (slice_x, slice_y, slice_width, slice_height)
+
         surf.blit(gradient, (x, y), rect, special_flags=pygame.BLEND_MAX)
 
     def draw_goal_glow(self, surf):
