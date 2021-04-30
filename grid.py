@@ -558,6 +558,9 @@ class Room:
                 surf.blit(punch_box_down, (x, y))
 
         elif self.has_tile(Checkpoint, col, row):
+            if transparent_background:
+                pygame.draw.rect(surf, const.TRANSPARENT, rect)
+
             checkpoint = self.get_tile(Checkpoint, col, row)
             if checkpoint.active:
                 surf.blit(checkpoint_activated, (x, y))
@@ -565,6 +568,9 @@ class Room:
                 surf.blit(checkpoint_deactivated, (x, y))
 
         elif self.has_tile(CheckpointRay, col, row):
+            if transparent_background:
+                pygame.draw.rect(surf, const.TRANSPARENT, rect)
+
             tile = self.get_tile(CheckpointRay, col, row)
             if tile.checkpoint.active:
                 color = (81, 255, 113)
