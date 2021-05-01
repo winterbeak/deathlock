@@ -139,13 +139,13 @@ def hard_reset():
 
 
 def game_update():
-    if hard_reset_key.is_pressed:
-        hard_reset()
-
     entity_handler.update_all()
     punchers.update()
 
     main_cam.update()
+
+    if hard_reset_key.is_pressed:
+        hard_reset()
 
     if player.dead:
         sound.set_music_volume(0.0)
@@ -181,6 +181,12 @@ def draw_level():
             sequence.next.draw_flicker_tiles(main_surf, main_cam, frame)
 
     else:
+        if player.checkpoint_swapped:
+            if player.checkpoint:
+                sequence.current.draw_checkpoint_and_ray(static_level_surf, player.checkpoint)
+            if player.prev_frame_checkpoint:
+                sequence.current.draw_checkpoint_and_ray(static_level_surf, player.prev_frame_checkpoint)
+
         main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
         punchers.draw(main_surf, main_cam)
         sequence.current.draw_dynamic(main_surf, main_cam,
@@ -235,6 +241,7 @@ def next_level():
     sequence.start_transition(static_level_surf)
     player.hidden = True
     player.health = player.MAX_HEALTH  # Turns on music again
+    player.checkpoint = None
 
 
 def end_transition():

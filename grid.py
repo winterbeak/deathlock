@@ -110,7 +110,7 @@ class Deathlock(Tile):
 class Checkpoint(Tile):
     SOLID = False
     EMITTED = False
-    DRAWN_STATICALLY = False
+    DRAWN_STATICALLY = True
 
     def __init__(self, direction, col, row):
         super().__init__()
@@ -124,7 +124,7 @@ class Checkpoint(Tile):
 class CheckpointRay(Tile):
     SOLID = False
     EMITTED = True
-    DRAWN_STATICALLY = False
+    DRAWN_STATICALLY = True
 
     def __init__(self, checkpoint, orientation):
         super().__init__()
@@ -563,23 +563,7 @@ class Room:
 
         elif self.has_tile(Checkpoint, col, row):
             checkpoint = self.get_tile(Checkpoint, col, row)
-            if checkpoint.active:
-                surf.blit(checkpoint_activated, (x, y))
-            else:
-                surf.blit(checkpoint_deactivated, (x, y))
-
-        elif self.has_tile(CheckpointRay, col, row):
-            tile = self.get_tile(CheckpointRay, col, row)
-            if tile.checkpoint.active:
-                color = (81, 255, 113)
-            else:
-                color = (71, 158, 71)
-            if tile.orientation == const.HORIZ:
-                ray_rect = (x, y + TILE_H // 3, TILE_W, TILE_H // 3 + 2)
-                pygame.draw.rect(surf, color, ray_rect)
-            elif tile.orientation == const.VERT:
-                ray_rect = (x + TILE_W // 3, y, TILE_W // 3 + 2, TILE_H)
-                pygame.draw.rect(surf, color, ray_rect)
+            self.draw_checkpoint_and_ray(surf, checkpoint)
 
         elif self.has_tile(PlayerGoalZone, col, row):
             pygame.draw.rect(surf, (250, 250, 250), rect)
@@ -816,6 +800,64 @@ class Room:
                 if self.grid[col][row] and not self.grid[col][row][0].DRAWN_STATICALLY:
                     self.draw_tile_at(surf, camera, col, row,
                                       player_dead, original_spawn)
+
+    def draw_checkpoint_and_ray(self, surf, checkpoint):
+        col = checkpoint.col
+        row = checkpoint.row
+
+        x = x_of(col)
+        y = y_of(row)
+        if checkpoint.active:
+            surf.blit(checkpoint_activated, (x, y))
+        else:
+            surf.blit(checkpoint_deactivated, (x, y))
+
+        if checkpoint.direction == const.LEFT:
+            stop_col = col - 1
+            while not self.stops_checkpoint_ray(stop_col, row):
+                stop_col -= 1
+            stop_col += 1
+            x = x_of(stop_col)
+            y += TILE_H // 3
+            width = (col - stop_col) * TILE_W
+            height = TILE_H // 3 + 2
+
+        elif checkpoint.direction == const.RIGHT:
+            stop_col = col + 1
+            while not self.stops_checkpoint_ray(stop_col, row):
+                stop_col += 1
+            stop_col -= 1
+            x += TILE_W
+            y += TILE_H // 3
+            width = (stop_col - col) * TILE_W
+            height = TILE_H // 3 + 2
+
+        elif checkpoint.direction == const.UP:
+            stop_row = row - 1
+            while not self.stops_checkpoint_ray(col, stop_row):
+                stop_row -= 1
+            stop_row += 1
+            x += TILE_W // 3
+            y = y_of(stop_row)
+            width = TILE_W // 3 + 2
+            height = (row - stop_row) * TILE_H
+
+        else:
+            stop_row = row + 1
+            while not self.stops_checkpoint_ray(col, stop_row):
+                stop_row += 1
+            stop_row -= 1
+            x += TILE_W // 3
+            y += TILE_H
+            width = TILE_W // 3 + 2
+            height = (stop_row - row) * TILE_H
+
+        if checkpoint.active:
+            color = (81, 255, 113)
+        else:
+            color = (71, 158, 71)
+
+        pygame.draw.rect(surf, color, (x, y, width, height))
 
     def place_tile_from_id(self, col, row, tile_id):
         """These ids are only used for writing and reading levels."""

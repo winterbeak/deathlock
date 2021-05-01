@@ -211,6 +211,9 @@ class Player(collision.PunchableGravityCollision):
 
         self._update_wall_push_success_flag = False
 
+        self.prev_frame_checkpoint = None
+        self.checkpoint_swapped = False
+
     @property
     def respawn_x(self):
         if self.checkpoint:
@@ -255,6 +258,8 @@ class Player(collision.PunchableGravityCollision):
 
     def update(self):
         self.collide_deathlock = not self.dead
+        self.prev_frame_checkpoint = None
+        self.checkpoint_swapped = False
         self._update_timers()
         self._take_inputs()
         self._update_animation()
@@ -348,7 +353,9 @@ class Player(collision.PunchableGravityCollision):
         self.respawn()
 
     def _deactivate_checkpoint(self):
+        self.checkpoint_swapped = True
         if self.checkpoint:
+            self.prev_frame_checkpoint = self.checkpoint
             self.checkpoint.active = False
             self.checkpoint = None
 
@@ -641,13 +648,12 @@ class Player(collision.PunchableGravityCollision):
         col = grid.col_at(self.center_x)
         row = grid.row_at(self.center_y)
         if self.level.has_tile(grid.CheckpointRay, col, row):
-            self._deactivate_checkpoint()
-
             ray = self.level.get_tile(grid.CheckpointRay, col, row)
-            checkpoint = ray.checkpoint
-            checkpoint.active = True
 
-            self.checkpoint = checkpoint
+            if not (ray.checkpoint is self.checkpoint):
+                self._deactivate_checkpoint()
+                ray.checkpoint.active = True
+                self.checkpoint = ray.checkpoint
 
     def _update_puncher_vel(self):
         if self.grounded:
