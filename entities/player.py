@@ -263,8 +263,8 @@ class Player(collision.PunchableGravityCollision):
         self._update_timers()
         self._take_inputs()
         self._update_animation()
-        self._collide_checkpoints()
         super().update()
+        self._collide_checkpoints()
 
     def _update_timers(self):
         if self.grounded:
