@@ -84,22 +84,24 @@ sequence = sequences.Sequence(
     levels_with_number("PunchersMomentum", 1, 5) +
     ["PuncherParkour"] +
     levels_with_number("RespawnMomentum", 1, 5) +
+    ["Parkour"] +
     levels_with_number("FallPunch", 1, 2) +
+    ["RespawnPuzzle"] +
 
     levels_with_number("CheckpointsIntro", 1, 3) +
     ["CheckpointTiming"] +
     levels_with_number("CheckpointsMomentum", 1, 4) +
-    ["Teleport1", "TeleportDown", "Parkour", "LaserMaze", "EarlyJump",
-     "SpamRespawn"] +
+    ["Teleport1", "TeleportDown", "SpamRespawn", "LaserMaze", "EarlyJump"] +
     levels_with_number("Escalator", 1, 3) +
 
     levels_with_number("DeathlockIntro", 1, 4) +
     levels_with_number("DeathlockMomentum", 1, 5) +
+    ["DeathlockBlock"] +
     ["DeadMansTrampoline", "DeadMansRightPuncher", "AvoidTheFirst"] +
     levels_with_number("Pole", 1, 2) +
     levels_with_number("DoubleFallPunch", 1, 2) +
     levels_with_number("Ledge", 1, 2) +
-    ["DeathlockHeadBonk", "DeathlockPuzzle", "DeathlockBlock", "DoubleTriple"] +
+    ["DeathlockHeadBonk", "DoubleTriple"] +
     levels_with_number("Haul", 1, 4)
 )
 editor = editor.Editor(sequence)
