@@ -746,32 +746,41 @@ class Room:
         rect = (slice_x, slice_y, slice_width, slice_height)
         surf.blit(gradient, (x, y), rect, special_flags=pygame.BLEND_MAX)
 
-    MAX_SEARCH = (deathlock_gradient.get_width() // TILE_W - 1) // 2 + 1
+    MAX_SEARCH_PUNCH_BOX = (punch_box_gradient.get_width() // TILE_W - 1) // 2 + 1
+    MAX_SEARCH_CHECKPOINT = (checkpoint_gradient.get_width() // TILE_W - 1) // 2 + 1
+    MAX_SEARCH_DEATHLOCK = (deathlock_gradient.get_width() // TILE_W - 1) // 2 + 1
 
     def _draw_flicker_gradient_efficient(self, surf, type_, gradient, col, row, frame):
+        if type_ is PunchBox:
+            max_search = self.MAX_SEARCH_PUNCH_BOX
+        elif type_ is Checkpoint:
+            max_search = self.MAX_SEARCH_CHECKPOINT
+        else:
+            max_search = self.MAX_SEARCH_DEATHLOCK
+
         x_to_center = gradient.get_width() // 2 - TILE_W // 2
         y_to_center = gradient.get_height() // 2 - TILE_H // 2
 
         space_left = 0
-        for c in range(1, self.MAX_SEARCH + 1):
+        for c in range(1, max_search + 1):
             if self._stops_flicker_gradient(type_, col - c, row, frame):
                 break
             space_left += 1
 
         space_right = 0
-        for c in range(1, self.MAX_SEARCH + 1):
+        for c in range(1, max_search + 1):
             if self._stops_flicker_gradient(type_, col + c, row, frame):
                 break
             space_right += 1
 
         space_up = 0
-        for r in range(1, self.MAX_SEARCH + 1):
+        for r in range(1, max_search + 1):
             if self._stops_flicker_gradient(type_, col, row - r, frame):
                 break
             space_up += 1
 
         space_down = 0
-        for r in range(1, self.MAX_SEARCH + 1):
+        for r in range(1, max_search + 1):
             if self._stops_flicker_gradient(type_, col, row + r, frame):
                 break
             space_down += 1
