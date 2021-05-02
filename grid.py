@@ -100,7 +100,7 @@ class PunchZone(Tile):
 class Deathlock(Tile):
     SOLID = False
     EMITTED = False
-    DRAWN_STATICALLY = False
+    DRAWN_STATICALLY = True
 
     def __init__(self):
         super().__init__()
@@ -567,6 +567,20 @@ class Room:
 
         elif self.has_tile(PlayerGoalZone, col, row):
             pygame.draw.rect(surf, (250, 250, 250), rect)
+
+    def draw_deathlock(self, surf, camera, player_dead):
+        for col in range(self.WIDTH):
+            for row in range(self.HEIGHT):
+                if self.has_tile(Deathlock, col, row):
+                    x = col * TILE_W - int(camera.x)
+                    y = row * TILE_H - int(camera.y)
+                    rect = (x, y, TILE_W, TILE_H)
+
+                    if player_dead:
+                        color = (88, 91, 173)
+                    else:
+                        color = (109, 112, 255)
+                    pygame.draw.rect(surf, color, rect)
 
     def draw_flicker_glow(self, surf, frame):
         for row in range(self.HEIGHT):

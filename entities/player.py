@@ -214,6 +214,9 @@ class Player(collision.PunchableGravityCollision):
         self.prev_frame_checkpoint = None
         self.checkpoint_swapped = False
 
+        self.just_died = False
+        self.just_respawned = False
+
     @property
     def respawn_x(self):
         if self.checkpoint:
@@ -260,6 +263,8 @@ class Player(collision.PunchableGravityCollision):
         self.collide_deathlock = not self.dead
         self.prev_frame_checkpoint = None
         self.checkpoint_swapped = False
+        self.just_died = False
+        self.just_respawned = False
         self._update_timers()
         self._take_inputs()
         self._update_animation()
@@ -340,6 +345,7 @@ class Player(collision.PunchableGravityCollision):
         self.tumble = False
 
     def respawn(self):
+        self.just_respawned = True
         self.REVIVE_SOUNDS.play_random(0.15)
         self.health = self.MAX_HEALTH
         self.tumble = False
@@ -643,6 +649,8 @@ class Player(collision.PunchableGravityCollision):
         self.tumble = True
         self.health -= 1
         self.camera.shake(6, 1)
+        if self.health == 0:
+            self.just_died = True
 
     def _collide_checkpoints(self):
         col = grid.col_at(self.center_x)

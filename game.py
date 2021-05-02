@@ -187,6 +187,9 @@ def draw_level():
             if player.prev_frame_checkpoint:
                 sequence.current.draw_checkpoint_and_ray(static_level_surf, player.prev_frame_checkpoint)
 
+        if player.just_respawned or player.just_died:
+            sequence.current.draw_deathlock(static_level_surf, camera.zero_camera, player.dead)
+
         main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
         punchers.draw(main_surf, main_cam)
         sequence.current.draw_dynamic(main_surf, main_cam,
