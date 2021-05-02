@@ -448,6 +448,8 @@ class Room:
     def stops_checkpoint_ray(self, col, row):
         if self.has_solid(col, row):
             return True
+        if self.has_tile(Deathlock, col, row):
+            return True
         if self.has_tile(Void, col, row):
             return True
         return False
