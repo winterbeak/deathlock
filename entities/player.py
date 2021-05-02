@@ -353,6 +353,7 @@ class Player(collision.PunchableGravityCollision):
         self.y = self.respawn_y
 
     def hard_respawn(self):
+        self._coyote_timer = 0
         self._deactivate_checkpoint()
         self._stop_x()
         self._stop_y()
