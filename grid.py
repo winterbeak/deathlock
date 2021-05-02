@@ -625,6 +625,14 @@ class Room:
     checkpoint_shade_bright = graphics.load_image("checkpoint_shade_bright", 2)
 
     def draw_flicker_tiles(self, surf, camera, frame):
+        # Draw all checkpoints first, so that the rays can be shaded later
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                if self.grid[col][row]:
+                    if type(self.grid[col][row][0]) is Checkpoint:
+                        self.draw_tile_at(surf, camera, col, row)
+
+        # Draw other tiles and shade them all
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
                 if self.grid[col][row]:
@@ -636,7 +644,7 @@ class Room:
                         else:
                             brightness = tile.flicker_sequence.brightness(frame)
 
-                        if brightness != flicker.NONE:
+                        if brightness != flicker.NONE and not type(tile) is Checkpoint and not is_ray:
                             self.draw_tile_at(surf, camera, col, row)
                         if brightness == flicker.SOFT:
                             shade = self.shade_soft
