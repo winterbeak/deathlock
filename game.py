@@ -81,7 +81,7 @@ sequence = sequences.Sequence(
     levels_with_number("Intro", 1, 4) +
 
     levels_with_number("PunchersIntro", 1, 5) +
-    levels_with_number("PunchersMomentum", 1, 5) +
+    levels_with_number("PunchersMomentum", 5, 6) +
     ["PuncherParkour"] +
     levels_with_number("RespawnMomentum", 1, 5) +
     ["Parkour"] +
@@ -95,6 +95,7 @@ sequence = sequences.Sequence(
     levels_with_number("Escalator", 1, 3) +
 
     levels_with_number("DeathlockIntro", 1, 4) +
+    ["DeathlockTiming"] +
     levels_with_number("DeathlockMomentum", 1, 5) +
     ["DeathlockBlock"] +
     ["DeadMansTrampoline", "DeadMansRightPuncher", "AvoidTheFirst"] +
