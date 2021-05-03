@@ -143,7 +143,7 @@ def hard_reset():
 def game_update():
     if not sequence.transitioning:
         entity_handler.update_all()
-    punchers.update()
+        punchers.update()
 
     main_cam.update()
 
@@ -247,6 +247,7 @@ def next_level():
     player.hidden = True
     player.health = player.MAX_HEALTH  # Turns on music again
     player.checkpoint = None
+    punchers.punchers = []
 
 
 def end_transition():
