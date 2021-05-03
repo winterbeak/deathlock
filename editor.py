@@ -75,10 +75,11 @@ class Editor:
             self.level.shift_down()
 
     def _input_selected_tile(self):
-        if events.keys.pressed_key in events.number_keys:
-            number = int(pygame.key.name(events.keys.pressed_key)) - 1
-            if 0 <= number < len(selections):
-                self._tile = selections[number]
+        for key in events.keys.pressed_keys:
+            if key in events.number_keys:
+                number = int(pygame.key.name(key)) - 1
+                if 0 <= number < len(selections):
+                    self._tile = selections[number]
 
     def _input_place_block(self):
         if events.mouse.held:
@@ -97,7 +98,7 @@ class Editor:
                 self.level.move_player_goal(col, row)
 
     def _input_switch_mode(self):
-        if events.keys.pressed_key == pygame.K_TAB:
+        if pygame.K_TAB in events.keys.pressed_keys:
             if self.mode == self.PLACE:
                 self.mode = self.RECT
             elif self.mode == self.RECT:
