@@ -5,12 +5,14 @@ import pygame
 
 import constants as const
 import events
-# import debug
+import debug
 
+import sequences
 import editor
 import graphics
 import camera
 import grid
+import flicker
 import entities.player
 import entities.handler
 
@@ -19,48 +21,24 @@ import punchers
 
 # INITIALIZATION
 pygame.init()
-post_surf = pygame.display.set_mode((const.SCRN_W, const.SCRN_H))
+main_surf = pygame.display.set_mode((const.SCRN_W, const.SCRN_H))
 pygame.display.set_caption("deathlock")
 
 clock = pygame.time.Clock()
 
 
-TUTORIAL_TEXT = graphics.load_image("tutorial", 2)
-TUTORIAL_TEXT.set_colorkey(const.TRANSPARENT)
-CREDITS_TEXT = graphics.load_image("credits", 2)
-CREDITS_TEXT.set_colorkey(const.TRANSPARENT)
+background = graphics.load_image("background", 1)
+player_glow = graphics.load_image("player_gradient", 1)
 
 
-def init_background():
-    surf = pygame.Surface((const.SCRN_W + grid.TILE_W * 2,
-                           const.SCRN_H + grid.TILE_H * 2))
-    width = grid.TILE_W
-    height = grid.TILE_H
-    for row in range(surf.get_height() // height):
-        for col in range(surf.get_width() // width):
-            x = col * width
-            y = row * height
-
-            if (col + row) % 2 == 0:
-                pygame.draw.rect(surf, const.BACKGROUND_GREY, (x, y, width, height))
-            else:
-                pygame.draw.rect(surf, const.WHITE, (x, y, width, height))
-
-    return surf
-
-
-def draw_background(surf, cam):
-    x = -(cam.x % (grid.TILE_W * 2)) - 10
-    y = -(cam.y % (grid.TILE_H * 2)) - 10
-    surf.blit(background, (x, y))
-
-
-background = init_background()
+def draw_background(surf):
+    surf.fill((20, 20, 20))
+    surf.blit(background, (0, 0))
 
 
 def screen_update(fps):
     pygame.display.flip()
-    post_surf.fill(const.WHITE)
+    main_surf.fill(const.BLACK)
     clock.tick(fps)
 
 
@@ -89,20 +67,64 @@ def test_level():
     return room
 
 
-# Current order: Intro, Punchers, RespawnMomentum, FallPunch
-level = grid.Room("RespawnMomentum4")
-editor = editor.Editor(level)
+def levels_with_number(shared_name, first, last):
+    """Returns a list of levels with increasing numbers attached.
+
+    levels_with_number("Intro", 2, 5) returns the list
+    ["Intro2", "Intro3", "Intro4", "Intro5"]
+    """
+    shared_name += "%i"
+    return [shared_name % x for x in range(first, last + 1)]
+
+
+sequence = sequences.Sequence(
+    levels_with_number("Intro", 1, 4) +
+
+    levels_with_number("PunchersIntro", 1, 5) +
+    levels_with_number("PunchersMomentum", 1, 5) +
+    ["PuncherParkour"] +
+    levels_with_number("RespawnMomentum", 1, 5) +
+    ["Parkour"] +
+    levels_with_number("FallPunch", 1, 2) +
+    ["RespawnPuzzle"] +
+
+    levels_with_number("CheckpointsIntro", 1, 3) +
+    ["CheckpointTiming"] +
+    levels_with_number("CheckpointsMomentum", 1, 4) +
+    ["Teleport1", "TeleportDown", "SpamRespawn", "LaserMaze", "EarlyJump"] +
+    levels_with_number("Escalator", 1, 3) +
+
+    levels_with_number("DeathlockIntro", 1, 4) +
+    levels_with_number("DeathlockMomentum", 1, 5) +
+    ["DeathlockBlock"] +
+    ["DeadMansTrampoline", "DeadMansRightPuncher", "AvoidTheFirst"] +
+    levels_with_number("Pole", 1, 2) +
+    levels_with_number("DoubleFallPunch", 1, 2) +
+    levels_with_number("Ledge", 1, 2) +
+    ["DeathlockHeadBonk", "DoubleTriple"] +
+    levels_with_number("Haul", 1, 4)
+)
+editor = editor.Editor(sequence)
+
+SWAP_TO_EDITOR = 0
+NEXT_LEVEL = 1
+level_beat_mode = NEXT_LEVEL
 
 main_cam = camera.Camera()
 main_cam.base_x = 0
 main_cam.base_y = 0
 
-player = entities.player.Player(level, main_cam)
+player = entities.player.Player(sequence.current, main_cam)
 
 entity_handler = entities.handler.Handler()
 entity_handler.list = [player]
 
-hard_reset_key = events.Keybind([pygame.K_t])
+hard_reset_key = events.Keybind([pygame.K_r])
+
+static_level_surf = pygame.Surface((const.SCRN_W, const.SCRN_H))
+static_level_surf.set_colorkey(const.TRANSPARENT)
+draw_background(static_level_surf)
+sequence.current.draw_static(static_level_surf, main_cam)
 
 sound.play_music()
 
@@ -119,26 +141,76 @@ def hard_reset():
 
 
 def game_update():
-    if hard_reset_key.is_pressed:
-        hard_reset()
-
     entity_handler.update_all()
     punchers.update()
 
     main_cam.update()
+
+    if hard_reset_key.is_pressed:
+        hard_reset()
 
     if player.dead:
         sound.set_music_volume(0.0)
     else:
         sound.set_music_volume(sound.MUSIC_VOLUME)
 
+    if sequence.transitioning:
+        sequence.update()
+    if sequence.done_transitioning:
+        end_transition()
+    elif player.touching_goal:
+        if level_beat_mode == SWAP_TO_EDITOR:
+            swap_to_editor()
+        elif level_beat_mode == NEXT_LEVEL:
+            next_level()
+
+
+def draw_level():
+    if sequence.transitioning:
+        if sequence.frame >= flicker.STOP_FLICKERING_FRAME:
+            if sequence.frame == flicker.STOP_FLICKERING_FRAME:
+                static_level_surf.fill(const.BLACK)
+                sequence.next.draw_flicker_glow(static_level_surf, 1000)
+                sequence.next.draw_silhouette(static_level_surf)
+                sequence.next.draw_flicker_tiles(static_level_surf, main_cam, 1000)
+            main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+        elif sequence.frame >= flicker.START_DELAY:
+            frame = sequence.frame - flicker.START_DELAY
+            sequence.next.draw_flicker_glow(main_surf, frame)
+
+            main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+
+            sequence.next.draw_flicker_tiles(main_surf, main_cam, frame)
+
+    else:
+        if player.checkpoint_swapped:
+            if player.checkpoint:
+                sequence.current.draw_checkpoint_and_ray(static_level_surf, player.checkpoint)
+            if player.prev_frame_checkpoint:
+                sequence.current.draw_checkpoint_and_ray(static_level_surf, player.prev_frame_checkpoint)
+
+        if player.just_respawned or player.just_died:
+            sequence.current.draw_deathlock(static_level_surf, camera.zero_camera, player.dead)
+
+        main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+        punchers.draw(main_surf, main_cam)
+        sequence.current.draw_dynamic(main_surf, main_cam,
+                                      player.dead, player.checkpoint is None)
+
+        x = grid.x_of(sequence.current.player_goal.col) - grid.TILE_W * 2 - main_cam.x
+        y = grid.y_of(sequence.current.player_goal.row) - grid.TILE_H * 2 - main_cam.y
+        main_surf.blit(grid.player_goal_glow, (x, y), special_flags=pygame.BLEND_ADD)
+
+        glow_x = int(player.center_x - player_glow.get_width() / 2) - main_cam.x
+        glow_y = int(player.center_y - player_glow.get_height() / 2) - main_cam.y
+
+        main_surf.blit(player_glow, (glow_x, glow_y), special_flags=pygame.BLEND_ADD)
+
 
 def game_draw():
-    draw_background(post_surf, main_cam)
-    punchers.draw(post_surf, main_cam)
-    level.draw(post_surf, main_cam)
+    draw_level()
 
-    entity_handler.draw_all(post_surf, main_cam)
+    entity_handler.draw_all(main_surf, main_cam)
 
 
 def editor_update():
@@ -146,9 +218,44 @@ def editor_update():
 
 
 def editor_draw():
-    draw_background(post_surf, main_cam)
-    level.draw(post_surf, main_cam)
-    editor.draw(post_surf)
+    draw_background(main_surf)
+    sequence.current.draw_tiles(main_surf, main_cam)
+    sequence.current.draw_dynamic(main_surf, main_cam,
+                                  player.dead, player.checkpoint is None)
+    editor.draw(main_surf)
+
+
+def swap_to_editor():
+    global state
+    state = EDITOR
+    sequence.current.unemit()
+
+
+def swap_to_game():
+    global state
+    state = GAME
+    player.hard_respawn()
+    sequence.current.emit()
+    draw_background(static_level_surf)
+    sequence.current.draw_static(static_level_surf, main_cam)
+
+
+def next_level():
+    sequence.current.unemit()
+    draw_background(static_level_surf)
+    sequence.start_transition(static_level_surf)
+    player.hidden = True
+    player.health = player.MAX_HEALTH  # Turns on music again
+    player.checkpoint = None
+
+
+def end_transition():
+    sequence.done_transitioning = False
+    draw_background(static_level_surf)
+    sequence.current.draw_static(static_level_surf, main_cam)
+    player.level = sequence.current
+    player.hidden = False
+    player.hard_respawn()
 
 
 while True:
@@ -156,24 +263,20 @@ while True:
 
     if editor_key.is_pressed:
         if state == GAME:
-            state = EDITOR
-            level.unemit()
+            swap_to_editor()
         elif state == EDITOR:
-            state = GAME
-            player.hard_respawn()
-            level.emit()
+            swap_to_game()
 
     if state == GAME:
         game_update()
         game_draw()
-        if player.touching_goal:
-            state = EDITOR
-            level.unemit()
+
     elif state == EDITOR:
         editor_update()
         editor_draw()
 
-    # debug.debug(clock.get_fps())
+    debug.debug(clock.get_fps())
+    debug.debug(sequence.current.name)
     # debug.debug(main_cam.sliding, main_cam.last_slide_frame)
     # debug.debug(main_cam.slide_x_frame, main_cam.slide_y_frame, main_cam.SLIDE_LENGTH)
     # debug.debug(level.active_column, level.active_row)
@@ -182,7 +285,7 @@ while True:
     # debug.debug(float(player.x_vel), float(player.ext_x_vel))
     # debug.debug(player.health, player.dead)
 
-    # debug.draw(post_surf)
+    debug.draw(main_surf)
 
     if pygame.K_f in events.keys.held_keys:
         screen_update(2)

@@ -34,14 +34,18 @@ class Editor:
     shift_up_key = events.Keybind([pygame.K_UP])
     shift_down_key = events.Keybind([pygame.K_DOWN])
 
-    def __init__(self, level):
-        self.level = level
+    def __init__(self, sequence):
+        self._sequence = sequence
         self.mode = self.PLACE
         self._direction = const.LEFT
         self._tile = None
 
         self.rect_start_col = 0
         self.rect_start_row = 0
+
+    @property
+    def level(self):
+        return self._sequence.current
 
     @property
     def _mode_string(self):

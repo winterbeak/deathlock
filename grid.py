@@ -4,6 +4,8 @@ import pygame
 import graphics
 import constants as const
 
+import flicker
+
 TILE_W = 20
 TILE_H = 20
 
@@ -48,78 +50,149 @@ def id_of(tiles):
 
 
 class Tile:
-    def __init__(self, solid, emitted):
-        self.solid = solid
-        self.emitted = emitted
+    SOLID = False
+    EMITTED = False
+    DRAWN_STATICALLY = True
+
+    def __init__(self):
+        pass
 
 
 class Void(Tile):
+    SOLID = True
+    EMITTED = False
+    DRAWN_STATICALLY = True
+
     def __init__(self):
-        super().__init__(True, False)
+        super().__init__()
 
 
 class Wall(Tile):
+    SOLID = True
+    EMITTED = False
+    DRAWN_STATICALLY = True
+
     def __init__(self):
-        super().__init__(True, False)
+        super().__init__()
 
 
 class PunchBox(Tile):
+    SOLID = True
+    EMITTED = False
+    DRAWN_STATICALLY = False
+
     def __init__(self, direction):
-        super().__init__(True, False)
+        super().__init__()
         self.direction = direction
+        self.flicker_sequence = flicker.FlickerSequence()
 
 
 class PunchZone(Tile):
+    SOLID = False
+    EMITTED = True
+    DRAWN_STATICALLY = True
+
     def __init__(self, direction):
-        super().__init__(False, True)
+        super().__init__()
         self.direction = direction
 
 
 class Deathlock(Tile):
+    SOLID = False
+    EMITTED = False
+    DRAWN_STATICALLY = True
+
     def __init__(self):
-        super().__init__(False, False)
+        super().__init__()
+        self.flicker_sequence = flicker.FlickerSequence()
 
 
 class Checkpoint(Tile):
+    SOLID = False
+    EMITTED = False
+    DRAWN_STATICALLY = True
+
     def __init__(self, direction, col, row):
-        super().__init__(False, False)
+        super().__init__()
         self.direction = direction
         self.col = col
         self.row = row
         self.active = False
+        self.flicker_sequence = flicker.FlickerSequence()
 
 
 class CheckpointRay(Tile):
+    SOLID = False
+    EMITTED = True
+    DRAWN_STATICALLY = True
+
     def __init__(self, checkpoint, orientation):
-        super().__init__(False, True)
+        super().__init__()
 
         self.orientation = orientation
         self.checkpoint = checkpoint
 
 
 class PlayerSpawn(Tile):
+    SOLID = False
+    EMITTED = False
+    DRAWN_STATICALLY = False
+
     def __init__(self, col, row):
-        super().__init__(False, False)
+        super().__init__()
         self.col = col
         self.row = row
+        self.flicker_sequence = flicker.FlickerSequence()
 
 
 class PlayerGoal(Tile):
+    SOLID = False
+    EMITTED = False
+    DRAWN_STATICALLY = True
+
     def __init__(self, col, row):
-        super().__init__(False, False)
+        super().__init__()
         self.col = col
         self.row = row
 
 
 class PlayerGoalZone(Tile):
+    SOLID = False
+    EMITTED = True
+    DRAWN_STATICALLY = True
+
     def __init__(self):
-        super().__init__(False, True)
+        super().__init__()
 
 
 punch_box_left = graphics.load_image("punch_box", 2)
+punch_box_left.set_colorkey(const.TRANSPARENT)
 punch_box_up = pygame.transform.rotate(punch_box_left, -90)
 punch_box_right = pygame.transform.rotate(punch_box_left, 180)
 punch_box_down = pygame.transform.rotate(punch_box_left, 90)
+punch_box_gradient = graphics.load_image("punch_box_gradient", 1)
+punch_box_glow = graphics.load_image("punch_box_glow", 1)
+
+checkpoint_activated = graphics.load_image("checkpoint_activated", 2)
+checkpoint_activated.set_colorkey(const.TRANSPARENT)
+checkpoint_deactivated = graphics.load_image("checkpoint_deactivated", 2)
+checkpoint_deactivated.set_colorkey(const.TRANSPARENT)
+checkpoint_gradient = graphics.load_image("checkpoint_gradient", 1)
+checkpoint_glow = graphics.load_image("checkpoint_glow", 1)
+
+checkpoint_ray_horiz_gradient = graphics.load_image("checkpoint_ray_horiz_gradient", 1)
+checkpoint_ray_vert_gradient = pygame.transform.rotate(checkpoint_ray_horiz_gradient, 90)
+checkpoint_ray_horiz_glow = graphics.load_image("checkpoint_ray_horiz_glow", 1)
+checkpoint_ray_vert_glow = pygame.transform.rotate(checkpoint_ray_horiz_glow, 90)
+
+player_goal_glow = graphics.load_image("player_goal_glow", 1)
+player_goal_gradient = graphics.load_image("player_goal_gradient", 1)
+
+deathlock_glow = graphics.load_image("deathlock_glow", 1)
+deathlock_gradient = graphics.load_image("deathlock_gradient", 1)
+
+player_spawn_gradient = checkpoint_gradient
+player_spawn_glow = graphics.load_image("player_spawn_glow", 1)
 
 
 def col_at(x):
@@ -152,6 +225,20 @@ def y_of(row, direction=const.UP):
         return row * TILE_H + TILE_H
 
 
+def center_x_of(col):
+    return x_of(col) + (TILE_W / 2)
+
+
+def center_y_of(row):
+    return y_of(row) + (TILE_H / 2)
+
+
+def draw_glow_centered(surf, glow, center_x, center_y):
+    glow_x = int(center_x - (glow.get_width() / 2))
+    glow_y = int(center_y - (glow.get_height() / 2))
+    surf.blit(glow, (glow_x, glow_y), special_flags=pygame.BLEND_MAX)
+
+
 class Room:
     """the grid where all the tiles on a single screen are placed"""
     WIDTH = const.SCRN_W // TILE_W  # the amount of tiles across the room
@@ -161,14 +248,6 @@ class Room:
 
     def __init__(self, name):
         """name is the name of the file in the levels folder"""
-        # These values are all default values.
-        # Only once the room is added to a level will they be set.
-        self.column = 0
-        self.row = 0
-
-        self.x = 0
-        self.y = 0
-
         self.grid = [[[] for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
 
         self.player_spawn = PlayerSpawn(0, 0)
@@ -295,7 +374,7 @@ class Room:
     def has_solid(self, col, row):
         """returns whether a tile is solid or not"""
         for tile in self.tiles_at(col, row):
-            if tile.solid:
+            if tile.SOLID:
                 return True
 
         return False
@@ -306,21 +385,25 @@ class Room:
         for col in range(self.WIDTH):
             for row in range(self.HEIGHT):
                 for tile in self.tiles_at(col, row):
+                    if type(tile) == PlayerGoal:
+                        self.emit_player_goal_zone(col, row)
+        for col in range(self.WIDTH):
+            for row in range(self.HEIGHT):
+                for tile in self.tiles_at(col, row):
+                    if type(tile) == Checkpoint:
+                        self.emit_checkpoint_ray(col, row, tile)
+        for col in range(self.WIDTH):
+            for row in range(self.HEIGHT):
+                for tile in self.tiles_at(col, row):
                     if type(tile) == PunchBox:
                         self.emit_punch_zone(col, row, tile)
-
-                    elif type(tile) == Checkpoint:
-                        self.emit_checkpoint_ray(col, row, tile)
-
-                    elif type(tile) == PlayerGoal:
-                        self.emit_player_goal_zone(col, row)
 
     def unemit(self):
         """Emits PunchZones from all PunchBoxes"""
         for col in range(self.WIDTH):
             for row in range(self.HEIGHT):
                 for tile in reversed(self.tiles_at(col, row)):
-                    if tile.emitted:
+                    if tile.EMITTED:
                         self.tiles_at(col, row).remove(tile)
 
     def emit_punch_zone(self, col, row, tile):
@@ -364,6 +447,8 @@ class Room:
 
     def stops_checkpoint_ray(self, col, row):
         if self.has_solid(col, row):
+            return True
+        if self.has_tile(Deathlock, col, row):
             return True
         if self.has_tile(Void, col, row):
             return True
@@ -435,60 +520,377 @@ class Room:
                 self.grid[col][row] = self.grid[col][row - 1]
         self._shift_location_tiles(0, 1)
 
-    def draw(self, surf, camera):
-        """draws the entire stage"""
-        for row in range(self.HEIGHT):
-            for col in range(self.WIDTH):
-                if self.is_empty(col, row):
-                    continue
-
-                full_col = self.column * self.WIDTH + col
-                full_row = self.row * self.HEIGHT + row
-                x = full_col * TILE_W - camera.x
-                y = full_row * TILE_H - camera.y
+    def draw_silhouette(self, surf):
+        for col in range(self.WIDTH):
+            for row in range(self.HEIGHT):
+                x = col * TILE_W
+                y = row * TILE_H
                 rect = (x, y, TILE_W, TILE_H)
-
-                if self.has_tile(Wall, col, row):
+                if self.has_solid(col, row):
                     pygame.draw.rect(surf, const.BLACK, rect)
 
-                elif self.has_tile(PlayerGoalZone, col, row):
-                    goal_rect = (x, y, TILE_W, TILE_H)
-                    pygame.draw.rect(surf, (130, 0, 130), goal_rect)
-                elif self.has_tile(PlayerGoal, col, row):
-                    goal_rect = (x, y, TILE_W, TILE_H)
-                    pygame.draw.rect(surf, const.MAGENTA, goal_rect)
-                elif self.has_tile(PlayerSpawn, col, row):
-                    goal_rect = (x, y, TILE_W, TILE_H)
-                    pygame.draw.rect(surf, const.YELLOW, goal_rect)
+    def draw_tile_at(self, surf, camera, col, row,
+                     player_dead=False, original_spawn=False):
+        x = col * TILE_W - int(camera.x)
+        y = row * TILE_H - int(camera.y)
+        rect = (x, y, TILE_W, TILE_H)
 
-                elif self.has_tile(Deathlock, col, row):
-                    pygame.draw.rect(surf, const.RED, rect)
-                elif self.has_tile(PunchBox, col, row):
-                    punch_box = self.get_tile(PunchBox, col, row)
-                    if punch_box.direction == const.LEFT:
-                        surf.blit(punch_box_left, (x, y))
-                    elif punch_box.direction == const.UP:
-                        surf.blit(punch_box_up, (x, y))
-                    elif punch_box.direction == const.RIGHT:
-                        surf.blit(punch_box_right, (x, y))
-                    elif punch_box.direction == const.DOWN:
-                        surf.blit(punch_box_down, (x, y))
+        if self.has_tile(Wall, col, row):
+            pygame.draw.rect(surf, const.BLACK, rect)
 
-                elif self.has_tile(Checkpoint, col, row):
-                    checkpoint = self.get_tile(Checkpoint, col, row)
-                    checkpoint_pos = (x + TILE_W // 2, y + TILE_H // 2)
-                    pygame.draw.circle(surf, const.GREEN, checkpoint_pos, 10)
+        elif self.has_tile(PlayerSpawn, col, row):
+            if original_spawn:
+                color = (81, 255, 113)
+            else:
+                color = (71, 158, 71)
+            pygame.draw.rect(surf, color, rect)
 
-                    if not checkpoint.active:
-                        pygame.draw.circle(surf, const.DARK_GREEN, checkpoint_pos, 7)
-                elif self.has_tile(CheckpointRay, col, row):
-                    tile = self.get_tile(CheckpointRay, col, row)
-                    if tile.orientation == const.HORIZ:
-                        ray_rect = (x, y + TILE_H // 3, TILE_W, TILE_H // 3)
-                        pygame.draw.rect(surf, const.GREEN, ray_rect)
-                    elif tile.orientation == const.VERT:
-                        ray_rect = (x + TILE_W // 3, y, TILE_W // 3, TILE_H)
-                        pygame.draw.rect(surf, const.GREEN, ray_rect)
+        elif self.has_tile(Deathlock, col, row):
+            if player_dead:
+                color = (88, 91, 173)
+            else:
+                color = (109, 112, 255)
+            pygame.draw.rect(surf, color, rect)
+
+        elif self.has_tile(PunchBox, col, row):
+            punch_box = self.get_tile(PunchBox, col, row)
+            if punch_box.direction == const.LEFT:
+                surf.blit(punch_box_left, (x, y))
+            elif punch_box.direction == const.UP:
+                surf.blit(punch_box_up, (x, y))
+            elif punch_box.direction == const.RIGHT:
+                surf.blit(punch_box_right, (x, y))
+            elif punch_box.direction == const.DOWN:
+                surf.blit(punch_box_down, (x, y))
+
+        elif self.has_tile(Checkpoint, col, row):
+            checkpoint = self.get_tile(Checkpoint, col, row)
+            self.draw_checkpoint_and_ray(surf, checkpoint)
+
+        elif self.has_tile(PlayerGoalZone, col, row):
+            pygame.draw.rect(surf, (250, 250, 250), rect)
+
+    def draw_deathlock(self, surf, camera, player_dead):
+        for col in range(self.WIDTH):
+            for row in range(self.HEIGHT):
+                if self.has_tile(Deathlock, col, row):
+                    x = col * TILE_W - int(camera.x)
+                    y = row * TILE_H - int(camera.y)
+                    rect = (x, y, TILE_W, TILE_H)
+
+                    if player_dead:
+                        color = (88, 91, 173)
+                    else:
+                        color = (109, 112, 255)
+                    pygame.draw.rect(surf, color, rect)
+
+    def draw_flicker_glow(self, surf, frame):
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                if self._flicker_bright_enough_for_gradient(col, row, frame):
+                    self.draw_glow_at(surf, col, row, frame)
+
+    def _flicker_bright_enough_for_gradient(self, col, row, frame):
+        if self.grid[col][row]:
+            tile = self.grid[col][row][0]
+            is_ray = type(tile) is CheckpointRay
+            if hasattr(tile, "flicker_sequence") or is_ray:
+                if is_ray:
+                    brightness = tile.checkpoint.flicker_sequence.brightness(frame)
+                else:
+                    brightness = tile.flicker_sequence.brightness(frame)
+                if brightness >= flicker.BRIGHT:
+                    return True
+
+        return False
+
+    def _stops_flicker_gradient(self, type_, col, row, frame):
+        if self.out_of_bounds(col, row):
+            return True
+
+        if self.grid[col][row]:
+            if type(self.grid[col][row][0]) is type_:
+                return self._flicker_bright_enough_for_gradient(col, row, frame)
+
+        return False
+
+    shade_soft = pygame.Surface((TILE_W, TILE_H))
+    shade_soft.fill((25, 25, 25))
+    shade_medium = pygame.Surface((TILE_W, TILE_H))
+    shade_medium.fill((50, 50, 50))
+    shade_bright = pygame.Surface((TILE_W, TILE_H))
+    shade_bright.fill((100, 100, 100))
+    checkpoint_shade_soft = graphics.load_image("checkpoint_shade_soft", 2)
+    checkpoint_shade_medium = graphics.load_image("checkpoint_shade_medium", 2)
+    checkpoint_shade_bright = graphics.load_image("checkpoint_shade_bright", 2)
+
+    def draw_flicker_tiles(self, surf, camera, frame):
+        # Draw all checkpoints first, so that the rays can be shaded later
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                if self.grid[col][row]:
+                    if type(self.grid[col][row][0]) is Checkpoint:
+                        self.draw_tile_at(surf, camera, col, row)
+
+        # Draw other tiles and shade them all
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                if self.grid[col][row]:
+                    tile = self.grid[col][row][0]
+                    is_ray = type(tile) is CheckpointRay
+                    if hasattr(tile, "flicker_sequence") or is_ray:
+                        if is_ray:
+                            brightness = tile.checkpoint.flicker_sequence.brightness(frame)
+                        else:
+                            brightness = tile.flicker_sequence.brightness(frame)
+
+                        if brightness != flicker.NONE and not type(tile) is Checkpoint and not is_ray:
+                            self.draw_tile_at(surf, camera, col, row)
+                        if brightness == flicker.SOFT:
+                            shade = self.shade_soft
+                        elif brightness == flicker.MEDIUM:
+                            shade = self.shade_medium
+                        elif brightness == flicker.BRIGHT:
+                            shade = self.shade_bright
+                        else:  # Skip FULL brightness, since no shade is drawn
+                            continue
+
+                        if is_ray:
+                            if tile.orientation == const.HORIZ:
+                                pos = (x_of(col), y_of(row) + TILE_H // 3)
+                                rect = (0, 0, TILE_W, TILE_H // 3 + 2)
+                            else:
+                                pos = (x_of(col) + TILE_W // 3, y_of(row))
+                                rect = (0, 0, TILE_W // 3 + 2, TILE_H)
+                            surf.blit(shade, pos, rect, special_flags=pygame.BLEND_MULT)
+                        else:
+                            if type(tile) is Checkpoint:
+                                if brightness == flicker.SOFT:
+                                    shade = self.checkpoint_shade_soft
+                                elif brightness == flicker.MEDIUM:
+                                    shade = self.checkpoint_shade_medium
+                                elif brightness == flicker.BRIGHT:
+                                    shade = self.checkpoint_shade_bright
+                            pos = (x_of(col), y_of(row))
+                            surf.blit(shade, pos, special_flags=pygame.BLEND_MULT)
+
+    glow_surf = pygame.Surface((const.SCRN_W, const.SCRN_H))
+
+    def draw_glow(self, surf):
+        self.glow_surf.fill(const.BLACK)
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                self.draw_glow_at(self.glow_surf, col, row)
+        surf.blit(self.glow_surf, (0, 0), special_flags=pygame.BLEND_ADD)
+
+    def draw_glow_at(self, surf, col, row, flicker_frame=-1):
+        center_x = center_x_of(col)
+        center_y = center_y_of(row)
+
+        if self.has_tile(PunchBox, col, row):
+            draw_glow_centered(surf, punch_box_glow, center_x, center_y)
+            if flicker_frame == -1:
+                self._draw_gradient_efficient(surf, PunchBox, punch_box_gradient, col, row)
+            else:
+                self._draw_flicker_gradient_efficient(surf, PunchBox, punch_box_gradient, col, row, flicker_frame)
+        elif self.has_tile(Deathlock, col, row):
+            draw_glow_centered(surf, deathlock_glow, center_x, center_y)
+            if flicker_frame == -1:
+                self._draw_gradient_efficient(surf, Deathlock, deathlock_gradient, col, row)
+            else:
+                self._draw_flicker_gradient_efficient(surf, Deathlock, deathlock_gradient, col, row, flicker_frame)
+
+        elif self.has_tile(Checkpoint, col, row):
+            draw_glow_centered(surf, checkpoint_glow, center_x, center_y)
+            if flicker_frame == -1:
+                self._draw_gradient_efficient(surf, Checkpoint, checkpoint_gradient, col, row)
+            else:
+                self._draw_flicker_gradient_efficient(surf, Checkpoint, checkpoint_gradient, col, row, flicker_frame)
+
+        elif self.has_tile(CheckpointRay, col, row):
+            tile = self.get_tile(CheckpointRay, col, row)
+            if tile.orientation == const.HORIZ:
+                draw_glow_centered(surf, checkpoint_ray_horiz_glow, center_x, center_y)
+                draw_glow_centered(surf, checkpoint_ray_horiz_gradient, center_x, center_y)
+
+            elif tile.orientation == const.VERT:
+                draw_glow_centered(surf, checkpoint_ray_vert_glow, center_x, center_y)
+                draw_glow_centered(surf, checkpoint_ray_vert_gradient, center_x, center_y)
+
+        elif self.has_tile(PlayerSpawn, col, row):
+            draw_glow_centered(surf, player_spawn_glow, center_x, center_y)
+            draw_glow_centered(surf, player_spawn_gradient, center_x, center_y)
+
+    def _draw_gradient_efficient(self, surf, type_, gradient, col, row):
+        gradient_width = gradient.get_width()
+        gradient_height = gradient.get_height()
+        x_to_center = gradient_width // 2 - TILE_W // 2
+        y_to_center = gradient_height // 2 - TILE_H // 2
+        x_remainder = gradient_width - x_to_center
+        y_remainder = gradient_height - y_to_center
+
+        if self.has_tile(type_, col - 1, row):
+            x = x_of(col)
+            slice_x = x_to_center
+            slice_width = x_remainder
+        else:
+            x = x_of(col) - x_to_center
+            slice_x = 0
+            slice_width = gradient_width
+        if self.has_tile(type_, col + 1, row):
+            slice_width -= x_to_center
+
+        if self.has_tile(type_, col, row - 1):
+            y = y_of(row)
+            slice_y = y_to_center
+            slice_height = y_remainder
+        else:
+            y = y_of(row) - y_to_center
+            slice_y = 0
+            slice_height = gradient_height
+        if self.has_tile(type_, col, row + 1):
+            slice_height -= y_to_center
+
+        rect = (slice_x, slice_y, slice_width, slice_height)
+        surf.blit(gradient, (x, y), rect, special_flags=pygame.BLEND_MAX)
+
+    MAX_SEARCH_PUNCH_BOX = (punch_box_gradient.get_width() // TILE_W - 1) // 2 + 1
+    MAX_SEARCH_CHECKPOINT = (checkpoint_gradient.get_width() // TILE_W - 1) // 2 + 1
+    MAX_SEARCH_DEATHLOCK = (deathlock_gradient.get_width() // TILE_W - 1) // 2 + 1
+
+    def _draw_flicker_gradient_efficient(self, surf, type_, gradient, col, row, frame):
+        if type_ is PunchBox:
+            max_search = self.MAX_SEARCH_PUNCH_BOX
+        elif type_ is Checkpoint:
+            max_search = self.MAX_SEARCH_CHECKPOINT
+        else:
+            max_search = self.MAX_SEARCH_DEATHLOCK
+
+        x_to_center = gradient.get_width() // 2 - TILE_W // 2
+        y_to_center = gradient.get_height() // 2 - TILE_H // 2
+
+        space_left = 0
+        for c in range(1, max_search + 1):
+            if self._stops_flicker_gradient(type_, col - c, row, frame):
+                break
+            space_left += 1
+
+        space_right = 0
+        for c in range(1, max_search + 1):
+            if self._stops_flicker_gradient(type_, col + c, row, frame):
+                break
+            space_right += 1
+
+        space_up = 0
+        for r in range(1, max_search + 1):
+            if self._stops_flicker_gradient(type_, col, row - r, frame):
+                break
+            space_up += 1
+
+        space_down = 0
+        for r in range(1, max_search + 1):
+            if self._stops_flicker_gradient(type_, col, row + r, frame):
+                break
+            space_down += 1
+
+        x = x_of(col) - space_left * TILE_W
+        y = y_of(row) - space_up * TILE_H
+        slice_x = x_to_center - space_left * TILE_W
+        slice_y = y_to_center - space_up * TILE_H
+        slice_width = (space_left + space_right + 1) * TILE_W
+        slice_height = (space_up + space_down + 1) * TILE_H
+        rect = (slice_x, slice_y, slice_width, slice_height)
+
+        surf.blit(gradient, (x, y), rect, special_flags=pygame.BLEND_MAX)
+
+    def draw_goal_glow(self, surf):
+        glow_surf = pygame.Surface(surf.get_size())
+        for col in range(self.player_goal.col - 1, self.player_goal.col + 2):
+            for row in range(self.player_goal.row - 1, self.player_goal.row + 2):
+                center_x = center_x_of(col)
+                center_y = center_y_of(row)
+
+                gradient_x = int(center_x - (player_goal_gradient.get_width() / 2))
+                gradient_y = int(center_y - (player_goal_gradient.get_height() / 2))
+                glow_surf.blit(player_goal_gradient, (gradient_x, gradient_y), special_flags=pygame.BLEND_MAX)
+        surf.blit(glow_surf, (0, 0), special_flags=pygame.BLEND_ADD)
+
+    def draw_static(self, surf, camera):
+        """draws the entire stage"""
+        self.draw_glow(surf)
+        self.draw_tiles(surf, camera)
+        self.draw_goal_glow(surf)
+
+    def draw_tiles(self, surf, camera):
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                if self.grid[col][row] and self.grid[col][row][0].DRAWN_STATICALLY:
+                    self.draw_tile_at(surf, camera, col, row)
+
+    def draw_dynamic(self, surf, camera, player_dead, original_spawn):
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                if self.grid[col][row] and not self.grid[col][row][0].DRAWN_STATICALLY:
+                    self.draw_tile_at(surf, camera, col, row,
+                                      player_dead, original_spawn)
+
+    def draw_checkpoint_and_ray(self, surf, checkpoint):
+        col = checkpoint.col
+        row = checkpoint.row
+
+        x = x_of(col)
+        y = y_of(row)
+        if checkpoint.active:
+            surf.blit(checkpoint_activated, (x, y))
+        else:
+            surf.blit(checkpoint_deactivated, (x, y))
+
+        if checkpoint.direction == const.LEFT:
+            stop_col = col - 1
+            while not self.stops_checkpoint_ray(stop_col, row):
+                stop_col -= 1
+            stop_col += 1
+            x = x_of(stop_col)
+            y += TILE_H // 3
+            width = (col - stop_col) * TILE_W
+            height = TILE_H // 3 + 2
+
+        elif checkpoint.direction == const.RIGHT:
+            stop_col = col + 1
+            while not self.stops_checkpoint_ray(stop_col, row):
+                stop_col += 1
+            stop_col -= 1
+            x += TILE_W
+            y += TILE_H // 3
+            width = (stop_col - col) * TILE_W
+            height = TILE_H // 3 + 2
+
+        elif checkpoint.direction == const.UP:
+            stop_row = row - 1
+            while not self.stops_checkpoint_ray(col, stop_row):
+                stop_row -= 1
+            stop_row += 1
+            x += TILE_W // 3
+            y = y_of(stop_row)
+            width = TILE_W // 3 + 2
+            height = (row - stop_row) * TILE_H
+
+        else:
+            stop_row = row + 1
+            while not self.stops_checkpoint_ray(col, stop_row):
+                stop_row += 1
+            stop_row -= 1
+            x += TILE_W // 3
+            y += TILE_H
+            width = TILE_W // 3 + 2
+            height = (stop_row - row) * TILE_H
+
+        if checkpoint.active:
+            color = (81, 255, 113)
+        else:
+            color = (71, 158, 71)
+
+        pygame.draw.rect(surf, color, (x, y, width, height))
 
     def place_tile_from_id(self, col, row, tile_id):
         """These ids are only used for writing and reading levels."""

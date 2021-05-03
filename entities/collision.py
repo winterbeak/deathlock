@@ -6,14 +6,10 @@ import grid
 import punchers
 
 
-class Collision:
-    CHECK_STEPS = 4
-
-    def __init__(self, level, width, height, x=0, y=0, extend_x=0, extend_y=0):
+class KinematicsPoint:
+    def __init__(self, x=0, y=0):
         self._x = x
         self._y = y
-        self._width = width
-        self._height = height
 
         self.x_vel = 0.0
         self.y_vel = 0.0
@@ -23,17 +19,6 @@ class Collision:
         self._x_dir = 0
         self._y_dir = 0
 
-        self._extend_x = extend_x
-        self._extend_y = extend_y
-        self._gridbox = pygame.Rect(x, y, width, height)
-        self._hitbox = pygame.Rect(x - extend_x, y - extend_y,
-                                   width + extend_x * 2, height + extend_y * 2)
-
-        self.collide_void = True
-        self.collide_deathlock = True
-
-        self._level = level  # reference to the level layout
-
     @property
     def x(self):
         return self._x
@@ -42,8 +27,6 @@ class Collision:
     def x(self, value):
         x = int(value)
         self._x = x
-        self._gridbox.x = x
-        self._hitbox.x = x - self._extend_x
 
     @property
     def y(self):
@@ -53,23 +36,8 @@ class Collision:
     def y(self, value):
         y = int(value)
         self._y = y
-        self._gridbox.y = y
-        self._hitbox.y = y - self._extend_y
-
-    @property
-    def center_x(self):
-        return self._x + self._width // 2
-
-    @property
-    def center_y(self):
-        return self._y + self._height // 2
-
-    @property
-    def center_pos(self):
-        return self.center_x, self.center_y
 
     def update(self):
-        self._collide_stage()
         self._update_kinematics()
         self._update_direction()
 
@@ -112,6 +80,77 @@ class Collision:
         self._y_dir = 0
         self.y_vel = 0
         self.y_acc = 0
+
+
+class Collision(KinematicsPoint):
+    CHECK_STEPS = 4
+
+    def __init__(self, level, width, height, x=0, y=0, extend_x=0, extend_y=0):
+        super().__init__(x, y)
+        self._width = width
+        self._height = height
+
+        self._extend_x = extend_x
+        self._extend_y = extend_y
+        self._gridbox = pygame.Rect(x, y, width, height)
+        self._hitbox = pygame.Rect(x - extend_x, y - extend_y,
+                                   width + extend_x * 2, height + extend_y * 2)
+
+        self.collide_void = True
+        self.collide_deathlock = True
+
+        self.level = level  # reference to the level layout
+
+        self.ignore_collision = False
+
+    @property
+    def x(self):
+        return self._x
+
+    @x.setter
+    def x(self, value):
+        x = int(value)
+        self._x = x
+        self._gridbox.x = x
+        self._hitbox.x = x - self._extend_x
+
+    @property
+    def y(self):
+        return self._y
+
+    @y.setter
+    def y(self, value):
+        y = int(value)
+        self._y = y
+        self._gridbox.y = y
+        self._hitbox.y = y - self._extend_y
+
+    @property
+    def center_x(self):
+        return self._x + self._width // 2
+
+    @center_x.setter
+    def center_x(self, value):
+        x = int(value) - self._width // 2
+        self.x = x
+
+    @property
+    def center_y(self):
+        return self._y + self._height // 2
+
+    @center_y.setter
+    def center_y(self, value):
+        y = int(value) - self._height // 2
+        self.y = y
+
+    @property
+    def center_pos(self):
+        return self.center_x, self.center_y
+
+    def update(self):
+        if not self.ignore_collision:
+            self._collide_stage()
+        super().update()
 
     def _snap_x(self, col, side=const.LEFT):
         """snaps you to either the left side or right side of a tile"""
@@ -162,10 +201,10 @@ class Collision:
             bottom_y = top_y + self._height - 1
 
             if dir_y == const.UP:
-                if self._level.collide_horiz(left_x, right_x, top_y, self.collide_deathlock):
+                if self.level.collide_horiz(left_x, right_x, top_y, self.collide_deathlock):
                     self._snap_y(grid.row_at(top_y), const.BOTTOM)
             elif dir_y == const.DOWN:
-                if self._level.collide_horiz(left_x, right_x, bottom_y, self.collide_deathlock):
+                if self.level.collide_horiz(left_x, right_x, bottom_y, self.collide_deathlock):
                     self._snap_y(grid.row_at(bottom_y), const.TOP)
 
             left_x = int(self._x + (diff_x * (step / 4)))
@@ -174,11 +213,11 @@ class Collision:
             bottom_y = top_y + self._height - 1
 
             if dir_x == const.LEFT:
-                if self._level.collide_vert(left_x, top_y, bottom_y, self.collide_deathlock):
+                if self.level.collide_vert(left_x, top_y, bottom_y, self.collide_deathlock):
                     self._snap_x(grid.col_at(left_x), const.RIGHT)
 
             elif dir_x == const.RIGHT:
-                if self._level.collide_vert(right_x, top_y, bottom_y, self.collide_deathlock):
+                if self.level.collide_vert(right_x, top_y, bottom_y, self.collide_deathlock):
                     self._snap_x(grid.col_at(right_x), const.LEFT)
 
     def _against_wall(self):
@@ -187,17 +226,17 @@ class Collision:
 
         if self._x_dir == const.LEFT:
             x = self._x - 1
-            return self._level.collide_vert(x, top_y, bottom_y, self.collide_deathlock)
+            return self.level.collide_vert(x, top_y, bottom_y, self.collide_deathlock)
 
         elif self._x_dir == const.RIGHT:
             x = self._x + self._width
-            return self._level.collide_vert(x, top_y, bottom_y, self.collide_deathlock)
+            return self.level.collide_vert(x, top_y, bottom_y, self.collide_deathlock)
 
     def _against_floor(self):
         x1 = self._x + 1
         x2 = x1 + self._width - 2
         y = self._y + self._height
-        return self._level.collide_horiz(x1, x2, y, self.collide_deathlock)
+        return self.level.collide_horiz(x1, x2, y, self.collide_deathlock)
 
     def draw_gridbox(self, surface, cam, color=const.RED):
         pygame.draw.rect(surface, color, cam.move_rect(self._gridbox))
@@ -214,6 +253,7 @@ class GravityCollision(Collision):
                  x=0, y=0, extend_x=0, extend_y=0):
         super().__init__(level, width, height, x, y, extend_x, extend_y)
         self._terminal_velocity = terminal_velocity
+        self.ignore_gravity = False
 
     @property
     def grounded(self):
@@ -222,7 +262,7 @@ class GravityCollision(Collision):
         return self._against_floor()
 
     def update(self):
-        if not self.grounded:
+        if not self.ignore_gravity and not self.grounded:
             self.y_acc = const.GRAVITY
         super().update()
         self.y_vel = min(self.y_vel, self._terminal_velocity)
@@ -247,7 +287,8 @@ class PunchableGravityCollision(GravityCollision):
 
     def update(self):
         super().update()
-        self.collide_punchers()
+        if not self.ignore_collision:
+            self.collide_punchers()
 
     def _stop_x(self):
         super()._stop_x()
@@ -282,8 +323,8 @@ class PunchableGravityCollision(GravityCollision):
             center_col = grid.col_at(self.center_x)
             center_row = grid.row_at(self.center_y)
 
-            if self._level.has_tile(grid.PunchZone, center_col, center_row):
-                tile = self._level.get_tile(grid.PunchZone, center_col, center_row)
+            if self.level.has_tile(grid.PunchZone, center_col, center_row):
+                tile = self.level.get_tile(grid.PunchZone, center_col, center_row)
                 if tile.direction == const.LEFT:
                     self._get_hit()
                     punchers.add(center_col, center_row, const.LEFT)
