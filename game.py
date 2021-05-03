@@ -141,7 +141,8 @@ def hard_reset():
 
 
 def game_update():
-    entity_handler.update_all()
+    if not sequence.transitioning:
+        entity_handler.update_all()
     punchers.update()
 
     main_cam.update()
