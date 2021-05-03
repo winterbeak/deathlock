@@ -77,11 +77,11 @@ def levels_with_number(shared_name, first, last):
     return [shared_name % x for x in range(first, last + 1)]
 
 
-sequence = sequences.Sequence(
+level_names = (
     levels_with_number("Intro", 1, 4) +
 
     levels_with_number("PunchersIntro", 1, 5) +
-    levels_with_number("PunchersMomentum", 5, 6) +
+    levels_with_number("PunchersMomentum", 1, 6) +
     ["PuncherParkour"] +
     levels_with_number("RespawnMomentum", 1, 5) +
     ["Parkour"] +
@@ -105,6 +105,8 @@ sequence = sequences.Sequence(
     ["DeathlockHeadBonk", "DoubleTriple"] +
     levels_with_number("Haul", 1, 4)
 )
+sequence = sequences.Sequence(level_names)
+
 editor = editor.Editor(sequence)
 
 SWAP_TO_EDITOR = 0
