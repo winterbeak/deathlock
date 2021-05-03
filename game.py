@@ -242,7 +242,6 @@ def swap_to_game():
 
 def next_level():
     sequence.current.unemit()
-    draw_background(static_level_surf)
     sequence.start_transition(static_level_surf)
     player.hidden = True
     player.health = player.MAX_HEALTH  # Turns on music again
