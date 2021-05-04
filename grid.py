@@ -850,6 +850,10 @@ class Room:
             while not self.stops_checkpoint_ray(stop_col, row):
                 stop_col -= 1
             stop_col += 1
+
+            if stop_col == col:
+                return
+
             x = x_of(stop_col)
             y += TILE_H // 3
             width = (col - stop_col) * TILE_W
@@ -860,6 +864,10 @@ class Room:
             while not self.stops_checkpoint_ray(stop_col, row):
                 stop_col += 1
             stop_col -= 1
+
+            if stop_col == col:
+                return
+
             x += TILE_W
             y += TILE_H // 3
             width = (stop_col - col) * TILE_W
@@ -870,6 +878,10 @@ class Room:
             while not self.stops_checkpoint_ray(col, stop_row):
                 stop_row -= 1
             stop_row += 1
+
+            if stop_row == row:
+                return
+
             x += TILE_W // 3
             y = y_of(stop_row)
             width = TILE_W // 3 + 2
@@ -880,6 +892,10 @@ class Room:
             while not self.stops_checkpoint_ray(col, stop_row):
                 stop_row += 1
             stop_row -= 1
+
+            if stop_row == row:
+                return
+
             x += TILE_W // 3
             y += TILE_H
             width = TILE_W // 3 + 2
