@@ -324,32 +324,56 @@ class PunchableGravityCollision(GravityCollision):
             center_row = grid.row_at(self.center_y)
 
             if self.level.has_tile(grid.PunchZone, center_col, center_row):
-                tile = self.level.get_tile(grid.PunchZone, center_col, center_row)
-                if tile.direction == const.LEFT:
-                    self._get_hit()
-                    punchers.add(center_col, center_row, const.LEFT)
-                    self.puncher_x_vel = -self.PUNCHER_X_VEL
+                self._activate_punch_zone(center_col, center_row)
+                return
 
-                    if self.x_vel > 0:
-                        self.x_vel = 0
+            # Only do special upwards puncher checks if player isn't moving up
+            if self.y_vel >= 0:
 
-                elif tile.direction == const.UP:
-                    self._get_hit()
-                    punchers.add(center_col, center_row, const.UP)
-                    self.y_vel = -self.PUNCHER_UP_VEL
+                # Upwards punchers can also punch based on left and right of the
+                # entity rather than just the player's center.  Otherwise, you'll
+                # sometimes see the player stand for a moment on the very edge of an
+                # upwards puncher
+                left_col = grid.col_at(self.x + 2)
+                if self.level.has_tile(grid.PunchZone, left_col, center_row):
+                    tile = self.level.get_tile(grid.PunchZone, left_col, center_row)
+                    if tile.direction == const.UP:
+                        self._activate_punch_zone(left_col, center_row)
+                        return
 
-                elif tile.direction == const.RIGHT:
-                    self._get_hit()
-                    punchers.add(center_col, center_row, const.RIGHT)
-                    self.puncher_x_vel = self.PUNCHER_X_VEL
-
-                    if self.x_vel < 0:
-                        self.x_vel = 0
-
-                elif tile.direction == const.DOWN:
-                    self._get_hit()
-                    punchers.add(center_col, center_row, const.DOWN)
-                    self.y_vel = self.PUNCHER_DOWN_VEL
+                right_col = grid.col_at(self.x + self._width - 3)
+                if self.level.has_tile(grid.PunchZone, right_col, center_row):
+                    tile = self.level.get_tile(grid.PunchZone, right_col, center_row)
+                    if tile.direction == const.UP:
+                        self._activate_punch_zone(right_col, center_row)
 
         elif self.invuln_frames:
             self.invuln_frames -= 1
+
+    def _activate_punch_zone(self, col, row):
+        tile = self.level.get_tile(grid.PunchZone, col, row)
+        if tile.direction == const.LEFT:
+            self._get_hit()
+            punchers.add(col, row, const.LEFT)
+            self.puncher_x_vel = -self.PUNCHER_X_VEL
+
+            if self.x_vel > 0:
+                self.x_vel = 0
+
+        elif tile.direction == const.UP:
+            self._get_hit()
+            punchers.add(col, row, const.UP)
+            self.y_vel = -self.PUNCHER_UP_VEL
+
+        elif tile.direction == const.RIGHT:
+            self._get_hit()
+            punchers.add(col, row, const.RIGHT)
+            self.puncher_x_vel = self.PUNCHER_X_VEL
+
+            if self.x_vel < 0:
+                self.x_vel = 0
+
+        elif tile.direction == const.DOWN:
+            self._get_hit()
+            punchers.add(col, row, const.DOWN)
+            self.y_vel = self.PUNCHER_DOWN_VEL
