@@ -104,7 +104,11 @@ class Deathlock(Tile):
 
     def __init__(self):
         super().__init__()
-        self.flicker_sequence = flicker.FlickerSequence()
+        self.flicker_sequence = None
+
+    @property
+    def flicker_initiated(self):
+        return self.flicker_sequence is not None
 
 
 class Checkpoint(Tile):
@@ -378,6 +382,27 @@ class Room:
                 return True
 
         return False
+
+    def _initiate_deathlock_flicker(self):
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                if self.has_tile(Deathlock, col, row):
+                    self._initiate_deathlock_flicker_recursion(flicker.FlickerSequence(), col, row)
+
+    def _initiate_deathlock_flicker_recursion(self, flicker_sequence, col, row):
+        tile = self.get_tile(Deathlock, col, row)
+        if tile.flicker_initiated:
+            return
+
+        tile.flicker_sequence = flicker_sequence
+        if self.has_tile(Deathlock, col - 1, row):
+            self._initiate_deathlock_flicker_recursion(flicker_sequence, col - 1, row)
+        if self.has_tile(Deathlock, col + 1, row):
+            self._initiate_deathlock_flicker_recursion(flicker_sequence, col + 1, row)
+        if self.has_tile(Deathlock, col, row - 1):
+            self._initiate_deathlock_flicker_recursion(flicker_sequence, col, row - 1)
+        if self.has_tile(Deathlock, col, row + 1):
+            self._initiate_deathlock_flicker_recursion(flicker_sequence, col, row + 1)
 
     def emit(self):
         """Emits PunchZones from all PunchBoxes and CheckpointRays from
@@ -969,4 +994,5 @@ class Room:
             for col_index, tile in enumerate(row.split(" ")):
                 self.place_tile_from_id(col_index, row_index, int(tile))
 
+        self._initiate_deathlock_flicker()
         self.emit()
