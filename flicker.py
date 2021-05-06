@@ -7,6 +7,50 @@ MEDIUM = 2
 BRIGHT = 3
 FULL = 4
 
+_OUTLINE_SOFT_PHASE = 35
+_OUTLINE_MEDIUM_PHASE = 60
+MAX_OUTLINE_LENGTH = 70
+
+
+def _outline_length(outline):
+    acc = 0
+    for section in outline:
+        acc += section[1]
+    return acc
+
+
+def _random_sequence_outline():
+    outline = [(NONE, random.randint(1, 10))]
+
+    while _outline_length(outline) < _OUTLINE_SOFT_PHASE:
+        brightness = random.randint(SOFT, MEDIUM)
+        if brightness == outline[-1][0]:
+            continue
+        if brightness == BRIGHT:
+            length = random.randint(2, 3)
+        elif brightness == MEDIUM:
+            length = random.randint(2, 5)
+        else:
+            length = random.randint(8, 25)
+        outline.append((brightness, length))
+
+    while _outline_length(outline) < _OUTLINE_MEDIUM_PHASE:
+        brightness = random.randint(SOFT, BRIGHT)
+        length = random.randint(2, 4)
+        outline.append((brightness, length))
+
+    while _outline_length(outline) < MAX_OUTLINE_LENGTH:
+        brightness = random.randint(MEDIUM, FULL)
+        if brightness == FULL:
+            length = random.randint(2, 15)
+        else:
+            length = random.randint(2, 4)
+        outline.append((brightness, length))
+
+    diff = _outline_length(outline) - MAX_OUTLINE_LENGTH
+    outline[-1] = (outline[-1][0], outline[-1][1] - diff)
+    return outline
+
 
 def _make_sequence_list(sequence_outline):
     sequence_list = []
@@ -17,16 +61,7 @@ def _make_sequence_list(sequence_outline):
 
 
 class FlickerSequence:
-    _SEQUENCE_OUTLINES = [
-        [(NONE, 2), (MEDIUM, 2), (SOFT, 8), (BRIGHT, 2), (SOFT, 18), (MEDIUM, 2), (FULL, 2)],
-        [(NONE, 4), (BRIGHT, 2), (MEDIUM, 10), (SOFT, 2), (MEDIUM, 6), (BRIGHT, 2), (FULL, 10)],
-        [(NONE, 16), (MEDIUM, 4), (SOFT, 2), (BRIGHT, 2), (MEDIUM, 3), (FULL, 3)],
-        [(SOFT, 10), (MEDIUM, 2), (SOFT, 8), (MEDIUM, 2), (SOFT, 10), (BRIGHT, 4)],
-        [(NONE, 8), (SOFT, 20), (BRIGHT, 4), (MEDIUM, 4)],
-        [(NONE, 6), (MEDIUM, 4), (SOFT, 10), (BRIGHT, 11), (FULL, 5)],
-        [(NONE, 12), (MEDIUM, 6), (SOFT, 4), (BRIGHT, 12), (FULL, 2)],
-        [(NONE, 2), (SOFT, 8), (BRIGHT, 4), (FULL, 10), (MEDIUM, 8), (FULL, 4)]
-    ]
+    _SEQUENCE_OUTLINES = [_random_sequence_outline() for _ in range(20)]
     _SEQUENCE_LISTS = [_make_sequence_list(seq) for seq in _SEQUENCE_OUTLINES]
     SEQUENCE_LENGTH = len(_SEQUENCE_LISTS[0])
 
