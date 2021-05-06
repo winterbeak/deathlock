@@ -654,8 +654,10 @@ class Room:
         for row in range(self.HEIGHT):
             for col in range(self.WIDTH):
                 if self.grid[col][row]:
-                    if type(self.grid[col][row][0]) is Checkpoint:
-                        self.draw_tile_at(surf, camera, col, row)
+                    tile = self.grid[col][row][0]
+                    if type(tile) is Checkpoint:
+                        if tile.flicker_sequence.brightness(frame) > flicker.NONE:
+                            self.draw_tile_at(surf, camera, col, row)
 
         # Draw other tiles and shade them all
         for row in range(self.HEIGHT):
