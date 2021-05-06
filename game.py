@@ -84,7 +84,6 @@ level_names = (
     levels_with_number("PunchersMomentum", 1, 6) +
     ["PuncherParkour"] +
     levels_with_number("RespawnMomentum", 1, 6) +
-    ["Parkour"] +
     levels_with_number("FallPunch", 1, 2) +
     ["RespawnPuzzle"] +
 
