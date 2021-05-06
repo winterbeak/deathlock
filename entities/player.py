@@ -158,7 +158,6 @@ class Player(collision.PunchableGravityCollision):
 
     # Sounds
     RUN_SOUNDS = sound.load_numbers("run%i", 5)
-    RUN_SOUND_DELAY = 5
 
     REVIVE_SOUNDS = sound.load_numbers("revive%i", 3)
 
@@ -194,8 +193,6 @@ class Player(collision.PunchableGravityCollision):
         self.heart_sprites = [graphics.AnimInstance(self.HEART_SHEET) for _ in range(self.MAX_HEALTH)]
         for heart_sprite in range(1, self.MAX_HEALTH):
             self.heart_sprites[heart_sprite].set_anim(heart_sprite)
-
-        self.run_sound_frame = self.RUN_SOUND_DELAY
 
         self.hidden = False
 
@@ -326,8 +323,6 @@ class Player(collision.PunchableGravityCollision):
                 self.puncher_x_vel = 0
 
     def _stay_still(self):
-        self.run_sound_frame = self.RUN_SOUND_DELAY
-
         if self.x_vel < 0:
             self.x_vel += self.MOVE_DEC
             if self.x_vel > 0:
@@ -446,12 +441,9 @@ class Player(collision.PunchableGravityCollision):
         self._update_wall_push(const.LEFT)
 
         # Plays running sound
-        if self.sprite.anim != self.WALL_PUSH_LEFT_ID:
-            if self.grounded:
-                if self.run_sound_frame < self.RUN_SOUND_DELAY:
-                    self.run_sound_frame += 1
-                else:
-                    self.run_sound_frame = 0
+        if self.grounded:
+            if self.sprite.anim == self.RUN_LEFT_ID:
+                if self.sprite.frame == 0 and self.sprite.frame_delay == 1:
                     self.RUN_SOUNDS.play_random(random.random() / 4 + 0.75)
 
     def _move_right_anim(self):
@@ -469,13 +461,10 @@ class Player(collision.PunchableGravityCollision):
         self._update_wall_push(const.RIGHT)
 
         # Plays running sound
-        if self.sprite.anim != self.WALL_PUSH_RIGHT_ID:
-            if self.grounded:
-                if self.run_sound_frame < self.RUN_SOUND_DELAY:
-                    self.run_sound_frame += 1
-                else:
-                    self.run_sound_frame = 0
-                    self.RUN_SOUNDS.play_random(random.random() / 2 + 0.5)
+        if self.grounded:
+            if self.sprite.anim == self.RUN_RIGHT_ID:
+                if self.sprite.frame == 0 and self.sprite.frame_delay == 1:
+                    self.RUN_SOUNDS.play_random(random.random() / 4 + 0.75)
 
     def _idle_anim(self):
         if self.facing == const.LEFT:
