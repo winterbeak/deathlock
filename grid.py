@@ -259,6 +259,8 @@ class Room:
         self.grid[0][0].append(self.player_spawn)
         self.grid[0][0].append(self.player_goal)
 
+        self.unique_flickers = []
+
         self.name = name
         self.load()
 
@@ -403,6 +405,19 @@ class Room:
             self._initiate_deathlock_flicker_recursion(flicker_sequence, col, row - 1)
         if self.has_tile(Deathlock, col, row + 1):
             self._initiate_deathlock_flicker_recursion(flicker_sequence, col, row + 1)
+
+    def _record_unique_flickers(self):
+        self.unique_flickers = [self.player_spawn.flicker_sequence]
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                if self.grid[col][row]:
+                    tile = self.grid[col][row][0]
+                    if hasattr(tile, "flicker_sequence"):
+                        for flicker_sequence in self.unique_flickers:
+                            if flicker_sequence.sequence_list is tile.flicker_sequence.sequence_list:
+                                break
+                        else:
+                            self.unique_flickers.append(tile.flicker_sequence)
 
     def emit(self):
         """Emits PunchZones from all PunchBoxes and CheckpointRays from
@@ -997,4 +1012,5 @@ class Room:
                 self.place_tile_from_id(col_index, row_index, int(tile))
 
         self._initiate_deathlock_flicker()
+        self._record_unique_flickers()
         self.emit()

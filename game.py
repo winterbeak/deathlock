@@ -179,6 +179,9 @@ def draw_level():
                 sequence.next.draw_silhouette(static_level_surf)
                 sequence.next.draw_flicker_tiles(static_level_surf, main_cam, 1000)
             main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+
+            flicker.mute_sounds()
+
         elif sequence.frame >= flicker.START_DELAY:
             frame = sequence.frame - flicker.START_DELAY
             sequence.next.draw_flicker_glow(main_surf, frame)
@@ -187,6 +190,7 @@ def draw_level():
 
             sequence.next.draw_flicker_tiles(main_surf, main_cam, frame)
 
+            adjust_flicker_volumes(frame)
     else:
         if player.checkpoint_swapped:
             if player.checkpoint:
@@ -210,6 +214,24 @@ def draw_level():
         glow_y = int(player.center_y - player_glow.get_height() / 2) - main_cam.y
 
         main_surf.blit(player_glow, (glow_x, glow_y), special_flags=pygame.BLEND_ADD)
+
+
+def adjust_flicker_volumes(frame):
+    flickers = sequence.next.unique_flickers[:flicker.SOUND_COUNT]
+    for i, flicker_sequence in enumerate(flickers):
+        if i == 0:
+            volume_mult = 1
+        else:
+            volume_mult = 0.8 / len(sequence.next.unique_flickers) + 0.2
+        brightness = flicker_sequence.brightness(frame)
+        if brightness == flicker.SOFT:
+            flicker.turn_on_sounds[i].set_volume(0.02 * volume_mult)
+        elif brightness == flicker.MEDIUM:
+            flicker.turn_on_sounds[i].set_volume(0.05 * volume_mult)
+        elif brightness == flicker.BRIGHT:
+            flicker.turn_on_sounds[i].set_volume(0.1 * volume_mult)
+        else:
+            flicker.turn_on_sounds[i].set_volume(0)
 
 
 def game_draw():
@@ -252,6 +274,7 @@ def next_level():
     player.health = player.MAX_HEALTH  # Turns on music again
     player.checkpoint = None
     punchers.punchers = []
+    flicker.play_sounds()
 
 
 def end_transition():

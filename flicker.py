@@ -1,5 +1,7 @@
 import random
 
+import sound
+
 
 NONE = 0
 SOFT = 1
@@ -66,17 +68,33 @@ class FlickerSequence:
     SEQUENCE_LENGTH = len(_SEQUENCE_LISTS[0])
 
     def __init__(self):
-        self._sequence_list = random.choice(self._SEQUENCE_LISTS)
+        self.sequence_list = random.choice(self._SEQUENCE_LISTS)
 
     def brightness(self, frame):
         if frame < 0:
             return NONE
-        if frame >= len(self._sequence_list):
+        if frame >= len(self.sequence_list):
             return FULL
-        return self._sequence_list[frame]
+        return self.sequence_list[frame]
 
 
-START_DELAY = 40
+START_DELAY = 20
 END_DELAY = 20
 STOP_FLICKERING_FRAME = START_DELAY + FlickerSequence.SEQUENCE_LENGTH
 TOTAL_LENGTH = START_DELAY + FlickerSequence.SEQUENCE_LENGTH + END_DELAY
+
+SOUND_COUNT = 6
+turn_on_sounds = [sound.load("flicker_on") for _ in range(SOUND_COUNT)]
+
+
+def mute_sounds():
+    for turn_on_sound in turn_on_sounds:
+        turn_on_sound.set_volume(0)
+
+
+def play_sounds():
+    for turn_on_sound in turn_on_sounds:
+        turn_on_sound.play()
+
+
+mute_sounds()
