@@ -27,6 +27,10 @@ pygame.display.set_caption("deathlock")
 clock = pygame.time.Clock()
 
 
+goal_light_activate = sound.load_numbers("level_start%i", 3)
+goal_light_activate.set_volumes(0.2)
+
+
 background = graphics.load_image("background", 1)
 player_glow = graphics.load_image("player_gradient", 1)
 
@@ -283,7 +287,8 @@ def end_transition():
     sequence.current.draw_static(static_level_surf, main_cam)
     player.level = sequence.current
     player.hidden = False
-    player.hard_respawn()
+    player.hard_respawn(False)
+    goal_light_activate.play_random()
 
 
 while True:

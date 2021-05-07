@@ -339,20 +339,22 @@ class Player(collision.PunchableGravityCollision):
         self.JUMP_SOUNDS.play_random(0.3)
         self.tumble = False
 
-    def respawn(self):
+    def respawn(self, make_sound=True):
         self.just_respawned = True
-        self.REVIVE_SOUNDS.play_random(0.15)
         self.health = self.MAX_HEALTH
         self.tumble = False
         self.x = self.respawn_x
         self.y = self.respawn_y
 
-    def hard_respawn(self):
+        if make_sound:
+            self.REVIVE_SOUNDS.play_random(0.15)
+
+    def hard_respawn(self, make_sound=True):
         self._coyote_timer = 0
         self._deactivate_checkpoint()
         self._stop_x()
         self._stop_y()
-        self.respawn()
+        self.respawn(make_sound)
 
     def _deactivate_checkpoint(self):
         self.checkpoint_swapped = True
