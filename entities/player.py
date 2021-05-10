@@ -199,8 +199,6 @@ class Player(collision.PunchableGravityCollision):
         self.push_frames = 0
         self.unpush_frames = self.MAX_UNPUSH_FRAME
 
-        self.land_frames = 0
-
         self.turn_left_frames = self.MAX_TURN_FRAME
         self.turn_right_frames = self.MAX_TURN_FRAME
 
