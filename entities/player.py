@@ -420,6 +420,7 @@ class Player(collision.PunchableGravityCollision):
 
     def _alive_air_anim(self):
         self.ground_frames = 0
+        self.run_end_frames = self.MAX_RUN_END_FRAME
 
         if self.unpush_frames < self.MAX_UNPUSH_FRAME:
             self._unpush_anim()
