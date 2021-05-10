@@ -381,6 +381,12 @@ class Player(collision.PunchableGravityCollision):
             if self.grounded and self.ground_frames < self.MAX_GROUND_FRAME:
                 self._landing_anim()
 
+            # Plays running sound
+            if self.grounded:
+                if self.sprite.anim == self.RUN_LEFT_ID or self.sprite.anim == self.RUN_RIGHT_ID:
+                    if self.sprite.frame == 0 and self.sprite.frame_delay == 0:
+                        self.RUN_SOUNDS.play_random(random.random() / 4 + 0.75)
+
         elif self.dead and self.grounded:
             self._dead_grounded_anim()
 
@@ -440,12 +446,6 @@ class Player(collision.PunchableGravityCollision):
         self.facing = const.LEFT
         self._update_wall_push(const.LEFT)
 
-        # Plays running sound
-        if self.grounded:
-            if self.sprite.anim == self.RUN_LEFT_ID:
-                if self.sprite.frame == 0 and self.sprite.frame_delay == 1:
-                    self.RUN_SOUNDS.play_random(random.random() / 4 + 0.75)
-
     def _move_right_anim(self):
 
         self.turn_left_frames = 0
@@ -459,12 +459,6 @@ class Player(collision.PunchableGravityCollision):
 
         self.facing = const.RIGHT
         self._update_wall_push(const.RIGHT)
-
-        # Plays running sound
-        if self.grounded:
-            if self.sprite.anim == self.RUN_RIGHT_ID:
-                if self.sprite.frame == 0 and self.sprite.frame_delay == 1:
-                    self.RUN_SOUNDS.play_random(random.random() / 4 + 0.75)
 
     def _idle_anim(self):
         if self.facing == const.LEFT:
