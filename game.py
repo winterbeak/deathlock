@@ -30,6 +30,15 @@ clock = pygame.time.Clock()
 goal_light_activate = sound.load_numbers("level_start%i", 3)
 goal_light_activate.set_volumes(0.2)
 
+goal_sound = sound.load("goal")
+goal_sound.set_volume(0)
+goal_sound_playing = False
+
+hum = sound.load("hum")
+MAX_HUM_VOLUME = 0.65
+hum.set_volume(0)
+hum.play(-1)
+
 
 background = graphics.load_image("background", 1)
 player_glow = graphics.load_image("player_gradient", 1)
@@ -134,7 +143,7 @@ static_level_surf.set_colorkey(const.TRANSPARENT)
 draw_background(static_level_surf)
 sequence.current.draw_static(static_level_surf, main_cam)
 
-sound.play_music()
+# sound.play_music()
 
 
 editor_key = events.Keybind([pygame.K_ESCAPE])
@@ -172,6 +181,12 @@ def game_update():
             swap_to_editor()
         elif level_beat_mode == NEXT_LEVEL:
             next_level()
+
+    if sequence.transitioning and sequence.frame < flicker.START_DELAY:
+        hum.set_volume(max(0, hum.get_volume() - 0.05))
+    else:
+        hum.set_volume(min(MAX_HUM_VOLUME, hum.get_volume() + 0.02))
+    sequence.current.update_goal_sound(player, sequence.transitioning)
 
 
 def draw_level():

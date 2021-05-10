@@ -157,17 +157,26 @@ class Player(collision.PunchableGravityCollision):
     HEART_Y = -3
 
     # Sounds
-    RUN_SOUNDS = sound.load_numbers("run%i", 5)
+    RUN_SOUNDS = sound.load_numbers("run%i", 7)
+    RUN_SOUNDS.set_volumes(0.6)
+
+    WALL_PUSH_SOUNDS = sound.load_numbers("run%i", 7)
+    WALL_PUSH_SOUNDS.set_volumes(0.9)
 
     REVIVE_SOUNDS = sound.load_numbers("revive%i", 3)
 
-    HIT_SOUNDS = sound.load_numbers("hit%i", 3)
+    HIT_SOUNDS = sound.load_numbers("hit%i", 5)
+    HIT_SOUNDS.set_volumes(0.7)
 
     # ROOM_CHANGE_SOUNDS = sound.load_numbers("room_change%i", 1)
 
     JUMP_SOUNDS = sound.load_numbers("jump%i", 3)
 
-    LAND_SOUNDS = sound.load_numbers("land%i", 3)
+    LAND_SOUNDS = sound.load_numbers("run%i", 7)
+    LAND_SOUNDS.set_volumes(0.8)
+
+    CHECKPOINT_CHANGE_SOUNDS = sound.load_numbers("checkpoint_change%i", 3)
+    CHECKPOINT_CHANGE_SOUNDS.set_volumes(0.3)
 
     def __init__(self, level, camera):
         x = grid.x_of(level.player_spawn.col)
@@ -211,6 +220,9 @@ class Player(collision.PunchableGravityCollision):
 
         self.just_died = False
         self.just_respawned = False
+
+        self._prev_frame_x_vel = 0
+        self._prev_frame_y_vel = 0
 
     @property
     def respawn_x(self):
@@ -260,6 +272,8 @@ class Player(collision.PunchableGravityCollision):
         self.checkpoint_swapped = False
         self.just_died = False
         self.just_respawned = False
+        self._prev_frame_x_vel = self.x_vel + self.puncher_x_vel
+        self._prev_frame_y_vel = self.y_vel
         self._update_timers()
         self._take_inputs()
         super().update()
@@ -385,13 +399,24 @@ class Player(collision.PunchableGravityCollision):
             if self.grounded:
                 if self.sprite.anim == self.RUN_LEFT_ID or self.sprite.anim == self.RUN_RIGHT_ID:
                     if self.sprite.frame == 0 and self.sprite.frame_delay == 0:
-                        self.RUN_SOUNDS.play_random(random.random() / 4 + 0.75)
+                        x_vel = self.x_vel + self.puncher_x_vel
+                        if abs(x_vel) <= 4.6:
+                            volume = random.random() / 8 + 0.375
+                        else:
+                            mult = abs(x_vel) / (self.PUNCHER_X_VEL + self.MOVE_SPEED)
+                            volume = mult * 0.25 + random.random() / 8 + 0.5
+                        self.RUN_SOUNDS.play_random(volume)
 
         elif self.dead and self.grounded:
             self._dead_grounded_anim()
 
         elif self.dead:
             self._dead_air_anim()
+
+        if self.grounded and self.y_vel == 0 and self._prev_frame_y_vel > 0:
+            mult = abs(self._prev_frame_y_vel) / self.TERMINAL_VELOCITY
+            volume = 0.5 + 0.5 * mult
+            self.LAND_SOUNDS.play_random(volume)
 
     def _alive_air_anim(self):
         self.ground_frames = 0
@@ -623,6 +648,13 @@ class Player(collision.PunchableGravityCollision):
                     else:
                         self.sprite.frame = 6
 
+            if self.push_frames == 1:
+                if abs(self._prev_frame_x_vel) < 4.6:
+                    volume = 0.33
+                else:
+                    volume = abs(self._prev_frame_x_vel) / 20 + 0.5
+                self.WALL_PUSH_SOUNDS.play_random(volume)
+
         else:
             self.push_frames = 0
             self.unpush_frames = self.MAX_UNPUSH_FRAME
@@ -646,6 +678,7 @@ class Player(collision.PunchableGravityCollision):
                 self._deactivate_checkpoint()
                 ray.checkpoint.active = True
                 self.checkpoint = ray.checkpoint
+                self.CHECKPOINT_CHANGE_SOUNDS.play_random()
 
     def _update_puncher_vel(self):
         if self.grounded:

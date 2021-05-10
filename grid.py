@@ -1,3 +1,6 @@
+import sound
+
+import math
 import os
 import pygame
 
@@ -249,6 +252,10 @@ class Room:
     HEIGHT = const.SCRN_H // TILE_H
     PIXEL_W = WIDTH * TILE_W
     PIXEL_H = HEIGHT * TILE_H
+
+    goal_sound = sound.load("goal")
+    goal_sound.set_volume(0)
+    goal_sound_playing = False
 
     def __init__(self, name):
         """name is the name of the file in the levels folder"""
@@ -949,6 +956,39 @@ class Room:
             color = (71, 158, 71)
 
         pygame.draw.rect(surf, color, (x, y, width, height))
+
+    def update_goal_sound(self, player, is_transitioning):
+        if is_transitioning:
+            self.goal_sound_playing = False
+            self.goal_sound.stop()
+            return
+
+        distance_x = player.center_x - center_x_of(self.player_goal.col)
+        distance_y = player.center_y - center_y_of(self.player_goal.row)
+        distance = math.sqrt(distance_x ** 2 + distance_y ** 2)
+
+        if distance < 300.0:
+            if distance == 20:
+                return
+
+            if distance < 75:
+                # Reciprocal rises fast as distance gets closer to 20
+                volume = 2 / (distance - 20)
+            else:
+                # A line from where the reciprocal ends at x=75 to 0 at x=200
+                connection = 2 / (75 - 20)
+                m = -connection / (300 - 75)
+                b = - m * 300
+                volume = m * distance + b
+            self.goal_sound.set_volume(volume)
+
+            if not self.goal_sound_playing:
+                self.goal_sound_playing = True
+                self.goal_sound.play(-1)
+
+        elif self.goal_sound_playing:
+            self.goal_sound_playing = False
+            self.goal_sound.stop()
 
     def place_tile_from_id(self, col, row, tile_id):
         """These ids are only used for writing and reading levels."""
