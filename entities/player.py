@@ -262,8 +262,8 @@ class Player(collision.PunchableGravityCollision):
         self.just_respawned = False
         self._update_timers()
         self._take_inputs()
-        self._update_animation()
         super().update()
+        self._update_animation()
         self._collide_checkpoints()
 
     def _update_timers(self):
