@@ -473,7 +473,6 @@ class Player(collision.PunchableGravityCollision):
         self._update_wall_push(const.LEFT)
 
     def _move_right_anim(self):
-
         self.turn_left_frames = 0
         self.run_end_frames = 0
 
