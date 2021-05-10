@@ -399,7 +399,7 @@ class Player(collision.PunchableGravityCollision):
         else:
             self.sprite.set_anim(self.JUMP_RIGHT_ID)
 
-        if self.y_vel < -self.JUMP_SPEED + 0.5:
+        if self.y_vel < -self.JUMP_SPEED:
             self.sprite.frame = 0
         elif self.y_vel < -self.JUMP_SPEED + 1.0:
             self.sprite.frame = 1
