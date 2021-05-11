@@ -973,13 +973,14 @@ class Room:
 
             if distance < 75:
                 # Reciprocal rises fast as distance gets closer to 20
-                volume = 2 / (distance - 20)
+                mult = 2 / (distance - 20)
             else:
                 # A line from where the reciprocal ends at x=75 to 0 at x=200
                 connection = 2 / (75 - 20)
                 m = -connection / (300 - 75)
                 b = - m * 300
-                volume = m * distance + b
+                mult = m * distance + b
+            volume = 0.97 * mult
             self.goal_sound.set_volume(volume)
 
             if not self.goal_sound_playing:

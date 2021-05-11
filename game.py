@@ -28,10 +28,10 @@ clock = pygame.time.Clock()
 
 
 goal_light_activate = sound.load_numbers("level_start%i", 3)
-goal_light_activate.set_volumes(0.2)
+goal_light_activate.set_volumes(0.14)
 
 hum = sound.load("hum")
-MAX_HUM_VOLUME = 0.65
+MAX_HUM_VOLUME = 1.0
 hum.set_volume(0)
 hum.play(-1)
 
@@ -235,9 +235,9 @@ def adjust_flicker_volumes(frame):
     flickers = sequence.next.unique_flickers[:flicker.SOUND_COUNT]
     for i, flicker_sequence in enumerate(flickers):
         if i == 0:
-            volume_mult = 1
+            volume_mult = 0.7
         else:
-            volume_mult = 0.8 / len(sequence.next.unique_flickers) + 0.2
+            volume_mult = 0.56 / len(sequence.next.unique_flickers) + 0.2
         brightness = flicker_sequence.brightness(frame)
         if brightness == flicker.SOFT:
             flicker.turn_on_sounds[i].set_volume(0.02 * volume_mult)

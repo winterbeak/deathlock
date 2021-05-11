@@ -158,25 +158,26 @@ class Player(collision.PunchableGravityCollision):
 
     # Sounds
     RUN_SOUNDS = sound.load_numbers("run%i", 7)
-    RUN_SOUNDS.set_volumes(0.6)
+    RUN_SOUNDS.set_volumes(0.3)
 
     WALL_PUSH_SOUNDS = sound.load_numbers("run%i", 7)
-    WALL_PUSH_SOUNDS.set_volumes(0.9)
+    WALL_PUSH_SOUNDS.set_volumes(0.35)
 
     REVIVE_SOUNDS = sound.load_numbers("revive%i", 3)
+    REVIVE_SOUNDS.set_volumes(0.87)
 
     HIT_SOUNDS = sound.load_numbers("hit%i", 5)
-    HIT_SOUNDS.set_volumes(0.7)
 
     # ROOM_CHANGE_SOUNDS = sound.load_numbers("room_change%i", 1)
 
     JUMP_SOUNDS = sound.load_numbers("jump%i", 3)
+    JUMP_SOUNDS.set_volumes(0.35)
 
     LAND_SOUNDS = sound.load_numbers("run%i", 7)
-    LAND_SOUNDS.set_volumes(0.8)
+    LAND_SOUNDS.set_volumes(0.42)
 
     CHECKPOINT_CHANGE_SOUNDS = sound.load_numbers("checkpoint_change%i", 3)
-    CHECKPOINT_CHANGE_SOUNDS.set_volumes(0.3)
+    CHECKPOINT_CHANGE_SOUNDS.set_volumes(0.32)
 
     def __init__(self, level, camera):
         x = grid.x_of(level.player_spawn.col)
@@ -416,7 +417,7 @@ class Player(collision.PunchableGravityCollision):
 
         if self.grounded and self.y_vel == 0 and self._prev_frame_y_vel > 0:
             mult = abs(self._prev_frame_y_vel) / self.TERMINAL_VELOCITY
-            volume = 0.5 + 0.5 * mult
+            volume = 0.2 + 0.7 * mult
             self.LAND_SOUNDS.play_random(volume)
 
     def _alive_air_anim(self):
@@ -651,7 +652,7 @@ class Player(collision.PunchableGravityCollision):
 
             if self.push_frames == 1:
                 if abs(self._prev_frame_x_vel) < 4.6:
-                    volume = 0.33
+                    volume = 0.45
                 else:
                     volume = abs(self._prev_frame_x_vel) / 20 + 0.5
                 self.WALL_PUSH_SOUNDS.play_random(volume)
