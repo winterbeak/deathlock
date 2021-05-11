@@ -7,7 +7,7 @@ import os
 music_muted = False
 sfx_muted = False
 
-CHANNEL_COUNT = 16
+CHANNEL_COUNT = 32
 pygame.mixer.init(22050, -16, CHANNEL_COUNT, 64)
 pygame.mixer.set_num_channels(CHANNEL_COUNT)
 pygame.init()
