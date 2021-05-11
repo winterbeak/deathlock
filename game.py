@@ -30,10 +30,6 @@ clock = pygame.time.Clock()
 goal_light_activate = sound.load_numbers("level_start%i", 3)
 goal_light_activate.set_volumes(0.2)
 
-goal_sound = sound.load("goal")
-goal_sound.set_volume(0)
-goal_sound_playing = False
-
 hum = sound.load("hum")
 MAX_HUM_VOLUME = 0.65
 hum.set_volume(0)
