@@ -347,6 +347,7 @@ class Player(collision.PunchableGravityCollision):
 
     def jump(self):
         self._coyote_timer = 0
+        self._jump_buffer = 0
         self.y_vel = -self.JUMP_SPEED
         self.JUMP_SOUNDS.play_random(0.3)
         self.tumble = False
