@@ -230,6 +230,8 @@ def draw_level():
 
         main_surf.blit(player_glow, (glow_x, glow_y), special_flags=pygame.BLEND_ADD)
 
+        sequence.draw_text(main_surf, main_cam)
+
 
 def adjust_flicker_volumes(frame):
     flickers = sequence.next.unique_flickers[:flicker.SOUND_COUNT]
@@ -265,6 +267,7 @@ def editor_draw():
     sequence.current.draw_dynamic(main_surf, main_cam,
                                   player.dead, player.checkpoint is None)
     editor.draw(main_surf)
+    sequence.draw_text(main_surf, main_cam)
 
 
 def swap_to_editor():

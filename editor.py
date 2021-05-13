@@ -29,6 +29,8 @@ class Editor:
     down_key = events.Keybind([pygame.K_s])
     save_key = events.Keybind([pygame.K_u])
 
+    place_text_key = events.Keybind([pygame.K_t])
+
     shift_left_key = events.Keybind([pygame.K_LEFT])
     shift_right_key = events.Keybind([pygame.K_RIGHT])
     shift_up_key = events.Keybind([pygame.K_UP])
@@ -135,6 +137,10 @@ class Editor:
             elif self._tile == grid.PlayerGoal:
                 self.level.move_player_goal(current_col, current_row)
 
+    def _input_place_text(self):
+        self.level.text_x = events.mouse.position[0]
+        self.level.text_y = events.mouse.position[1]
+
     def _take_inputs(self):
         self._input_direction()
         self._input_shift_level()
@@ -144,6 +150,9 @@ class Editor:
             self._input_place_block()
         elif self.mode == self.RECT:
             self._input_place_rect()
+
+        if self.place_text_key.is_held:
+            self._input_place_text()
 
         if self.save_key.is_pressed:
             self.level.save()

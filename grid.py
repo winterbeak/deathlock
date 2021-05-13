@@ -268,6 +268,9 @@ class Room:
 
         self.unique_flickers = []
 
+        self.text_x = 0
+        self.text_y = 0
+
         self.name = name
         self.load()
 
@@ -1025,7 +1028,7 @@ class Room:
         self.add_tile(col, row, tile)
 
     def save(self):
-        strings = []
+        strings = ["%i %i" % (self.text_x, self.text_y)]
         for row in range(self.HEIGHT):
             row_of_ids = []
             for col in range(self.WIDTH):
@@ -1048,7 +1051,14 @@ class Room:
         with open(path, "r") as file:
             data = file.read()
 
-        for row_index, row in enumerate(data.split("\n")):
+        lines = data.split("\n")
+        text_position = lines[0].split(" ")
+        self.text_x = int(text_position[0])
+        self.text_y = int(text_position[1])
+
+        level_rows = lines[1:]
+
+        for row_index, row in enumerate(level_rows):
             for col_index, tile in enumerate(row.split(" ")):
                 self.place_tile_from_id(col_index, row_index, int(tile))
 
