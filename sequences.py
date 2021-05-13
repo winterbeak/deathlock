@@ -1,6 +1,7 @@
 import pygame
 import os
 
+import graphics
 import grid
 import flicker
 import constants as const
@@ -17,8 +18,16 @@ story = load_story()
 
 font = pygame.font.Font(os.path.join("text", "m5x7.ttf"), 32)
 
+small_heart = graphics.load_image("heart_small", 2)
+small_heart.set_colorkey(const.TRANSPARENT)
+large_heart = graphics.load_image("heart_large", 2)
+large_heart.set_colorkey(const.TRANSPARENT)
+
 
 class Sequence:
+    HEART_OFFSETS_X = [-8, -26, 14]
+    HEART_OFFSETS_Y = [28, 28, 28]
+
     def __init__(self, level_names):
         self.level_names = level_names
         self._level_num = 0
@@ -64,3 +73,12 @@ class Sequence:
         y = self.current.text_y - cam.y
 
         surf.blit(text, (x, y))
+
+    def draw_hearts(self, surf, cam, player):
+        heart = large_heart
+        for i in range(player.health):
+            x = self.current.text_x - cam.x + self.HEART_OFFSETS_X[i]
+            y = self.current.text_y - cam.y + self.HEART_OFFSETS_Y[i]
+
+            surf.blit(heart, (x, y))
+            heart = small_heart

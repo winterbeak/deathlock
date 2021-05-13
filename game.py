@@ -231,6 +231,7 @@ def draw_level():
         main_surf.blit(player_glow, (glow_x, glow_y), special_flags=pygame.BLEND_ADD)
 
         sequence.draw_text(main_surf, main_cam)
+        sequence.draw_hearts(main_surf, main_cam, player)
 
 
 def adjust_flicker_volumes(frame):
@@ -268,6 +269,7 @@ def editor_draw():
                                   player.dead, player.checkpoint is None)
     editor.draw(main_surf)
     sequence.draw_text(main_surf, main_cam)
+    sequence.draw_hearts(main_surf, main_cam, player)
 
 
 def swap_to_editor():
