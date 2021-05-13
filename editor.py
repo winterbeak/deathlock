@@ -138,6 +138,10 @@ class Editor:
                 self.level.move_player_goal(current_col, current_row)
 
     def _input_place_text(self):
+        if self._direction == const.LEFT or self._direction == const.UP:
+            self.level.heart_direction = const.UP
+        else:
+            self.level.heart_direction = const.DOWN
         self.level.text_x = events.mouse.position[0]
         self.level.text_y = events.mouse.position[1]
 

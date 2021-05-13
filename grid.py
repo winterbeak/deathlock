@@ -270,6 +270,7 @@ class Room:
 
         self.text_x = 0
         self.text_y = 0
+        self.heart_direction = const.UP
 
         self.name = name
         self.load()
@@ -1028,7 +1029,7 @@ class Room:
         self.add_tile(col, row, tile)
 
     def save(self):
-        strings = ["%i %i" % (self.text_x, self.text_y)]
+        strings = ["%i %i %i" % (self.text_x, self.text_y, self.heart_direction)]
         for row in range(self.HEIGHT):
             row_of_ids = []
             for col in range(self.WIDTH):
@@ -1055,6 +1056,7 @@ class Room:
         text_position = lines[0].split(" ")
         self.text_x = int(text_position[0])
         self.text_y = int(text_position[1])
+        self.heart_direction = int(text_position[2])
 
         level_rows = lines[1:]
 

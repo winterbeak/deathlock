@@ -26,7 +26,8 @@ large_heart.set_colorkey(const.TRANSPARENT)
 
 class Sequence:
     HEART_OFFSETS_X = [-8, -26, 14]
-    HEART_OFFSETS_Y = [28, 28, 28]
+    HEART_OFFSETS_UP_Y = [-14, -12, -12]
+    HEART_OFFSETS_DOWN_Y = [28, 28, 28]
 
     def __init__(self, level_names):
         self.level_names = level_names
@@ -78,7 +79,10 @@ class Sequence:
         heart = large_heart
         for i in range(player.health):
             x = self.current.text_x - cam.x + self.HEART_OFFSETS_X[i]
-            y = self.current.text_y - cam.y + self.HEART_OFFSETS_Y[i]
+            if self.current.heart_direction == const.UP:
+                y = self.current.text_y - cam.y + self.HEART_OFFSETS_UP_Y[i]
+            else:
+                y = self.current.text_y - cam.y + self.HEART_OFFSETS_DOWN_Y[i]
 
             surf.blit(heart, (x, y))
             heart = small_heart
