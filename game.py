@@ -114,7 +114,7 @@ level_names = (
     ["DeathlockHeadBonk", "DoubleTriple", "EverythingClimb"] +
     levels_with_number("Haul", 1, 4) +
     ["DoublePunchHaul", "CheckpointHaul", "BackAndForthHaul", "UsefulSpawnHaul"] +
-    levels_with_number("End", 1, 5)
+    levels_with_number("End", 1, 6)
 )
 sequence = sequences.Sequence(level_names)
 
