@@ -32,8 +32,8 @@ class Sequence:
     def __init__(self, level_names):
         self.level_names = level_names
         self._level_num = 0
-        self.current = grid.Room(level_names[0])
-        self.next = grid.Room(level_names[1])
+        self.current = grid.Room(level_names[self._level_num])
+        self.next = grid.Room(level_names[self._level_num + 1])
         self.transitioning = False
         self.done_transitioning = False
         self._frame = 0
