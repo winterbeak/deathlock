@@ -39,6 +39,10 @@ class Sequence:
         self._frame = 0
 
     @property
+    def level_num(self):
+        return self._level_num
+
+    @property
     def frame(self):
         return self._frame
 
