@@ -85,12 +85,17 @@ class Sequence:
             surf.blit(text, (x, y))
 
     def _draw_hard_respawn_popup(self, surf, cam, player):
-        if player.dead_no_horizontal_frames > 60 and self.level_num < FIRST_CHECKPOINT_LEVEL:
+        if player.dead_no_horizontal_frames >= 60 and self.level_num < FIRST_CHECKPOINT_LEVEL:
+            frame = player.dead_no_horizontal_frames - 60
+
+            c = min(255, frame * 30)
+            color = (c, c, c)
+
             key_name = pygame.key.name(entities.player.Player.hard_respawn_key.list[0])
-            text = m3x6.render(key_name, False, const.WHITE)
+            text = m3x6.render(key_name, False, color, const.BLACK)
             x = player.center_x - text.get_width() // 2 - cam.x
             y = player.y - 30
-            surf.blit(text, (x, y))
+            surf.blit(text, (x, y), special_flags=pygame.BLEND_ADD)
 
     def _draw_level_text(self, surf, cam):
         level_num = len(self.level_names) - self._level_num
