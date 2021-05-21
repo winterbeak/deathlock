@@ -83,6 +83,13 @@ class Sequence:
         y = self.current.text_y - 80
         surf.blit(text, (x, y))
 
+    def draw_hard_respawn_popup(self, surf, cam, player):
+        key_name = pygame.key.name(entities.player.Player.hard_respawn_key.list[0])
+        text = m3x6.render(key_name, False, const.WHITE)
+        x = player.center_x - text.get_width() // 2 - cam.x
+        y = player.y - 30
+        surf.blit(text, (x, y))
+
     def draw_text(self, surf, cam):
         level_num = len(self.level_names) - self._level_num
         string = str(level_num) + ": " + story[self._level_num]

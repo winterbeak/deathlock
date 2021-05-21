@@ -220,6 +220,9 @@ def draw_level():
         if sequence.level_num == sequences.TUTORIAL_TEXT_LEVEL:
             sequence.draw_respawn_text(main_surf, main_cam)
 
+        if player.dead_no_horizontal_frames > 60 and sequence.level_num < sequences.FIRST_CHECKPOINT_LEVEL:
+            sequence.draw_hard_respawn_popup(main_surf, main_cam, player)
+
     handle_music_fade()
 
 

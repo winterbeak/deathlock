@@ -227,6 +227,8 @@ class Player(collision.PunchableGravityCollision):
         self._prev_frame_x_vel = 0
         self._prev_frame_y_vel = 0
 
+        self.dead_no_horizontal_frames = 0
+
     @property
     def respawn_x(self):
         if self.checkpoint:
@@ -282,6 +284,11 @@ class Player(collision.PunchableGravityCollision):
         super().update()
         self._update_animation()
         self._collide_checkpoints()
+
+        if abs(self.x_vel) < 0.00001 and self.dead:
+            self.dead_no_horizontal_frames += 1
+        else:
+            self.dead_no_horizontal_frames = 0
 
     def _update_timers(self):
         if self.grounded:
