@@ -347,7 +347,8 @@ while True:
         main_menu.update()
         main_menu.draw(main_surf)
 
-        if menus.start_key.is_pressed:
+        if main_menu.switch_to_game:
+            main_menu.switch_to_game = False
             state = GAME
 
     elif state == GAME:
