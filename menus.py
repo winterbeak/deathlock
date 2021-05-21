@@ -50,7 +50,12 @@ class MainMenu:
             for i, key in enumerate(rebind_order):
                 key_name = pygame.key.name(key.list[0])
                 key_description = rebind_descriptions[i]
-                string = "%s key: %s" % (key_description, key_name)
+
+                if i == self._rebind_stage:
+                    string = "> %s key: %s" % (key_description, key_name)
+                else:
+                    string = "%s key: %s" % (key_description, key_name)
+
                 render_menu_text(surf, string, i * 50 + 210)
         else:
             start_string = "Press %s to start" % pygame.key.name(start_key.list[0])
