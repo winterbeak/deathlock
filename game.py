@@ -242,6 +242,9 @@ def draw_level():
         sequence.draw_text(main_surf, main_cam)
         sequence.draw_hearts(main_surf, main_cam, player)
 
+        if sequence.level_num == 16:
+            sequence.draw_respawn_text(main_surf, main_cam)
+
     handle_music_fade()
 
 

@@ -1,6 +1,7 @@
+import os
+
 import pygame
 import constants as const
-import sequences
 import events
 import entities.player
 
@@ -15,8 +16,11 @@ rebind_order = [entities.player.Player.left_key,
 rebind_descriptions = ["Left", "Right", "Jump", "Action", "Reset level"]
 
 
+m3x6 = pygame.font.Font(os.path.join("text", "m3x6.ttf"), 64)
+
+
 def render_menu_text(surf, string, y):
-    text = sequences.m3x6.render(string, False, const.WHITE)
+    text = m3x6.render(string, False, const.WHITE)
     x = const.SCRN_W // 2 - text.get_width() // 2
     surf.blit(text, (x, y))
 

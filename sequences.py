@@ -1,6 +1,7 @@
 import pygame
 import os
 
+import entities.player
 import graphics
 import grid
 import flicker
@@ -17,7 +18,7 @@ def load_story():
 story = load_story()
 
 m5x7 = pygame.font.Font(os.path.join("text", "m5x7.ttf"), 32)
-m3x6 = pygame.font.Font(os.path.join("text", "m3x6.ttf"), 64)
+m3x6 = pygame.font.Font(os.path.join("text", "m3x6.ttf"), 32)
 
 small_heart = graphics.load_image("heart_small", 2)
 small_heart.set_colorkey(const.TRANSPARENT)
@@ -70,8 +71,14 @@ class Sequence:
 
         self._frame += 1
 
-    def draw_respawn_text(self):
-        text = m5x7.render("Press O to respawn", False, const.WHITE)
+    def draw_respawn_text(self, surf, cam):
+        key_name = pygame.key.name(entities.player.Player.respawn_key.list[0])
+        string = "Press %s to respawn with momentum." % key_name
+        text = m3x6.render(string, False, const.WHITE)
+        x = self.current.text_x  - text.get_width() // 2 - cam.x
+        y = self.current.text_y - 80
+        surf.blit(text, (x, y))
+
 
     def draw_text(self, surf, cam):
         level_num = len(self.level_names) - self._level_num
