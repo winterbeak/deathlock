@@ -79,10 +79,9 @@ class Sequence:
         key_name = pygame.key.name(entities.player.Player.respawn_key.list[0])
         string = "Press %s to respawn with momentum." % key_name
         text = m3x6.render(string, False, const.WHITE)
-        x = self.current.text_x  - text.get_width() // 2 - cam.x
+        x = self.current.text_x - text.get_width() // 2 - cam.x
         y = self.current.text_y - 80
         surf.blit(text, (x, y))
-
 
     def draw_text(self, surf, cam):
         level_num = len(self.level_names) - self._level_num
