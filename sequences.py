@@ -44,6 +44,8 @@ class Sequence:
         self.done_transitioning = False
         self._frame = 0
 
+        self._checkpoint_timing_popup_frame = 0
+
     @property
     def level_num(self):
         return self._level_num
@@ -85,9 +87,21 @@ class Sequence:
             surf.blit(text, (x, y))
 
     def _draw_hard_respawn_popup(self, surf, cam, player):
-        good_player_state = player.dead_no_horizontal_frames >= 60 and player.dead
-        if good_player_state and self.level_num < FIRST_CHECKPOINT_LEVEL:
-            frame = player.dead_no_horizontal_frames - 60
+        player_dead_no_horizontal = player.dead_no_horizontal_frames >= 60 and player.dead
+        beginning_popup = player_dead_no_horizontal and self.level_num < FIRST_CHECKPOINT_LEVEL
+
+        on_checkpoint_level = self.level_num == 28
+        in_ditch = player.y > 500 and player.x < 660
+        if on_checkpoint_level and in_ditch:
+            self._checkpoint_timing_popup_frame += 1
+        else:
+            self._checkpoint_timing_popup_frame = 0
+
+        if beginning_popup or self._checkpoint_timing_popup_frame > 300:
+            if beginning_popup:
+                frame = player.dead_no_horizontal_frames - 60
+            else:
+                frame = self._checkpoint_timing_popup_frame - 300
 
             c = min(255, frame * 30)
             color = (c, c, c)
