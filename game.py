@@ -7,6 +7,7 @@ import constants as const
 import events
 import debug
 
+import menus
 import sequences
 import editor
 import graphics
@@ -151,9 +152,12 @@ sequence.current.draw_static(static_level_surf, main_cam)
 
 editor_key = events.Keybind([pygame.K_ESCAPE])
 
+main_menu = menus.MainMenu()
+
 GAME = 0
 EDITOR = 1
-state = GAME
+MENU = 2
+state = MENU
 
 
 def hard_reset():
@@ -341,7 +345,14 @@ while True:
         elif state == EDITOR:
             swap_to_game()
 
-    if state == GAME:
+    if state == MENU:
+        main_menu.update()
+        main_menu.draw(main_surf)
+
+        if menus.start_key.is_pressed:
+            state = GAME
+
+    elif state == GAME:
         game_update()
         game_draw()
 

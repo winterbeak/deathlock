@@ -16,7 +16,8 @@ def load_story():
 
 story = load_story()
 
-font = pygame.font.Font(os.path.join("text", "m5x7.ttf"), 32)
+m5x7 = pygame.font.Font(os.path.join("text", "m5x7.ttf"), 32)
+m3x6 = pygame.font.Font(os.path.join("text", "m3x6.ttf"), 64)
 
 small_heart = graphics.load_image("heart_small", 2)
 small_heart.set_colorkey(const.TRANSPARENT)
@@ -69,10 +70,13 @@ class Sequence:
 
         self._frame += 1
 
+    def draw_respawn_text(self):
+        text = m5x7.render("Press O to respawn", False, const.WHITE)
+
     def draw_text(self, surf, cam):
         level_num = len(self.level_names) - self._level_num
         string = str(level_num) + ": " + story[self._level_num]
-        text = font.render(string, False, const.WHITE)
+        text = m5x7.render(string, False, const.WHITE)
 
         x = self.current.text_x - text.get_width() // 2 - cam.x
         y = self.current.text_y - cam.y
