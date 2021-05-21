@@ -85,7 +85,8 @@ class Sequence:
             surf.blit(text, (x, y))
 
     def _draw_hard_respawn_popup(self, surf, cam, player):
-        if player.dead_no_horizontal_frames >= 60 and self.level_num < FIRST_CHECKPOINT_LEVEL:
+        good_player_state = player.dead_no_horizontal_frames >= 60 and player.dead
+        if good_player_state and self.level_num < FIRST_CHECKPOINT_LEVEL:
             frame = player.dead_no_horizontal_frames - 60
 
             c = min(255, frame * 30)
