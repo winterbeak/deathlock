@@ -1,3 +1,5 @@
+import sound
+
 import os
 
 import pygame
@@ -18,6 +20,11 @@ rebind_descriptions = ["Left", "Right", "Jump", "Action", "Reset level"]
 
 m3x6 = pygame.font.Font(os.path.join("text", "m3x6.ttf"), 64)
 
+start_sound = sound.load("game_start")
+start_sound.set_volume(0.4)
+select_sound = sound.load_numbers("menu%i", 3)
+select_sound.set_volumes(0.35)
+
 
 def render_menu_text(surf, string, y):
     text = m3x6.render(string, False, const.WHITE)
@@ -32,8 +39,18 @@ class MainMenu:
         self._rebind_stage = 0
         self._rebind_end_wait_frame = 0
 
+        self._start_press_delaying = False
+        self._start_press_delay_frame = 0
+
     def update(self):
-        if self._rebinding:
+        if self._start_press_delaying:
+            self._start_press_delay_frame += 1
+            if self._start_press_delay_frame >= 420:
+                self.switch_to_game = True
+                self._start_press_delaying = False
+                self._start_press_delay_frame = 0
+
+        elif self._rebinding:
             if self._rebind_stage == len(rebind_order):
                 self._final_bind_delay()
             else:
@@ -42,12 +59,14 @@ class MainMenu:
             if self._rebind_stage > len(rebind_order):
                 self._end_rebinding()
 
-        else:
+        elif not self._start_press_delaying:
             if rebind_key.is_pressed:
                 self._rebinding = True
+                select_sound.play_random()
 
             elif start_key.is_pressed:
-                self.switch_to_game = True
+                self._start_press_delaying = True
+                start_sound.play()
 
     def draw(self, surf):
         if self._rebinding:
@@ -56,12 +75,12 @@ class MainMenu:
                 key_description = rebind_descriptions[i]
 
                 if i == self._rebind_stage:
-                    string = "> %s key: %s" % (key_description, key_name)
+                    string = "> %s: %s" % (key_description, key_name)
                 else:
-                    string = "%s key: %s" % (key_description, key_name)
+                    string = "%s: %s" % (key_description, key_name)
 
                 render_menu_text(surf, string, i * 50 + 210)
-        else:
+        elif not self._start_press_delaying:
             start_string = "Press %s to start" % pygame.key.name(start_key.list[0])
             render_menu_text(surf, start_string, 400)
 
@@ -72,6 +91,7 @@ class MainMenu:
         if events.keys.pressed:
             rebind_order[self._rebind_stage].list = [events.keys.pressed_keys[0]]
             self._rebind_stage += 1
+            select_sound.play_random()
 
     def _final_bind_delay(self):
         # Little delay after binding the last key, so that the player can see
