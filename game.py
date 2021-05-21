@@ -58,31 +58,6 @@ def screen_update(fps):
     clock.tick(fps)
 
 
-def test_level():
-    room = grid.Room("Test Level")
-    room.add_rect(0, 20, 40, 1, grid.Wall)
-    room.add_rect(20, 0, 1, 20, grid.Deathlock)
-    room.add_tile(17, 17, grid.PunchBox(const.RIGHT))
-
-    room.add_tile(5, 17, grid.PunchBox(const.UP))
-
-    room.add_tile(11, 18, grid.PunchBox(const.UP))
-    room.add_tile(10, 17, grid.PunchBox(const.RIGHT))
-
-    room.add_tile(11, 17, grid.Deathlock())
-    room.add_tile(11, 13, grid.PunchBox(const.DOWN))
-    room.add_rect(0, 30, 40, 1, lambda: grid.PunchBox(const.UP))
-
-    room.add_checkpoint(23, 3, const.DOWN)
-    room.add_checkpoint(26, 16, const.RIGHT)
-    room.add_checkpoint(30, 25, const.LEFT)
-    room.add_checkpoint(30, 24, const.UP)
-
-    room.emit()
-
-    return room
-
-
 def levels_with_number(shared_name, first, last):
     """Returns a list of levels with increasing numbers attached.
 
