@@ -35,6 +35,12 @@ MAX_HUM_VOLUME = 1.0
 hum.set_volume(0)
 hum.play(-1)
 
+music = [sound.load("music%i" % x) for x in range(1, 4)]
+for m in music[1:]:
+    m.set_volume(0)
+for m in music:
+    m.play(-1)
+
 
 background = graphics.load_image("background", 1)
 player_glow = graphics.load_image("player_gradient", 1)
@@ -179,10 +185,10 @@ def game_update():
         elif level_beat_mode == NEXT_LEVEL:
             next_level()
 
-    if sequence.transitioning and sequence.frame < flicker.START_DELAY:
-        hum.set_volume(max(0, hum.get_volume() - 0.05))
-    else:
-        hum.set_volume(min(MAX_HUM_VOLUME, hum.get_volume() + 0.02))
+    # if sequence.transitioning and sequence.frame < flicker.START_DELAY:
+    #     hum.set_volume(max(0, hum.get_volume() - 0.05))
+    # else:
+    #     hum.set_volume(min(MAX_HUM_VOLUME, hum.get_volume() + 0.02))
     sequence.current.update_goal_sound(player, sequence.transitioning)
 
 
@@ -233,6 +239,21 @@ def draw_level():
 
         sequence.draw_text(main_surf, main_cam)
         sequence.draw_hearts(main_surf, main_cam, player)
+
+    handle_music_fade()
+
+
+def handle_music_fade():
+    # Note: Level 36+ fadeout is handled in next_level() method
+    if sequence.level_num >= 25:
+        sound.lower_volume(music[1], 0.005)
+        if sequence.level_num < 36:
+            sound.raise_volume(music[2], 0.02)
+
+    if sequence.level_num >= 16:
+        sound.lower_volume(music[0], 0.005)
+        if sequence.level_num < 25:
+            sound.raise_volume(music[1], 0.02)
 
 
 def adjust_flicker_volumes(frame):
@@ -296,6 +317,9 @@ def next_level():
     player.checkpoint = None
     punchers.punchers = []
     flicker.play_sounds()
+
+    if sequence.level_num >= 36:
+        sound.lower_volume(music[2], 0.1)
 
 
 def end_transition():

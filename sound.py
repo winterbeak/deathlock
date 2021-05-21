@@ -173,7 +173,12 @@ class SoundSet:
         self.sound_duration = sounds_length
 
 
-MUSIC_VOLUME = 0.3
+def raise_volume(sound, amount):
+    sound.set_volume(min(1.0, sound.get_volume() + amount))
 
-load_music("deathlocked")
-set_music_volume(MUSIC_VOLUME)
+
+def lower_volume(sound, amount):
+    sound.set_volume(max(0.0, sound.get_volume() - amount))
+
+
+MUSIC_VOLUME = 1.0
