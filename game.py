@@ -214,14 +214,7 @@ def draw_level():
 
         main_surf.blit(player_glow, (glow_x, glow_y), special_flags=pygame.BLEND_ADD)
 
-        sequence.draw_text(main_surf, main_cam)
-        sequence.draw_hearts(main_surf, main_cam, player)
-
-        if sequence.level_num == sequences.TUTORIAL_TEXT_LEVEL:
-            sequence.draw_respawn_text(main_surf, main_cam)
-
-        if player.dead_no_horizontal_frames > 60 and sequence.level_num < sequences.FIRST_CHECKPOINT_LEVEL:
-            sequence.draw_hard_respawn_popup(main_surf, main_cam, player)
+        sequence.draw_ui(main_surf, main_cam, player)
 
     handle_music_fade()
 
@@ -273,8 +266,7 @@ def editor_draw():
     sequence.current.draw_dynamic(main_surf, main_cam,
                                   player.dead, player.checkpoint is None)
     editor.draw(main_surf)
-    sequence.draw_text(main_surf, main_cam)
-    sequence.draw_hearts(main_surf, main_cam, player)
+    sequence.draw_ui(main_surf, main_cam, player)
 
 
 def swap_to_editor():

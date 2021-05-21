@@ -75,22 +75,24 @@ class Sequence:
 
         self._frame += 1
 
-    def draw_respawn_text(self, surf, cam):
-        key_name = pygame.key.name(entities.player.Player.respawn_key.list[0])
-        string = "Press %s to respawn with momentum." % key_name
-        text = m3x6.render(string, False, const.WHITE)
-        x = self.current.text_x - text.get_width() // 2 - cam.x
-        y = self.current.text_y - 80
-        surf.blit(text, (x, y))
+    def _draw_respawn_text(self, surf, cam):
+        if self.level_num == TUTORIAL_TEXT_LEVEL:
+            key_name = pygame.key.name(entities.player.Player.respawn_key.list[0])
+            string = "Press %s to respawn with momentum." % key_name
+            text = m3x6.render(string, False, const.WHITE)
+            x = self.current.text_x - text.get_width() // 2 - cam.x
+            y = self.current.text_y - 80
+            surf.blit(text, (x, y))
 
-    def draw_hard_respawn_popup(self, surf, cam, player):
-        key_name = pygame.key.name(entities.player.Player.hard_respawn_key.list[0])
-        text = m3x6.render(key_name, False, const.WHITE)
-        x = player.center_x - text.get_width() // 2 - cam.x
-        y = player.y - 30
-        surf.blit(text, (x, y))
+    def _draw_hard_respawn_popup(self, surf, cam, player):
+        if player.dead_no_horizontal_frames > 60 and self.level_num < FIRST_CHECKPOINT_LEVEL:
+            key_name = pygame.key.name(entities.player.Player.hard_respawn_key.list[0])
+            text = m3x6.render(key_name, False, const.WHITE)
+            x = player.center_x - text.get_width() // 2 - cam.x
+            y = player.y - 30
+            surf.blit(text, (x, y))
 
-    def draw_text(self, surf, cam):
+    def _draw_level_text(self, surf, cam):
         level_num = len(self.level_names) - self._level_num
         string = str(level_num) + ": " + story[self._level_num]
         text = m5x7.render(string, False, const.WHITE)
@@ -100,7 +102,7 @@ class Sequence:
 
         surf.blit(text, (x, y))
 
-    def draw_hearts(self, surf, cam, player):
+    def _draw_hearts(self, surf, cam, player):
         heart = large_heart
         for i in range(player.health):
             x = self.current.text_x - cam.x + self.HEART_OFFSETS_X[i]
@@ -111,3 +113,10 @@ class Sequence:
 
             surf.blit(heart, (x, y))
             heart = small_heart
+
+    def draw_ui(self, surf, cam, player):
+        self._draw_level_text(surf, cam)
+        self._draw_hearts(surf, cam, player)
+
+        self._draw_respawn_text(surf, cam)
+        self._draw_hard_respawn_popup(surf, cam, player)
