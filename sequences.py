@@ -25,6 +25,10 @@ small_heart.set_colorkey(const.TRANSPARENT)
 large_heart = graphics.load_image("heart_large", 2)
 large_heart.set_colorkey(const.TRANSPARENT)
 
+TUTORIAL_TEXT_LEVEL = 16
+FIRST_CHECKPOINT_LEVEL = 25
+START_MUSIC_FADE_LEVEL = 36
+
 
 class Sequence:
     HEART_OFFSETS_X = [-8, -26, 14]

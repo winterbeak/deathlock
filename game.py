@@ -217,22 +217,22 @@ def draw_level():
         sequence.draw_text(main_surf, main_cam)
         sequence.draw_hearts(main_surf, main_cam, player)
 
-        if sequence.level_num == 16:
+        if sequence.level_num == sequences.TUTORIAL_TEXT_LEVEL:
             sequence.draw_respawn_text(main_surf, main_cam)
 
     handle_music_fade()
 
 
 def handle_music_fade():
-    # Note: Level 36+ fadeout is handled in next_level() method
-    if sequence.level_num >= 25:
+    # Note: START_MUSIC_FADE_LEVEL fadeout is handled in next_level() method
+    if sequence.level_num >= sequences.FIRST_CHECKPOINT_LEVEL:
         sound.lower_volume(music[1], 0.005)
-        if sequence.level_num < 36:
+        if sequence.level_num < sequences.START_MUSIC_FADE_LEVEL:
             sound.raise_volume(music[2], 0.02)
 
-    if sequence.level_num >= 16:
+    if sequence.level_num >= sequences.TUTORIAL_TEXT_LEVEL:
         sound.lower_volume(music[0], 0.005)
-        if sequence.level_num < 25:
+        if sequence.level_num < sequences.FIRST_CHECKPOINT_LEVEL:
             sound.raise_volume(music[1], 0.02)
 
 
@@ -298,7 +298,7 @@ def next_level():
     punchers.punchers = []
     flicker.play_sounds()
 
-    if sequence.level_num >= 36:
+    if sequence.level_num >= sequences.START_MUSIC_FADE_LEVEL:
         sound.lower_volume(music[2], 0.1)
 
 
