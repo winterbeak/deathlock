@@ -140,8 +140,6 @@ player = entities.player.Player(sequence.current, main_cam)
 entity_handler = entities.handler.Handler()
 entity_handler.list = [player]
 
-hard_reset_key = events.Keybind([pygame.K_r])
-
 static_level_surf = pygame.Surface((const.SCRN_W, const.SCRN_H))
 static_level_surf.set_colorkey(const.TRANSPARENT)
 draw_background(static_level_surf)
@@ -171,7 +169,7 @@ def game_update():
 
     main_cam.update()
 
-    if hard_reset_key.is_pressed:
+    if player.hard_respawn_key.is_pressed:
         hard_reset()
 
     if player.dead:

@@ -18,6 +18,8 @@ class Player(collision.PunchableGravityCollision):
     right_key = events.Keybind([pygame.K_d, pygame.K_RIGHT])
     respawn_key = events.Keybind([pygame.K_o])
 
+    hard_respawn_key = events.Keybind([pygame.K_r])
+
     # Physics/Gameplay constants
     TERMINAL_VELOCITY = 20.0
 
