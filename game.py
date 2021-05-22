@@ -37,7 +37,8 @@ hum.set_volume(0)
 hum.play(-1)
 
 music = [sound.load("music%i" % x) for x in range(1, 4)]
-
+for m in music:
+    m.set_volume(0)
 
 background = graphics.load_image("background", 1)
 player_glow = graphics.load_image("player_gradient", 1)
@@ -227,6 +228,11 @@ def handle_music_fade():
         if sequence.level_num < sequences.FIRST_CHECKPOINT_LEVEL:
             sound.raise_volume(music[1], 0.02)
 
+    if sequence.intro_transition_flag and not sequence.transitioning:
+        sequence.intro_transition_flag = False
+        for m in music:
+            m.play(-1)
+
     if sequence.level_num < sequences.TUTORIAL_TEXT_LEVEL:
         sound.raise_volume(music[0], 0.02)
 
@@ -321,10 +327,7 @@ while True:
         if main_menu.switch_to_game:
             main_menu.switch_to_game = False
             state = GAME
-            for m in music:
-                m.set_volume(0)
-            for m in music:
-                m.play(-1)
+            next_level()
         else:
             main_menu.draw(main_surf)
 

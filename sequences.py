@@ -37,7 +37,9 @@ class Sequence:
 
     def __init__(self, level_names):
         self.level_names = level_names
-        self._level_num = 0
+        # If the game starts at the menu, subtract 1 from the level you want to test
+        # For example, test level 0 by initializing _level_num with -1
+        self._level_num = -1
         self.current = grid.Room(level_names[self._level_num])
         self.next = grid.Room(level_names[self._level_num + 1])
         self.transitioning = False
@@ -45,6 +47,8 @@ class Sequence:
         self._frame = 0
 
         self._checkpoint_timing_popup_frame = 0
+
+        self.intro_transition_flag = True
 
     @property
     def level_num(self):
