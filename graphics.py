@@ -3,6 +3,8 @@ import constants as const
 import os
 import copy
 
+os.environ['SDL_VIDEO_CENTERED'] = '1'
+
 pygame.init()
 pygame.display.set_mode((const.SCRN_W, const.SCRN_H))
 
