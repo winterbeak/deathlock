@@ -7,6 +7,7 @@ import constants as const
 import events
 import debug
 
+import splash
 import menus
 import sequences
 import editor
@@ -123,11 +124,13 @@ sequence.current.draw_static(static_level_surf, main_cam)
 editor_key = events.Keybind([pygame.K_ESCAPE])
 
 main_menu = menus.MainMenu()
+splash_screen = splash.SplashScreen()
 
 GAME = 0
 EDITOR = 1
 MENU = 2
-state = MENU
+SPLASH_SCREEN = 3
+state = SPLASH_SCREEN
 
 
 def hard_reset():
@@ -321,7 +324,14 @@ while True:
         elif state == EDITOR:
             swap_to_game()
 
-    if state == MENU:
+    if state == SPLASH_SCREEN:
+        splash_screen.update()
+        splash_screen.draw(main_surf)
+        if splash_screen.done:
+            splash_screen.done = False
+            state = MENU
+
+    elif state == MENU:
         main_menu.update()
 
         if main_menu.switch_to_game:
