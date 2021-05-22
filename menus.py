@@ -4,6 +4,7 @@ import os
 
 import pygame
 import constants as const
+import graphics
 import events
 import entities.player
 
@@ -24,6 +25,10 @@ start_sound = sound.load("game_start")
 start_sound.set_volume(0.4)
 select_sound = sound.load_numbers("menu%i", 3)
 select_sound.set_volumes(0.35)
+
+title = graphics.load_image("title", 1)
+TITLE_X = const.SCRN_W // 2 - title.get_width() // 2
+TITLE_Y = 100
 
 
 def render_menu_text(surf, string, y):
@@ -81,6 +86,8 @@ class MainMenu:
 
                 render_menu_text(surf, string, i * 50 + 210)
         elif not self._start_press_delaying:
+            surf.blit(title, (TITLE_X, TITLE_Y))
+
             start_string = "Press %s to start" % pygame.key.name(start_key.list[0])
             render_menu_text(surf, start_string, 400)
 
