@@ -9,6 +9,8 @@ MEDIUM = 2
 BRIGHT = 3
 FULL = 4
 
+shade_color = [(0, 0, 0), (25, 25, 25), (50, 50, 50), (100, 100, 100), (255, 255, 255)]
+
 _OUTLINE_SOFT_PHASE = 35
 _OUTLINE_MEDIUM_PHASE = 60
 MAX_OUTLINE_LENGTH = 70
@@ -95,6 +97,17 @@ def mute_sounds():
 def play_sounds():
     for turn_on_sound in turn_on_sounds:
         turn_on_sound.play()
+
+
+def set_sound_volume(sound_num, brightness, mult):
+    if brightness == SOFT:
+        turn_on_sounds[sound_num].set_volume(0.02 * mult)
+    elif brightness == MEDIUM:
+        turn_on_sounds[sound_num].set_volume(0.05 * mult)
+    elif brightness == BRIGHT:
+        turn_on_sounds[sound_num].set_volume(0.1 * mult)
+    else:
+        turn_on_sounds[sound_num].set_volume(0)
 
 
 mute_sounds()

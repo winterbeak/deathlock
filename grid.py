@@ -666,11 +666,11 @@ class Room:
         return False
 
     shade_soft = pygame.Surface((TILE_W, TILE_H))
-    shade_soft.fill((25, 25, 25))
+    shade_soft.fill(flicker.shade_color[flicker.SOFT])
     shade_medium = pygame.Surface((TILE_W, TILE_H))
-    shade_medium.fill((50, 50, 50))
+    shade_medium.fill(flicker.shade_color[flicker.MEDIUM])
     shade_bright = pygame.Surface((TILE_W, TILE_H))
-    shade_bright.fill((100, 100, 100))
+    shade_bright.fill(flicker.shade_color[flicker.BRIGHT])
     checkpoint_shade_soft = graphics.load_image("checkpoint_shade_soft", 2)
     checkpoint_shade_medium = graphics.load_image("checkpoint_shade_medium", 2)
     checkpoint_shade_bright = graphics.load_image("checkpoint_shade_bright", 2)

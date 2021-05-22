@@ -248,14 +248,7 @@ def adjust_flicker_volumes(frame):
         else:
             volume_mult = 0.56 / len(sequence.next.unique_flickers) + 0.2
         brightness = flicker_sequence.brightness(frame)
-        if brightness == flicker.SOFT:
-            flicker.turn_on_sounds[i].set_volume(0.02 * volume_mult)
-        elif brightness == flicker.MEDIUM:
-            flicker.turn_on_sounds[i].set_volume(0.05 * volume_mult)
-        elif brightness == flicker.BRIGHT:
-            flicker.turn_on_sounds[i].set_volume(0.1 * volume_mult)
-        else:
-            flicker.turn_on_sounds[i].set_volume(0)
+        flicker.set_sound_volume(i, brightness, volume_mult)
 
 
 def game_draw():
