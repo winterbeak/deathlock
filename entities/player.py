@@ -285,7 +285,8 @@ class Player(collision.PunchableGravityCollision):
         self._update_animation()
         self._collide_checkpoints()
 
-        if -0.0001 < self.x_vel < 1.0 and self.dead:
+        x_vel = self.x_vel + self.puncher_x_vel
+        if -0.0001 < x_vel < 1.0 and self.dead:
             self.dead_no_horizontal_frames += 1
         else:
             self.dead_no_horizontal_frames = 0
