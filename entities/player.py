@@ -320,6 +320,9 @@ class Player(collision.PunchableGravityCollision):
             else:
                 self._stay_still()
 
+            # Updates the added horizontal velocity from being punched
+            self._puncher_x_vel_preservation()
+
         elif self.dead and self.grounded:
             self.x_vel = 0
             self.puncher_x_vel = 0
@@ -344,6 +347,19 @@ class Player(collision.PunchableGravityCollision):
             self.puncher_x_vel += self.puncher_deceleration
             if self.puncher_x_vel > 0:
                 self.puncher_x_vel = 0
+
+    def _puncher_x_vel_preservation(self):
+        """Updates the added horizontal velocity from being punched"""
+        x_vel = self.x_vel + self.puncher_x_vel
+        if abs(x_vel) < self.MOVE_SPEED:
+            self.puncher_x_vel = 0
+
+        if self.left_key.is_held:
+            if self.puncher_x_vel < -0.00001:
+                self.puncher_x_vel = -self.PUNCHER_X_VEL
+        elif self.right_key.is_held:
+            if self.puncher_x_vel > 0.00001:
+                self.puncher_x_vel = self.PUNCHER_X_VEL
 
     def _stay_still(self):
         if self.x_vel < 0:
