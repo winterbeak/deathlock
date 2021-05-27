@@ -7,6 +7,7 @@ import sound
 import grid
 import random
 import graphics
+import punchers
 
 
 class Player(collision.PunchableGravityCollision):
@@ -25,6 +26,7 @@ class Player(collision.PunchableGravityCollision):
 
     COYOTE_TIME = 5
     JUMP_BUFFER = 5
+    HORIZONTAL_PUNCH_BUFFER = 7
 
     MAX_HEALTH = 3
     JUMP_SPEED = 9
@@ -198,6 +200,8 @@ class Player(collision.PunchableGravityCollision):
 
         self._coyote_timer = 0
         self._jump_buffer = 0
+        self._horizontal_punch_buffer = 0
+        self._horizontal_punch_direction = const.LEFT
 
         self.sprite = graphics.AnimInstance(self.ANIMSHEET)
         self.facing = const.LEFT
@@ -302,6 +306,9 @@ class Player(collision.PunchableGravityCollision):
         elif self._jump_buffer > 0:
             self._jump_buffer -= 1
 
+        if self._horizontal_punch_buffer > 0:
+            self._horizontal_punch_buffer -= 1
+
     def _take_inputs(self):
         if not self.dead:
             if self.jump_key.is_pressed and self._coyote_timer > 0:
@@ -352,13 +359,13 @@ class Player(collision.PunchableGravityCollision):
         """Updates the added horizontal velocity from being punched"""
         x_vel = self.x_vel + self.puncher_x_vel
         if abs(x_vel) < self.MOVE_SPEED:
-            self.puncher_x_vel = 0
+            if self.left_key.is_held or self.right_key.is_held:
+                self.puncher_x_vel = 0
 
-        if self.left_key.is_held:
-            if self.puncher_x_vel < -0.00001:
+        if self._horizontal_punch_buffer:
+            if self.left_key.is_held and self._horizontal_punch_direction == const.LEFT:
                 self.puncher_x_vel = -self.PUNCHER_X_VEL
-        elif self.right_key.is_held:
-            if self.puncher_x_vel > 0.00001:
+            elif self.right_key.is_held and self._horizontal_punch_direction == const.RIGHT:
                 self.puncher_x_vel = self.PUNCHER_X_VEL
 
     def _stay_still(self):
@@ -385,6 +392,8 @@ class Player(collision.PunchableGravityCollision):
         self.tumble = False
         self.x = self.respawn_x
         self.y = self.respawn_y
+
+        self._horizontal_punch_buffer = 0
 
         if make_sound:
             self.REVIVE_SOUNDS.play_random(0.15)
@@ -687,6 +696,42 @@ class Player(collision.PunchableGravityCollision):
             self.push_frames = 0
             self.unpush_frames = self.MAX_UNPUSH_FRAME
             self._update_wall_push_success_flag = False
+
+    def _activate_punch_zone(self, col, row):
+        # Exactly the same as the parent method, except _horizontal_punch_buffer
+        # is updated when punched horizontally
+        tile = self.level.get_tile(grid.PunchZone, col, row)
+        if tile.direction == const.LEFT:
+            self._get_hit()
+            punchers.add(col, row, const.LEFT)
+            self.puncher_x_vel = -self.PUNCHER_X_VEL
+
+            if self.x_vel > 0:
+                self.x_vel = 0
+
+            self._horizontal_punch_buffer = self.HORIZONTAL_PUNCH_BUFFER
+            self._horizontal_punch_direction = const.LEFT
+
+        elif tile.direction == const.UP:
+            self._get_hit()
+            punchers.add(col, row, const.UP)
+            self.y_vel = -self.PUNCHER_UP_VEL
+
+        elif tile.direction == const.RIGHT:
+            self._get_hit()
+            punchers.add(col, row, const.RIGHT)
+            self.puncher_x_vel = self.PUNCHER_X_VEL
+
+            if self.x_vel < 0:
+                self.x_vel = 0
+
+            self._horizontal_punch_buffer = self.HORIZONTAL_PUNCH_BUFFER
+            self._horizontal_punch_direction = const.RIGHT
+
+        elif tile.direction == const.DOWN:
+            self._get_hit()
+            punchers.add(col, row, const.DOWN)
+            self.y_vel = self.PUNCHER_DOWN_VEL
 
     def _get_hit(self):
         super()._get_hit()
