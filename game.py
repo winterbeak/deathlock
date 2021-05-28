@@ -190,6 +190,8 @@ def draw_level():
             sequence.next.draw_flicker_tiles(main_surf, main_cam, frame)
 
             adjust_flicker_volumes(frame)
+
+        sequence.draw_flicker_ui(main_surf, main_cam)
     else:
         if player.checkpoint_swapped:
             if player.checkpoint:
@@ -241,10 +243,15 @@ def handle_music_fade():
 
 
 def adjust_flicker_volumes(frame):
-    flickers = sequence.next.unique_flickers[:flicker.SOUND_COUNT]
+    flickers = sequence.next.unique_flickers[:flicker.SOUND_COUNT - 1]
+    flickers.insert(0, sequence.level_name_flicker)
     for i, flicker_sequence in enumerate(flickers):
+        # Level name flicker is loud
         if i == 0:
             volume_mult = 0.7
+        # Player spawn flicker is loud, but less so
+        elif i == 1:
+            volume_mult = 0.4
         else:
             volume_mult = 0.56 / len(sequence.next.unique_flickers) + 0.2
         brightness = flicker_sequence.brightness(frame)

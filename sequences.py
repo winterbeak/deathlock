@@ -50,6 +50,9 @@ class Sequence:
 
         self.intro_transition_flag = True
 
+        self.level_name_flicker = flicker.FlickerSequence()
+        self._heart_shade_surface = pygame.Surface(large_heart.get_size())
+
     @property
     def level_num(self):
         return self._level_num
@@ -69,6 +72,8 @@ class Sequence:
 
         static_level_surf.fill(const.TRANSPARENT)
         self.next.draw_silhouette(static_level_surf)
+
+        self.level_name_flicker = flicker.FlickerSequence()
 
     def _end_transition(self):
         self.transitioning = False
@@ -115,6 +120,50 @@ class Sequence:
             x = player.center_x - text.get_width() // 2 - cam.x
             y = player.y - 30
             surf.blit(text, (x, y), special_flags=pygame.BLEND_ADD)
+
+    def draw_flicker_ui(self, surf, cam):
+        if self._frame < flicker.START_DELAY:
+            return
+        if self._frame < flicker.STOP_FLICKERING_FRAME:
+            frame = self._frame - flicker.START_DELAY
+            brightness = self.level_name_flicker.brightness(frame)
+            color = flicker.shade_color[brightness]
+        else:
+            color = const.WHITE
+
+        # Code copied from _draw_level_text
+        level_num = len(self.level_names) - self._level_num - 1
+        string = str(level_num) + ": " + story[self._level_num + 1]
+        text = m5x7.render(string, False, color)
+
+        x = self.next.text_x - text.get_width() // 2 - cam.x
+        y = self.next.text_y - cam.y
+
+        surf.blit(text, (x, y))
+
+        # Code copied from _draw_hearts
+        heart = large_heart
+        for i in range(3):
+            x = self.next.text_x - cam.x + self.HEART_OFFSETS_X[i]
+            if self.next.heart_direction == const.UP:
+                y = self.next.text_y - cam.y + self.HEART_OFFSETS_UP_Y[i]
+            else:
+                y = self.next.text_y - cam.y + self.HEART_OFFSETS_DOWN_Y[i]
+
+            surf.blit(heart, (x, y))
+
+            if self._frame < flicker.STOP_FLICKERING_FRAME:
+                frame = self._frame - flicker.START_DELAY
+                brightness = self.level_name_flicker.brightness(frame)
+                color = flicker.shade_color[brightness]
+            else:
+                color = const.WHITE
+
+            self._heart_shade_surface.fill(color)
+
+            surf.blit(self._heart_shade_surface, (x, y), special_flags=pygame.BLEND_MULT)
+
+            heart = small_heart
 
     def _draw_level_text(self, surf, cam):
         level_num = len(self.level_names) - self._level_num
