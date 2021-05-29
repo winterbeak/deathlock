@@ -16,8 +16,9 @@ rebind_order = [entities.player.Player.left_key,
                 entities.player.Player.right_key,
                 entities.player.Player.jump_key,
                 entities.player.Player.respawn_key,
-                entities.player.Player.hard_respawn_key]
-rebind_descriptions = ["Left", "Right", "Jump", "Action", "Reset level"]
+                entities.player.Player.hard_respawn_key,
+                entities.player.Player.pause_key]
+rebind_descriptions = ["Left", "Right", "Jump", "Action", "Reset level", "Pause"]
 
 
 m3x6 = pygame.font.Font(os.path.join("text", "m3x6.ttf"), 64)
@@ -28,8 +29,6 @@ select_sound = sound.load_numbers("menu%i", 3)
 select_sound.set_volumes(0.35)
 
 title = graphics.load_image("title", 1)
-TITLE_X = const.SCRN_W // 2 - title.get_width() // 2
-TITLE_Y = 100
 
 title_shade = pygame.Surface(title.get_size())
 
@@ -42,6 +41,14 @@ def render_menu_text(surf, string, y, brightness):
 
 
 class MainMenu:
+    TITLE_X = const.SCRN_W // 2 - title.get_width() // 2
+    TITLE_Y = 100
+
+    KEYBIND_TEXT_Y = 190
+
+    START_TEXT_Y = 400
+    REBIND_TEXT_Y = 450
+
     def __init__(self):
         self.switch_to_game = False
         self._rebinding = False
@@ -55,6 +62,8 @@ class MainMenu:
         self._start_prompt_flicker = flicker.FlickerSequence()
         self._rebind_prompt_flicker = flicker.FlickerSequence()
         self._title_flicker = flicker.FlickerSequence()
+
+        self.start_action = "start"
 
     def update(self):
         if self._flicker_frame == 0:
@@ -97,12 +106,15 @@ class MainMenu:
                 select_sound.play_random()
 
             elif start_key.is_pressed:
-                self._start_press_delaying = True
-                start_sound.play()
+                self._start_key_pressed()
 
-                # Mute flicker sounds if they're still playing
-                self._flicker_frame = flicker.STOP_FLICKERING_FRAME
-                flicker.mute_sounds()
+    def _start_key_pressed(self):
+        self._start_press_delaying = True
+        start_sound.play()
+
+        # Mute flicker sounds if they're still playing
+        self._flicker_frame = flicker.STOP_FLICKERING_FRAME
+        flicker.mute_sounds()
 
     def draw(self, surf):
         if self._rebinding:
@@ -115,20 +127,23 @@ class MainMenu:
                 else:
                     string = "%s: %s" % (key_description, key_name)
 
-                render_menu_text(surf, string, i * 50 + 210, flicker.FULL)
+                render_menu_text(surf, string, i * 50 + self.KEYBIND_TEXT_Y, flicker.FULL)
         elif not self._start_press_delaying:
-            surf.blit(title, (TITLE_X, TITLE_Y))
-            brightness = self._title_flicker.brightness(self._flicker_frame)
-            title_shade.fill(flicker.shade_color[brightness])
-            surf.blit(title_shade, (TITLE_X, TITLE_Y), special_flags=pygame.BLEND_MULT)
+            self._draw_title(surf)
 
-            start_string = "Press %s to start" % pygame.key.name(start_key.list[0])
+            start_string = ("Press %s to " + self.start_action) % pygame.key.name(start_key.list[0])
             brightness = self._start_prompt_flicker.brightness(self._flicker_frame)
-            render_menu_text(surf, start_string, 400, brightness)
+            render_menu_text(surf, start_string, self.START_TEXT_Y, brightness)
 
             rebind_string = "Press %s to bind keys" % pygame.key.name(rebind_key.list[0])
             brightness = self._rebind_prompt_flicker.brightness(self._flicker_frame)
-            render_menu_text(surf, rebind_string, 450, brightness)
+            render_menu_text(surf, rebind_string, self.REBIND_TEXT_Y, brightness)
+
+    def _draw_title(self, surf):
+        surf.blit(title, (self.TITLE_X, self.TITLE_Y))
+        brightness = self._title_flicker.brightness(self._flicker_frame)
+        title_shade.fill(flicker.shade_color[brightness])
+        surf.blit(title_shade, (self.TITLE_X, self.TITLE_Y), special_flags=pygame.BLEND_MULT)
 
     def _bind_current_stage(self):
         if events.keys.pressed:
@@ -147,3 +162,37 @@ class MainMenu:
         self._rebinding = False
         self._rebind_stage = 0
         self._rebind_end_wait_frame = 0
+
+
+class PauseMenu(MainMenu):
+    START_TEXT_Y = 300
+    REBIND_TEXT_Y = 350
+
+    def __init__(self, player):
+        super().__init__()
+        self.player = player
+        self.paused_screen = pygame.Surface((const.SCRN_W, const.SCRN_H))
+        self._flicker_frame = flicker.STOP_FLICKERING_FRAME
+
+        self.start_action = "resume"
+
+    def update(self):
+        super().update()
+        if self.player.pause_key.is_pressed and not self._rebinding:
+            self.switch_to_game = True
+
+    def draw(self, surf):
+        surf.blit(self.paused_screen, (0, 0))
+        super().draw(surf)
+
+    def initialize(self, paused_screen):
+        self.paused_screen.blit(paused_screen, (0, 0))
+        shading = pygame.Surface((const.SCRN_W, const.SCRN_H))
+        shading.fill((150, 150, 150))
+        self.paused_screen.blit(shading, (0, 0), special_flags=pygame.BLEND_MULT)
+
+    def _draw_title(self, surf):
+        pass
+
+    def _start_key_pressed(self):
+        self.switch_to_game = True

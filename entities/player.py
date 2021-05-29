@@ -18,6 +18,7 @@ class Player(collision.PunchableGravityCollision):
     left_key = events.Keybind([pygame.K_a, pygame.K_LEFT])
     right_key = events.Keybind([pygame.K_d, pygame.K_RIGHT])
     respawn_key = events.Keybind([pygame.K_o])
+    pause_key = events.Keybind([pygame.K_ESCAPE])
 
     hard_respawn_key = events.Keybind([pygame.K_r])
 

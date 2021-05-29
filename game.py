@@ -121,15 +121,17 @@ sequence.current.draw_static(static_level_surf, main_cam)
 # sound.play_music()
 
 
-editor_key = events.Keybind([pygame.K_ESCAPE])
+editor_key = events.Keybind([pygame.K_e])
 
 main_menu = menus.MainMenu()
+pause_menu = menus.PauseMenu(player)
 splash_screen = splash.SplashScreen()
 
 GAME = 0
 EDITOR = 1
 MENU = 2
 SPLASH_SCREEN = 3
+PAUSE = 4
 state = SPLASH_SCREEN
 
 
@@ -341,9 +343,23 @@ while True:
         else:
             main_menu.draw(main_surf)
 
+    elif state == PAUSE:
+        pause_menu.update()
+        pause_menu.draw(main_surf)
+
+        if pause_menu.switch_to_game:
+            state = GAME
+            pause_menu.switch_to_game = False
+            menus.select_sound.play_random()
+
     elif state == GAME:
         game_update()
         game_draw()
+
+        if player.pause_key.is_pressed:
+            state = PAUSE
+            pause_menu.initialize(main_surf)
+            menus.select_sound.play_random()
 
     elif state == EDITOR:
         editor_update()
