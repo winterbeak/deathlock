@@ -36,10 +36,13 @@ class Sequence:
     HEART_OFFSETS_DOWN_Y = [28, 28, 28]
 
     def __init__(self, level_names):
+
+        with open("save.txt") as file:
+            level = file.readline()
+
         self.level_names = level_names
-        # If the game starts at the menu, subtract 1 from the level you want to test
-        # For example, test level 0 by initializing _level_num with -1
-        self._level_num = -1
+        # Subtract one, since the transition from menu to game increments level by 1
+        self._level_num = (len(level_names) - int(level)) - 1
         self.current = grid.Room(level_names[self._level_num])
         self.next = grid.Room(level_names[self._level_num + 1])
         self.transitioning = False

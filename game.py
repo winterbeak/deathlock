@@ -163,6 +163,8 @@ def game_update():
             swap_to_editor()
         elif level_beat_mode == NEXT_LEVEL:
             next_level()
+            with open("save.txt", "w") as file:
+                file.write(str(len(level_names) - sequence.level_num - 1))
 
     # if sequence.transitioning and sequence.frame < flicker.START_DELAY:
     #     hum.set_volume(max(0, hum.get_volume() - 0.05))
