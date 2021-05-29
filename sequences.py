@@ -49,6 +49,8 @@ class Sequence:
         self.done_transitioning = False
         self._frame = 0
 
+        self.start_credits = False
+
         self._checkpoint_timing_popup_frame = 0
 
         self.intro_transition_flag = True
@@ -67,7 +69,8 @@ class Sequence:
     def next_level(self):
         self._level_num += 1
         self.current = self.next
-        self.next = grid.Room(self.level_names[self._level_num + 1])
+        if self.level_num < len(self.level_names) - 1:
+            self.next = grid.Room(self.level_names[self._level_num + 1])
 
     def start_transition(self, static_level_surf):
         self._frame = 0

@@ -132,6 +132,7 @@ EDITOR = 1
 MENU = 2
 SPLASH_SCREEN = 3
 PAUSE = 4
+CREDITS = 5
 state = SPLASH_SCREEN
 
 
@@ -162,9 +163,14 @@ def game_update():
         if level_beat_mode == SWAP_TO_EDITOR:
             swap_to_editor()
         elif level_beat_mode == NEXT_LEVEL:
-            next_level()
+            if sequence.level_num == len(level_names) - 1:
+                sequence.start_credits = True
+                save_level = 80
+            else:
+                next_level()
+                save_level = len(level_names) - sequence.level_num - 1
             with open("save.txt", "w") as file:
-                file.write(str(len(level_names) - sequence.level_num - 1))
+                file.write(str(save_level))
 
     # if sequence.transitioning and sequence.frame < flicker.START_DELAY:
     #     hum.set_volume(max(0, hum.get_volume() - 0.05))
@@ -362,6 +368,10 @@ while True:
             state = PAUSE
             pause_menu.initialize(main_surf)
             menus.select_sound.play_random()
+
+        elif sequence.start_credits:
+            state = CREDITS
+            grid.Room.goal_sound.stop()
 
     elif state == EDITOR:
         editor_update()
