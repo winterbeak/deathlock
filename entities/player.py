@@ -13,14 +13,13 @@ import punchers
 class Player(collision.PunchableGravityCollision):
 
     # Controls
-    jump_key = events.Keybind([pygame.K_p, pygame.K_z, pygame.K_w,
-                               pygame.K_UP, pygame.K_SPACE])
     left_key = events.Keybind([pygame.K_a, pygame.K_LEFT])
     right_key = events.Keybind([pygame.K_d, pygame.K_RIGHT])
+    jump_key = events.Keybind([pygame.K_p, pygame.K_z, pygame.K_w,
+                               pygame.K_UP, pygame.K_SPACE])
     respawn_key = events.Keybind([pygame.K_o])
-    pause_key = events.Keybind([pygame.K_ESCAPE])
-
     hard_respawn_key = events.Keybind([pygame.K_r])
+    pause_key = events.Keybind([pygame.K_ESCAPE])
 
     # Physics/Gameplay constants
     TERMINAL_VELOCITY = 20.0
