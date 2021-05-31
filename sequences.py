@@ -37,7 +37,7 @@ class Sequence:
 
     def __init__(self, level_names):
 
-        with open("save.txt") as file:
+        with open(os.path.join("data", "save.txt")) as file:
             level = file.readline()
 
         self.level_names = level_names
