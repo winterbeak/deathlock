@@ -128,6 +128,10 @@ pause_menu = menus.PauseMenu(player)
 splash_screen = splash.SplashScreen()
 credits_screen = menus.Credits()
 
+# If we're not on the first level, change menu text from "start" to "continue"
+if sequence.level_num != -1:
+    main_menu.start_action = "continue"
+
 GAME = 0
 EDITOR = 1
 MENU = 2
