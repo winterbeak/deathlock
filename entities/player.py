@@ -1,4 +1,5 @@
 import pygame
+import os
 import constants as const
 
 from entities import collision
@@ -13,11 +14,10 @@ import punchers
 class Player(collision.PunchableGravityCollision):
 
     # Controls
-    left_key = events.Keybind([pygame.K_a, pygame.K_LEFT])
-    right_key = events.Keybind([pygame.K_d, pygame.K_RIGHT])
-    jump_key = events.Keybind([pygame.K_p, pygame.K_z, pygame.K_w,
-                               pygame.K_UP, pygame.K_SPACE])
-    respawn_key = events.Keybind([pygame.K_o])
+    left_key = events.Keybind([pygame.K_LEFT])
+    right_key = events.Keybind([pygame.K_RIGHT])
+    jump_key = events.Keybind([pygame.K_z])
+    respawn_key = events.Keybind([pygame.K_x])
     hard_respawn_key = events.Keybind([pygame.K_r])
     pause_key = events.Keybind([pygame.K_ESCAPE])
 
@@ -184,6 +184,8 @@ class Player(collision.PunchableGravityCollision):
     CHECKPOINT_CHANGE_SOUNDS.set_volumes(0.32)
 
     def __init__(self, level, camera):
+        self.load_controls()
+
         x = grid.x_of(level.player_spawn.col)
         y = grid.y_of(level.player_spawn.row)
         super().__init__(level, self.WIDTH, self.HEIGHT, self.TERMINAL_VELOCITY,
@@ -764,6 +766,18 @@ class Player(collision.PunchableGravityCollision):
                 self.puncher_x_vel -= self.puncher_deceleration
                 if self.puncher_x_vel < 0:
                     self.puncher_x_vel = 0
+
+    def load_controls(self):
+        with open(os.path.join("data", "controls.txt")) as file:
+            line = file.readline()
+        controls = [int(control) for control in line.split()]
+
+        self.left_key.list = [controls[0]]
+        self.right_key.list = [controls[1]]
+        self.jump_key.list = [controls[2]]
+        self.respawn_key.list = [controls[3]]
+        self.hard_respawn_key.list = [controls[4]]
+        self.pause_key.list = [controls[5]]
 
     @property
     def touching_goal(self):

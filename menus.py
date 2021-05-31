@@ -162,6 +162,14 @@ class MainMenu:
         self._rebinding = False
         self._rebind_stage = 0
         self._rebind_end_wait_frame = 0
+        save_controls()
+
+
+def save_controls():
+    string = " ".join([str(key.list[0]) for key in rebind_order])
+    string += "\n"
+    with open(os.path.join("data", "controls.txt"), "w") as file:
+        file.write(string)
 
 
 class PauseMenu(MainMenu):
