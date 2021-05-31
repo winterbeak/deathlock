@@ -196,3 +196,59 @@ class PauseMenu(MainMenu):
 
     def _start_key_pressed(self):
         self.switch_to_game = True
+
+
+class Credits:
+    TEXT = [
+        ("",),
+        ("TESTING", "ThatOneGuy", "timurichk"),
+        ("FONTS", "m3x6 and m5x7", "by Daniel Linssen"),
+        ("SOUNDS",
+         "Electricity 4 by PureAudioNinja",
+         "Circuit Breaker Reverb.wav by DCElliott",
+         "Hum1.wav by jameswrowles",
+         "Metal Impact Railing Hit Deep Reverb 4 by Sheyvan",
+         "Electrical Noise by _MC5_"),
+        ("a game by winterbeak",),
+        ("",)
+    ]
+    TEXT_HEIGHT = m3x6.get_height()
+
+    START_DELAY = 240
+
+    # Milliseconds each chord plays for
+    LENGTHS = [577, 2308, 2402, 3479, 5000, 2000]
+
+    def __init__(self):
+        self._frame = 0
+        self.done = False
+
+        self.STARTS = []
+        acc = 0
+        for length in self.LENGTHS:
+            acc += length
+            self.STARTS.append(acc)
+
+    def update(self):
+        self._frame += 1
+        if self._frame == self.START_DELAY:
+            pygame.mixer.music.load(os.path.join("sounds", "credits.wav"))
+            pygame.mixer.music.play()
+
+    def draw(self, surf):
+        if self._frame >= self.START_DELAY:
+            for i, start in enumerate(self.STARTS):
+                if pygame.mixer.music.get_pos() < start:
+                    self._draw_credit(surf, i)
+                    break
+            else:
+                self.done = True
+
+    def _draw_credit(self, surf, credit_num):
+        lines = self.TEXT[credit_num]
+        height = len(lines) * self.TEXT_HEIGHT
+        y = const.SCRN_H // 2 - height // 2
+
+        for line in lines:
+            render_menu_text(surf, line, y, flicker.FULL)
+            y += self.TEXT_HEIGHT

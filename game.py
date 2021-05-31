@@ -126,6 +126,7 @@ editor_key = events.Keybind([pygame.K_e])
 main_menu = menus.MainMenu()
 pause_menu = menus.PauseMenu(player)
 splash_screen = splash.SplashScreen()
+credits_screen = menus.Credits()
 
 GAME = 0
 EDITOR = 1
@@ -351,6 +352,10 @@ while True:
         else:
             main_menu.draw(main_surf)
 
+    elif state == CREDITS:
+        credits_screen.update()
+        credits_screen.draw(main_surf)
+
     elif state == PAUSE:
         pause_menu.update()
         pause_menu.draw(main_surf)
@@ -394,7 +399,7 @@ while True:
     else:
         screen_update(60)
 
-    if events.quit_program:
+    if events.quit_program or credits_screen.done:
         break
 
 pygame.quit()
