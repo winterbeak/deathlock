@@ -1,5 +1,6 @@
 import sound
 
+import os
 import pygame
 # import sys
 
@@ -174,7 +175,7 @@ def game_update():
             else:
                 next_level()
                 save_level = len(level_names) - sequence.level_num - 1
-            with open("save.txt", "w") as file:
+            with open(os.path.join("data", "save.txt"), "w") as file:
                 file.write(str(save_level))
 
     # if sequence.transitioning and sequence.frame < flicker.START_DELAY:
