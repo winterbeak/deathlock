@@ -23,6 +23,8 @@ rebind_descriptions = ["Left", "Right", "Jump", "Action", "Reset level", "Pause"
 
 m3x6 = pygame.font.Font(os.path.join("text", "m3x6.ttf"), 64)
 
+main_menu_music = sound.load("menu_music")
+
 start_sound = sound.load("game_start")
 start_sound.set_volume(0.4)
 select_sound = sound.load_numbers("menu%i", 3)
@@ -73,6 +75,7 @@ class MainMenu:
         if self._flicker_frame < flicker.STOP_FLICKERING_FRAME:
             self._flicker_frame += 1
             if self._flicker_frame == flicker.STOP_FLICKERING_FRAME:
+                main_menu_music.play(-1)
                 flicker.mute_sounds()
             else:
                 brightness = self._start_prompt_flicker.brightness(self._flicker_frame)
@@ -86,6 +89,7 @@ class MainMenu:
 
         if self._start_press_delaying:
             self._start_press_delay_frame += 1
+            main_menu_music.fadeout(1000)
             if self._start_press_delay_frame >= 420:
                 self.switch_to_game = True
                 self._start_press_delaying = False
