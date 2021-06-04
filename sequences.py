@@ -130,12 +130,10 @@ class Sequence:
     def draw_flicker_ui(self, surf, cam):
         if self._frame < flicker.START_DELAY:
             return
-        if self._frame < flicker.STOP_FLICKERING_FRAME:
-            frame = self._frame - flicker.START_DELAY
-            brightness = self.level_name_flicker.brightness(frame)
-            color = flicker.shade_color[brightness]
-        else:
-            color = const.WHITE
+
+        flicker_frame = self._frame - flicker.START_DELAY
+        brightness = self.level_name_flicker.brightness(flicker_frame)
+        color = flicker.shade_color[brightness]
 
         # Code copied from _draw_level_text
         level_num = len(self.level_names) - self._level_num - 1
@@ -157,13 +155,6 @@ class Sequence:
                 y = self.next.text_y - cam.y + self.HEART_OFFSETS_DOWN_Y[i]
 
             surf.blit(heart, (x, y))
-
-            if self._frame < flicker.STOP_FLICKERING_FRAME:
-                frame = self._frame - flicker.START_DELAY
-                brightness = self.level_name_flicker.brightness(frame)
-                color = flicker.shade_color[brightness]
-            else:
-                color = const.WHITE
 
             self._heart_shade_surface.fill(color)
 
