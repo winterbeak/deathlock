@@ -56,6 +56,7 @@ class Sequence:
         self.intro_transition_flag = True
 
         self.level_name_flicker = flicker.FlickerSequence()
+        self.respawn_text_flicker = flicker.FlickerSequence()
         self._heart_shade_surface = pygame.Surface(large_heart.get_size())
 
     @property
@@ -161,6 +162,17 @@ class Sequence:
             surf.blit(self._heart_shade_surface, (x, y), special_flags=pygame.BLEND_MULT)
 
             heart = small_heart
+
+        # Code copied from _draw_respawn_text
+        brightness =  self.respawn_text_flicker.brightness(flicker_frame)
+        color = flicker.shade_color[brightness]
+
+        key_name = pygame.key.name(entities.player.Player.respawn_key.list[0])
+        string = "Press %s to respawn with momentum." % key_name
+        text = m3x6.render(string, False, color)
+        x = self.next.text_x - text.get_width() // 2 - cam.x
+        y = self.next.text_y - 80
+        surf.blit(text, (x, y))
 
     def _draw_level_text(self, surf, cam):
         level_num = len(self.level_names) - self._level_num
