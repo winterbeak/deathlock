@@ -220,6 +220,7 @@ class Player(collision.PunchableGravityCollision):
         self.turn_left_frames = self.MAX_TURN_FRAME
         self.turn_right_frames = self.MAX_TURN_FRAME
 
+        self.ground_frames = 0
         self.run_end_frames = self.MAX_RUN_END_FRAME
 
         self._update_wall_push_success_flag = False
