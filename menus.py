@@ -153,7 +153,10 @@ class MainMenu:
         if events.keys.pressed:
             rebind_order[self._rebind_stage].list = [events.keys.pressed_keys[0]]
             self._rebind_stage += 1
-            select_sound.play_random()
+            if self._rebind_stage == len(rebind_order):
+                select_sound.play(0)
+            else:
+                select_sound.play_random()
 
     def _final_bind_delay(self):
         # Little delay after binding the last key, so that the player can see

@@ -364,7 +364,7 @@ while True:
         if pause_menu.switch_to_game:
             state = GAME
             pause_menu.switch_to_game = False
-            menus.select_sound.play_random()
+            menus.select_sound.play(0)
 
     elif state == GAME:
         game_update()
