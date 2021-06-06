@@ -181,4 +181,18 @@ def lower_volume(sound, amount):
     sound.set_volume(max(0.0, sound.get_volume() - amount))
 
 
+def fade_to(sound, target, amount):
+    volume = sound.get_volume()
+    if volume < target:
+        if volume + amount > target:
+            sound.set_volume(target)
+        else:
+            sound.set_volume(volume + amount)
+    elif volume > target:
+        if volume - amount < target:
+            sound.set_volume(target)
+        else:
+            sound.set_volume(volume - amount)
+
+
 MUSIC_VOLUME = 1.0

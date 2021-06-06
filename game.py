@@ -38,7 +38,7 @@ MAX_HUM_VOLUME = 1.0
 hum.set_volume(0)
 hum.play(-1)
 
-music = [sound.load("music%i" % x) for x in range(1, 4)]
+music = [sound.load("music%i" % x) for x in range(1, 8)]
 for m in music:
     m.set_volume(0)
 
@@ -238,24 +238,23 @@ def draw_level():
 
 
 def handle_music_fade():
-    # Note: START_MUSIC_FADE_LEVEL fadeout is handled in next_level() method
-    if sequence.level_num >= sequences.FIRST_CHECKPOINT_LEVEL:
-        sound.lower_volume(music[1], 0.005)
-        if sequence.level_num < sequences.START_MUSIC_FADE_LEVEL:
-            sound.raise_volume(music[2], 0.02)
+    if sequence.level_num >= sequences.music_changes[6]:
+        sound.lower_volume(music[6], 0.005)
 
-    if sequence.level_num >= sequences.TUTORIAL_TEXT_LEVEL:
-        sound.lower_volume(music[0], 0.005)
-        if sequence.level_num < sequences.FIRST_CHECKPOINT_LEVEL:
-            sound.raise_volume(music[1], 0.02)
+    for i in range(len(music) - 1):
+        if sequence.level_num >= sequences.music_changes[i]:
+            sound.lower_volume(music[i], 0.005)
+            if sequence.level_num < sequences.music_changes[i + 1]:
+                sound.raise_volume(music[i + 1], 0.02)
 
+    if sequence.level_num < sequences.TUTORIAL_TEXT_LEVEL:
+        sound.raise_volume(music[0], 0.02)
+
+    # Plays the first song after the first level flickers in
     if sequence.intro_transition_flag and not sequence.transitioning:
         sequence.intro_transition_flag = False
         for m in music:
             m.play(-1)
-
-    if sequence.level_num < sequences.TUTORIAL_TEXT_LEVEL:
-        sound.raise_volume(music[0], 0.02)
 
 
 def adjust_flicker_volumes(frame):
@@ -316,9 +315,6 @@ def next_level():
     player.checkpoint = None
     punchers.punchers = []
     flicker.play_sounds()
-
-    if sequence.level_num >= sequences.START_MUSIC_FADE_LEVEL:
-        sound.lower_volume(music[2], 0.1)
 
 
 def end_transition():
