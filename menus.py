@@ -229,7 +229,7 @@ class Credits:
     START_DELAY = 240
 
     # Milliseconds each chord plays for
-    LENGTHS = [577, 2308, 2402, 3479, 5000, 2000]
+    LENGTHS = [0, 2667, 2736, 3421, 5000, 4000]
 
     def __init__(self):
         self._frame = 0
