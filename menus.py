@@ -233,6 +233,8 @@ class Credits:
 
     def __init__(self):
         self._frame = 0
+        self._counting_towards_end = False
+        self._end_frame = 0
         self.done = False
 
         self.STARTS = []
@@ -246,6 +248,13 @@ class Credits:
         if self._frame == self.START_DELAY:
             pygame.mixer.music.load(os.path.join("sounds", "credits.wav"))
             pygame.mixer.music.play()
+        if self._frame > self.START_DELAY:
+            if not pygame.mixer.music.get_busy():
+                self._counting_towards_end = True
+        if self._counting_towards_end:
+            self._end_frame += 1
+            if self._end_frame == 60:
+                self.done = True
 
     def draw(self, surf):
         if self._frame >= self.START_DELAY:
@@ -253,8 +262,6 @@ class Credits:
                 if pygame.mixer.music.get_pos() < start:
                     self._draw_credit(surf, i)
                     break
-            else:
-                self.done = True
 
     def _draw_credit(self, surf, credit_num):
         lines = self.TEXT[credit_num]
