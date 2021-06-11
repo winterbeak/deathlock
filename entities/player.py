@@ -26,7 +26,7 @@ class Player(collision.PunchableGravityCollision):
 
     COYOTE_TIME = 5
     JUMP_BUFFER = 5
-    HORIZONTAL_PUNCH_BUFFER = 7
+    HORIZONTAL_PUNCH_BUFFER = 10
 
     MAX_HEALTH = 3
     JUMP_SPEED = 9
