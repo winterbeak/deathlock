@@ -383,8 +383,8 @@ while True:
         editor_update()
         editor_draw()
 
-    debug.debug(clock.get_fps())
-    debug.debug(sequence.current.name)
+    # debug.debug(clock.get_fps())
+    # debug.debug(sequence.current.name)
     # debug.debug(main_cam.sliding, main_cam.last_slide_frame)
     # debug.debug(main_cam.slide_x_frame, main_cam.slide_y_frame, main_cam.SLIDE_LENGTH)
     # debug.debug(level.active_column, level.active_row)
