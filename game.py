@@ -26,6 +26,7 @@ import punchers
 pygame.init()
 main_surf = pygame.display.set_mode((const.SCRN_W, const.SCRN_H))
 pygame.display.set_caption("deathlock")
+pygame.display.set_icon(pygame.image.load(os.path.join("images", "icon.png")))
 
 clock = pygame.time.Clock()
 
