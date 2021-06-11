@@ -5,6 +5,7 @@ import constants as const
 pygame.init()
 
 TAHOMA = pygame.font.SysFont("Tahoma", 10)
+TAHOMA_LARGE = pygame.font.SysFont("Tahoma", 24)
 
 strings = []
 lines = []

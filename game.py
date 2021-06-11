@@ -1,814 +1,391 @@
-# Come on and slam.
-# And welcome to the jam.
-
 import sound
 
-import random
+import os
 import pygame
 # import sys
 
 import constants as const
 import events
-# import debug
+import debug
 
+import splash
+import menus
+import sequences
+import editor
 import graphics
 import camera
 import grid
+import flicker
+import entities.player
+import entities.handler
 
-import roomgen
 import punchers
 
 
 # INITIALIZATION
 pygame.init()
-post_surf = pygame.display.set_mode((const.SCRN_W, const.SCRN_H))
+main_surf = pygame.display.set_mode((const.SCRN_W, const.SCRN_H))
 pygame.display.set_caption("deathlock")
+pygame.display.set_icon(pygame.image.load(os.path.join("images", "icon.png")))
 
 clock = pygame.time.Clock()
 
 
-TUTORIAL_TEXT = graphics.load_image("tutorial", 2)
-TUTORIAL_TEXT.set_colorkey(const.TRANSPARENT)
-CREDITS_TEXT = graphics.load_image("credits", 2)
-CREDITS_TEXT.set_colorkey(const.TRANSPARENT)
+goal_light_activate = sound.load_numbers("level_start%i", 3)
+goal_light_activate.set_volumes(0.14)
 
-def init_background():
-    surf = pygame.Surface((const.SCRN_W + grid.TILE_W * 2,
-                           const.SCRN_H + grid.TILE_H * 2))
-    width = grid.TILE_W
-    height = grid.TILE_H
-    for row in range(surf.get_height() // height):
-        for col in range(surf.get_width() // width):
-            x = col * width
-            y = row * height
+hum = sound.load("hum")
+MAX_HUM_VOLUME = 1.0
+hum.set_volume(0)
+hum.play(-1)
 
-            if (col + row) % 2 == 0:
-                pygame.draw.rect(surf, const.BACKGROUND_GREY, (x, y, width, height))
-            else:
-                pygame.draw.rect(surf, const.WHITE, (x, y, width, height))
+music = [sound.load("music%i" % x) for x in range(1, 8)]
+for m in music:
+    m.set_volume(0)
 
-    return surf
+background = graphics.load_image("background", 1)
+player_glow = graphics.load_image("player_gradient", 1)
 
 
-def draw_background(surf, cam):
-    x = -(cam.x % (grid.TILE_W * 2)) - 10
-    y = -(cam.y % (grid.TILE_H * 2)) - 10
-    surf.blit(background, (x, y))
-
-
-background = init_background()
+def draw_background(surf):
+    surf.fill((20, 20, 20))
+    surf.blit(background, (0, 0))
 
 
 def screen_update(fps):
     pygame.display.flip()
-    post_surf.fill(const.WHITE)
+    main_surf.fill(const.BLACK)
     clock.tick(fps)
 
 
-class Player:
-    CHECK_STEPS = 4
-    TERMINAL_VELOCITY = 20.0
-
-    MAX_HEALTH = 3
-    JUMP_SPEED = 9
-    MOVE_SPEED = 4
-    MOVE_ACC = 0.8
-    MOVE_DEC = 1.5
-    EXT_DEC = 0.5
-
-    INVULN_LENGTH = 10
-
-    HEALTH_SPACING = 5
-
-    WIDTH = 20
-    HEIGHT = 20
-
-    RUN_LEFT = graphics.AnimColumn("run", 6, 2)
-    RUN_LEFT.set_delay(4)
-    RUN_LEFT_ID = 0
-    RUN_RIGHT = graphics.flip_column(RUN_LEFT)
-    RUN_RIGHT_ID = 1
-
-    IDLE_LEFT = graphics.AnimColumn("idle", 4, 2)
-    IDLE_LEFT.set_delays((60, 10, 45, 10))
-    IDLE_LEFT_ID = 2
-    IDLE_RIGHT = graphics.flip_column(IDLE_LEFT)
-    IDLE_RIGHT_ID = 3
-
-    TUMBLE_LEFT = graphics.AnimColumn("tumble", 6, 2)
-    TUMBLE_LEFT.set_delay(4)
-    TUMBLE_LEFT_ID = 4
-    TUMBLE_RIGHT = graphics.flip_column(TUMBLE_LEFT)
-    TUMBLE_RIGHT_ID = 5
-
-    DEAD_GROUNDED_LEFT = graphics.AnimColumn("dead_grounded", 1, 2)
-    DEAD_GROUNDED_LEFT.set_delay(0xbeef)
-    DEAD_GROUNDED_LEFT_ID = 6
-    DEAD_GROUNDED_RIGHT = graphics.flip_column(DEAD_GROUNDED_LEFT)
-    DEAD_GROUNDED_RIGHT_ID = 7
-
-    DEAD_FALL_LEFT = graphics.AnimColumn("dead_fall", 7, 2)
-    DEAD_FALL_LEFT.set_delay(0xbeef)
-    DEAD_FALL_LEFT_ID = 8
-    DEAD_FALL_RIGHT = graphics.flip_column(DEAD_FALL_LEFT)
-    DEAD_FALL_RIGHT_ID = 9
-
-    WALL_PUSH_LEFT = graphics.AnimColumn("wall_push", 1, 2)
-    WALL_PUSH_LEFT.set_delay(0xbeef)
-    WALL_PUSH_LEFT_ID = 10
-    WALL_PUSH_RIGHT = graphics.flip_column(WALL_PUSH_LEFT)
-    WALL_PUSH_RIGHT_ID = 11
-
-    JUMP_LEFT = graphics.AnimColumn("jump", 6, 2)
-    JUMP_LEFT.set_delay(0xbeef)
-    JUMP_LEFT_ID = 12
-    JUMP_RIGHT = graphics.flip_column(JUMP_LEFT)
-    JUMP_RIGHT_ID = 13
-
-    ANIMSHEET = graphics.AnimSheet((RUN_LEFT, RUN_RIGHT,
-                                    IDLE_LEFT, IDLE_RIGHT,
-                                    TUMBLE_LEFT, TUMBLE_RIGHT,
-                                    DEAD_GROUNDED_LEFT, DEAD_GROUNDED_RIGHT,
-                                    DEAD_FALL_LEFT, DEAD_FALL_RIGHT,
-                                    WALL_PUSH_LEFT, WALL_PUSH_RIGHT,
-                                    JUMP_LEFT, JUMP_RIGHT))
-
-    MIDDLE_HEART = graphics.AnimColumn("heart_middle", 2, 2)
-    LEFT_HEART = graphics.AnimColumn("heart_left", 2, 2)
-    RIGHT_HEART = graphics.flip_column(LEFT_HEART)
-    MIDDLE_HEART.set_delays((62, 16))
-    LEFT_HEART.set_delays((62, 16))
-    RIGHT_HEART.set_delays((62, 16))
-
-    HEART_SHEET = graphics.AnimSheet((MIDDLE_HEART, LEFT_HEART, RIGHT_HEART))
-
-    MIDDLE_HEART_X = (const.SCRN_W - MIDDLE_HEART.frame_w) // 2
-    HEART_X = [MIDDLE_HEART_X, MIDDLE_HEART_X - 50, MIDDLE_HEART_X + 50]
-    HEART_Y = -3
-
-    RUN_SOUNDS = sound.load_numbers("run%i", 5)
-    RUN_SOUND_DELAY = 5
-
-    REVIVE_SOUNDS = sound.load_numbers("revive%i", 3)
-
-    HIT_SOUNDS = sound.load_numbers("hit%i", 3)
-
-    # ROOM_CHANGE_SOUNDS = sound.load_numbers("room_change%i", 1)
-
-    JUMP_SOUNDS = sound.load_numbers("jump%i", 3)
-
-    LAND_SOUNDS = sound.load_numbers("land%i", 3)
-
-    def __init__(self, x, y, extend_x=0, extend_y=0):
-        self.health = self.MAX_HEALTH
-        self.dead = False
-        self.offscreen_direction = 0
-
-        self.x = x
-        self.y = y
-        self.x_vel = 0.0
-        self.y_vel = 0.0
-        self.x_acc = 0.0
-        self.y_acc = 0.0
-
-        # external velocities - caused by non-player forces
-        self.ext_x_vel = 0.0
-
-        self.x_dir = 0
-        self.y_dir = 0
-
-        self.extend_x = extend_x
-        self.extend_y = extend_y
-        self.gridbox = pygame.Rect(x, y, self.WIDTH, self.HEIGHT)
-        self.hitbox = pygame.Rect(x - extend_x, y - extend_y,
-                                  self.WIDTH + extend_x * 2, self.HEIGHT + extend_y * 2)
-
-        self.grounded = False
-        self.level = level  # reference to the level layout
-
-        self.tumble = False
-        self.invuln_frames = 0
-
-        self.respawn_x = 0.0
-        self.respawn_y = 0.0
-
-        self.sprite = graphics.AnimInstance(self.ANIMSHEET)
-        self.facing = const.LEFT
-
-        self.heart_sprites = [graphics.AnimInstance(self.HEART_SHEET) for _ in range(self.MAX_HEALTH)]
-        for heart_sprite in range(1, self.MAX_HEALTH):
-            self.heart_sprites[heart_sprite].set_anim(heart_sprite)
-
-        self.run_sound_frame = self.RUN_SOUND_DELAY
-
-    def draw(self, surf, cam):
-        self.sprite.update()
-
-        x = self.gridbox.x - cam.x
-        y = self.gridbox.y - cam.y
-        self.sprite.draw_frame(surf, x, y)
-
-    def check_offscreen(self):
-        center_x = self.x + (self.WIDTH // 2)
-        center_y = self.y + (self.HEIGHT // 2)
-
-        grid_left = grid.Room.PIXEL_W * level.active_column
-        grid_right = grid_left + grid.Room.PIXEL_W
-        grid_top = grid.Room.PIXEL_H * level.active_row
-        grid_bottom = grid_top + grid.Room.PIXEL_H
-
-        if center_x > grid_right:
-            self.offscreen_direction = const.RIGHT
-        elif center_x < grid_left:
-            self.offscreen_direction = const.LEFT
-        elif center_y > grid_bottom:
-            self.offscreen_direction = const.DOWN
-        elif center_y < grid_top:
-            self.offscreen_direction = const.UP
-        else:
-            self.offscreen_direction = 0
-
-    def move(self, void_solid=True):
-        """moves body based on velocity and acceleration"""
-        if not self.grounded:
-            self.y_acc = const.GRAVITY
-
-        if self.x_vel > self.MOVE_SPEED:
-            self.x_vel = self.MOVE_SPEED
-        elif self.x_vel < -self.MOVE_SPEED:
-            self.x_vel = -self.MOVE_SPEED
-        self.collide_stage(not self.dead)
-
-        self.x_vel += self.x_acc
-        self.y_vel += self.y_acc
-        if self.y_vel > self.TERMINAL_VELOCITY:
-            self.y_vel = self.TERMINAL_VELOCITY
-
-        self.x += self.x_vel + self.ext_x_vel
-        self.y += self.y_vel
-
-        # Determines direction of movement
-        if self.x_vel < 0:
-            self.x_dir = const.LEFT
-        elif self.x_vel > 0:
-            self.x_dir = const.RIGHT
-        else:
-            self.x_dir = 0
-
-        if self.y_vel < 0:
-            self.y_dir = const.UP
-        elif self.y_vel > 0:
-            self.y_dir = const.DOWN
-        else:
-            self.y_dir = 0
-
-        self.check_ground(void_solid)
-
-        self.goto(self.x, self.y)
-
-        self.check_offscreen()
-
-    def change_health(self, amount):
-        self.health += amount
-        if self.health <= 0:
-            self.dead = True
-        else:
-            self.dead = False
-
-    def set_health(self, amount):
-        self.health = amount
-        if self.health <= 0:
-            self.dead = True
-        else:
-            self.dead = False
-
-    # Body
-    def goto(self, x, y):
-        """instantly moves the body to a specific position"""
-        x = int(x)
-        y = int(y)
-        self.x = x
-        self.y = y
-        self.gridbox.x = x
-        self.gridbox.y = y
-        self.hitbox.x = x - self.extend_x
-        self.hitbox.y = y - self.extend_y
-
-    def next_x(self):
-        """returns the x position of the body on the next frame"""
-        return self.x + self.x_vel + self.ext_x_vel + self.x_acc
-
-    def next_y(self):
-        """returns the y position of the body on the next frame"""
-        return self.y + self.y_vel + self.y_acc
-
-    def stop_x(self):
-        self.x_dir = 0
-        self.x_vel = 0
-        self.ext_x_vel = 0
-        self.x_acc = 0
-
-    def stop_y(self):
-        self.y_dir = 0
-        self.y_vel = 0
-        self.y_acc = 0
-
-    def snap_x(self, col, side=const.LEFT):
-        """snaps you to either the left side or right side of a tile"""
-        if side == const.LEFT:
-            self.goto(grid.x_of(col, const.LEFT) - self.WIDTH, self.y)
-            self.stop_x()
-
-        elif side == const.RIGHT:
-            self.goto(grid.x_of(col, const.RIGHT), self.y)
-            self.stop_x()
-
-    def snap_y(self, row, side=const.TOP):
-        """snaps you to either the top or bottom of a tile"""
-        if side == const.TOP:
-            self.goto(self.x, grid.y_of(row, const.TOP) - self.HEIGHT)
-            self.stop_y()
-
-        elif side == const.BOTTOM:
-            self.goto(self.x, grid.y_of(row, const.BOTTOM))
-            self.stop_y()
-
-    def collide_stage(self, void_solid=True):
-        """checks collision with stage and updates movement accordingly
-
-        if screen_edge is True, then the edge of the screen acts as a wall."""
-
-        for step in range(1, self.CHECK_STEPS + 1):
-            diff_x = self.next_x() - self.x
-            diff_y = self.next_y() - self.y
-
-            if diff_x < 0:
-                dir_x = const.LEFT
-            elif diff_x > 0:
-                dir_x = const.RIGHT
-            else:
-                dir_x = 0
-
-            if diff_y < 0:
-                dir_y = const.UP
-            elif diff_y > 0:
-                dir_y = const.DOWN
-            else:
-                dir_y = 0
-
-            left_x = self.x
-            right_x = left_x + self.WIDTH - 1
-            top_y = int(self.y + (diff_y * (step / self.CHECK_STEPS)))
-            bottom_y = top_y + self.HEIGHT - 1
-
-            if dir_y == const.UP:
-                if self.level.collide_horiz(left_x, right_x, top_y, void_solid):
-                    self.snap_y(grid.row_at(top_y), const.BOTTOM)
-            elif dir_y == const.DOWN:
-                if self.level.collide_horiz(left_x, right_x, bottom_y, void_solid):
-                    self.snap_y(grid.row_at(bottom_y), const.TOP)
-
-            left_x = int(self.x + (diff_x * (step / 4)))
-            right_x = left_x + self.WIDTH - 1
-            top_y = self.y
-            bottom_y = top_y + self.HEIGHT - 1
-
-            if dir_x == const.LEFT:
-                if self.level.collide_vert(left_x, top_y, bottom_y, void_solid):
-                    self.snap_x(grid.col_at(left_x), const.RIGHT)
-
-            elif dir_x == const.RIGHT:
-                if self.level.collide_vert(right_x, top_y, bottom_y, void_solid):
-                    self.snap_x(grid.col_at(right_x), const.LEFT)
-
-            if not self.dead and not self.invuln_frames:
-                center_col = grid.col_at(self.x + (self.WIDTH // 2))
-                center_row = grid.row_at(self.y + (self.HEIGHT // 2))
-                tile = self.level.tile_at(center_col, center_row)
-                if tile == grid.PUNCHER_LEFT:
-                    self.get_hit()
-                    punchers.add(center_col, center_row, const.LEFT)
-                    self.ext_x_vel = -7
-
-                    if self.x_vel > 0:
-                        self.x_vel = 0
-
-                elif tile == grid.PUNCHER_UP:
-                    self.get_hit()
-                    punchers.add(center_col, center_row, const.UP)
-                    self.y_vel = -12
-
-                elif tile == grid.PUNCHER_RIGHT:
-                    self.get_hit()
-                    punchers.add(center_col, center_row, const.RIGHT)
-                    self.ext_x_vel = 7
-
-                    if self.x_vel < 0:
-                        self.x_vel = 0
-
-                elif tile == grid.PUNCHER_DOWN:
-                    self.get_hit()
-                    punchers.add(center_col, center_row, const.DOWN)
-                    self.y_vel = 7
-
-            elif self.invuln_frames:
-                self.invuln_frames -= 1
-
-    def update_wall_push(self, direction):
-        top_y = self.y
-        bottom_y = top_y + self.HEIGHT - 1
-
-        if direction == const.LEFT:
-            x = self.x - 1
-            if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
-                self.sprite.set_anim(self.WALL_PUSH_LEFT_ID)
-
-        elif direction == const.RIGHT:
-            x = self.x + self.WIDTH
-            if self.level.collide_vert(x, top_y, bottom_y, not self.dead):
-                self.sprite.set_anim(self.WALL_PUSH_RIGHT_ID)
-
-    def update_hearts(self):
-        for heart in self.heart_sprites:
-            heart.update()
-
-    def draw_hearts(self, surf):
-        for heart in range(self.health):
-            heart_sprite = self.heart_sprites[heart]
-            heart_sprite.draw_frame(surf, self.HEART_X[heart], self.HEART_Y)
-
-    def get_hit(self):
-        self.tumble = True
-        self.change_health(-1)
-        self.invuln_frames = self.INVULN_LENGTH
-        self.HIT_SOUNDS.play_random()
-        main_cam.shake(6, 1)
-
-    def check_ground(self, screen_edge):
-        x1 = self.x
-        x2 = x1 + self.WIDTH - 1
-        y = self.y + self.HEIGHT
-        if self.level.collide_horiz(x1, x2, y, screen_edge):
-            if not self.grounded:
-                self.LAND_SOUNDS.play_random(0.3)
-            self.grounded = True
-        else:
-            self.grounded = False
-
-    def set_checkpoint(self):
-        room = self.level.room_grid[self.level.active_column][self.level.active_row]
-
-        center_col = grid.col_at(self.x + (self.WIDTH // 2))
-        center_row = grid.row_at(self.y + (self.HEIGHT // 2))
-        tile = self.level.tile_at(center_col, center_row)
-
-        if tile in grid.CHECKPOINT_ZONE:
-            checkpoint_num = grid.CHECKPOINT_ZONE.index(tile)
-            col, row = room.checkpoints[checkpoint_num]
-
-            x_offset = (grid.TILE_W - self.WIDTH) // 2  # centers the player on the tile
-            y_offset = (grid.TILE_H - self.HEIGHT) // 2
-            self.respawn_x = grid.x_of(col) + x_offset
-            self.respawn_y = grid.y_of(row) + y_offset
-
-        else:
-            print("Player entered level without setting checkpoint!")
-
-            for y in range(-1, 2, 1):
-                for x in range(-1, 2, 1):
-                    print(self.level.tile_at(center_col + x, center_row + y), end=" ")
-
-                print()
-
-
-def current_room_is_silent():
-    column = level.active_column
-    row = level.active_row
-
-    if column == START_COL and START_ROW <= row <= START_ROW + 2:
-        return True
-
-    if column == START_COL + 2 and START_ROW + 10 <= row <= START_ROW + 12:
-        return True
-
-
-level = grid.Level(10, 20)
-
-START_COL = 3
-START_ROW = 3
-DEBUG_START_COL = START_COL
-DEBUG_START_ROW = START_ROW
-level.active_column = DEBUG_START_COL
-level.active_row = DEBUG_START_ROW
-
-PLAYER_START_X = DEBUG_START_COL * grid.Room.PIXEL_W + (grid.Room.PIXEL_W - Player.WIDTH) // 2
-PLAYER_START_Y = DEBUG_START_ROW * grid.Room.PIXEL_H
-
-player = Player(PLAYER_START_X, PLAYER_START_Y)
-player.set_health(0)
-
-level.add_room(roomgen.intro_fallway(), START_COL, START_ROW)
-level.add_room(roomgen.intro_fallway(), START_COL, START_ROW + 1)
-level.add_room(roomgen.intro_fallway(), START_COL, START_ROW + 2)
-level.add_room(roomgen.fallway_disturbance(), START_COL, START_ROW + 3)
-level.add_room(roomgen.fallway_disturbance_2(), START_COL, START_ROW + 4)
-
-level.add_room(roomgen.lets_go_left(), START_COL, START_ROW + 5)
-level.add_room(roomgen.run_into_it(), START_COL - 1, START_ROW + 5)
-level.add_room(roomgen.triple_bounce(), START_COL - 2, START_ROW + 5)
-level.add_room(roomgen.ow_my_head(), START_COL - 3, START_ROW + 5)
-
-level.add_room(roomgen.far_enough(), START_COL - 3, START_ROW + 6)
-level.add_room(roomgen.spike_spike(), START_COL - 3, START_ROW + 7)
-level.add_room(roomgen.not_far_enough(), START_COL - 3, START_ROW + 8)
-
-level.add_room(roomgen.elbow(), START_COL - 3, START_ROW + 9)
-level.add_room(roomgen.ready_for_launch(), START_COL - 2, START_ROW + 9)
-level.add_room(roomgen.ready_for_landing(), START_COL - 1, START_ROW + 9)
-
-level.add_room(roomgen.up_and_up_and_up(), START_COL, START_ROW + 9)
-level.add_room(roomgen.crossing_rooms(), START_COL + 1, START_ROW + 9)
-
-level.add_room(roomgen.climber(), START_COL - 1, START_ROW + 8)
-level.add_room(roomgen.uncrossable_chasm(), START_COL, START_ROW + 8)
-level.add_room(roomgen.secret_ceiling(), START_COL, START_ROW + 7)
-level.add_room(roomgen.stand_in_weird_places(), START_COL + 1, START_ROW + 8)
-level.add_room(roomgen.the_big_jump(), START_COL + 2, START_ROW + 8)
-level.add_room(roomgen.safety_net(), START_COL + 2, START_ROW + 9)
-
-level.add_room(roomgen.fall_the_right_way(), START_COL + 3, START_ROW + 8)
-level.add_room(roomgen.run_run_jump(), START_COL + 4, START_ROW + 8)
-level.add_room(roomgen.wrong(), START_COL + 4, START_ROW + 7)
-level.add_room(roomgen.extra_gravity(), START_COL + 3, START_ROW + 7)
-
-level.add_room(roomgen.left_down_town(), START_COL + 3, START_ROW + 9)
-level.add_room(roomgen.how_to_go_left(), START_COL + 3, START_ROW + 10)
-level.add_room(roomgen.mysteriously_easy(), START_COL + 2, START_ROW + 10)
-level.add_room(roomgen.funnel_vision(), START_COL + 2, START_ROW + 11)
-level.add_room(roomgen.intro_fallway(), START_COL + 2, START_ROW + 12)
-
-player.set_checkpoint()
+def levels_with_number(shared_name, first, last):
+    """Returns a list of levels with increasing numbers attached.
+
+    levels_with_number("Intro", 2, 5) returns the list
+    ["Intro2", "Intro3", "Intro4", "Intro5"]
+    """
+    shared_name += "%i"
+    return [shared_name % x for x in range(first, last + 1)]
+
+
+level_names = (
+    levels_with_number("Intro", 1, 4) +
+
+    levels_with_number("PunchersIntro", 1, 5) +
+    levels_with_number("PunchersMomentum", 1, 6) +
+    ["PuncherParkour"] +
+    levels_with_number("RespawnMomentum", 1, 6) +
+    levels_with_number("FallPunch", 1, 2) +
+    ["RespawnPuzzle"] +
+
+    levels_with_number("CheckpointsIntro", 1, 3) +
+    ["CheckpointTiming"] +
+    levels_with_number("CheckpointsMomentum", 1, 4) +
+    ["CheckpointsClimb", "Teleport1", "TeleportDown", "SpamRespawn",
+     "SpamRespawnFall", "LaserMaze", "EarlyJump"] +
+    levels_with_number("Escalator", 1, 3) +
+
+    levels_with_number("DeathlockIntro", 1, 4) +
+    ["DeathlockTiming"] +
+    levels_with_number("DeathlockMomentum", 1, 5) +
+    ["DeathlockBlock"] +
+    ["DeadMansTrampoline", "DeadMansRightPuncher", "AvoidTheFirst"] +
+    levels_with_number("Pole", 1, 2) +
+    levels_with_number("DoubleFallPunch", 1, 2) +
+    levels_with_number("Ledge", 1, 2) +
+    ["DeathlockHeadBonk", "DoubleTriple", "EverythingClimb"] +
+    levels_with_number("Haul", 1, 4) +
+    ["DoublePunchHaul", "CheckpointHaul", "BackAndForthHaul", "UsefulSpawnHaul"] +
+    levels_with_number("End", 1, 6)
+)
+sequence = sequences.Sequence(level_names)
+
+editor = editor.Editor(sequence)
+
+SWAP_TO_EDITOR = 0
+NEXT_LEVEL = 1
+level_beat_mode = NEXT_LEVEL
 
 main_cam = camera.Camera()
-main_cam.base_x = level.active_column * grid.Room.PIXEL_W
-main_cam.base_y = level.active_row * grid.Room.PIXEL_H
+main_cam.base_x = 0
+main_cam.base_y = 0
 
-first_revive = True
-beat_once = False
+player = entities.player.Player(sequence.current, main_cam)
 
-while True:
-    events.update()
+entity_handler = entities.handler.Handler()
+entity_handler.list = [player]
 
-    # Jumping
-    if (pygame.K_p in events.keys.held_keys or pygame.K_z in events.keys.held_keys or
-            pygame.K_w in events.keys.held_keys or pygame.K_UP in events.keys.held_keys or
-            pygame.K_SPACE in events.keys.held_keys):
-        if player.grounded and not player.dead:
-            player.grounded = False
-            player.y_vel = -player.JUMP_SPEED
-            player.JUMP_SOUNDS.play_random(0.3)
-            player.tumble = False
+static_level_surf = pygame.Surface((const.SCRN_W, const.SCRN_H))
+static_level_surf.set_colorkey(const.TRANSPARENT)
+draw_background(static_level_surf)
+sequence.current.draw_static(static_level_surf, main_cam)
 
-    # Moving left & right
-    if not player.dead:
+# sound.play_music()
 
-        if not player.grounded:
-            if player.tumble:
-                if player.facing == const.LEFT:
-                    player.sprite.set_anim(player.TUMBLE_LEFT_ID)
-                else:
-                    player.sprite.set_anim(player.TUMBLE_RIGHT_ID)
 
-            # Jumping animation
-            else:
-                if player.facing == const.LEFT:
-                    player.sprite.set_anim(player.JUMP_LEFT_ID)
-                else:
-                    player.sprite.set_anim(player.JUMP_RIGHT_ID)
+editor_key = events.Keybind([pygame.K_e])
 
-                if player.y_vel < -player.JUMP_SPEED + 2.5:
-                    player.sprite.frame = 0
-                elif player.y_vel < -player.JUMP_SPEED + 5:
-                    player.sprite.frame = 1
-                elif player.y_vel < -player.JUMP_SPEED + 7.5:
-                    player.sprite.frame = 2
-                elif player.y_vel < 0:
-                    player.sprite.frame = 3
-                elif player.y_vel < 2.5:
-                    player.sprite.frame = 4
-                else:
-                    player.sprite.frame = 5
+main_menu = menus.MainMenu()
+pause_menu = menus.PauseMenu(player)
+splash_screen = splash.SplashScreen()
+credits_screen = menus.Credits()
 
-        else:
-            player.tumble = False
+# If we're not on the first level, change menu text from "start" to "continue"
+if sequence.level_num != -1:
+    main_menu.start_action = "continue"
 
-        if (pygame.K_LEFT in events.keys.held_keys or
-                pygame.K_a in events.keys.held_keys):
-            player.x_vel += -player.MOVE_ACC
+GAME = 0
+EDITOR = 1
+MENU = 2
+SPLASH_SCREEN = 3
+PAUSE = 4
+CREDITS = 5
+state = SPLASH_SCREEN
 
-            if player.ext_x_vel > 0:
-                player.ext_x_vel -= player.EXT_DEC
-                if player.ext_x_vel < 0:
-                    player.ext_x_vel = 0
 
-            # Graphics and sounds
-            if player.grounded:
-                player.sprite.set_anim(player.RUN_LEFT_ID)
+def hard_reset():
+    player.hard_respawn()
 
-            if not player.tumble:
-                player.facing = const.LEFT
 
-            player.update_wall_push(const.LEFT)
-
-            # Plays running sound
-            if player.sprite.anim != player.WALL_PUSH_LEFT_ID:
-                if player.grounded:
-                    if player.run_sound_frame < player.RUN_SOUND_DELAY:
-                        player.run_sound_frame += 1
-                    else:
-                        player.run_sound_frame = 0
-                        player.RUN_SOUNDS.play_random(random.random() / 4 + 0.75)
-
-        elif (pygame.K_RIGHT in events.keys.held_keys or
-                pygame.K_d in events.keys.held_keys):
-            player.x_vel += player.MOVE_ACC
-
-            if player.ext_x_vel < 0:
-                player.ext_x_vel += player.EXT_DEC
-                if player.ext_x_vel > 0:
-                    player.ext_x_vel = 0
-
-            # Graphics
-            if player.grounded:
-                player.sprite.set_anim(player.RUN_RIGHT_ID)
-
-            if not player.tumble:
-                player.facing = const.RIGHT
-
-            player.update_wall_push(const.RIGHT)
-
-            if player.sprite.anim != player.WALL_PUSH_RIGHT_ID:
-                if player.grounded:
-                    if player.run_sound_frame < player.RUN_SOUND_DELAY:
-                        player.run_sound_frame += 1
-                    else:
-                        player.run_sound_frame = 0
-                        player.RUN_SOUNDS.play_random(random.random() / 2 + 0.5)
-
-        # Decelerate when you stop moving
-        else:
-            player.run_sound_frame = player.RUN_SOUND_DELAY
-
-            if player.grounded:
-                if player.facing == const.LEFT:
-                    player.sprite.set_anim(player.IDLE_LEFT_ID)
-                elif player.facing == const.RIGHT:
-                    player.sprite.set_anim(player.IDLE_RIGHT_ID)
-
-            if player.x_vel < 0:
-                player.x_vel += player.MOVE_DEC
-                if player.x_vel > 0:
-                    player.x_vel = 0
-
-            elif player.x_vel > 0:
-                player.x_vel -= player.MOVE_DEC
-                if player.x_vel < 0:
-                    player.x_vel = 0
-
-            if player.ext_x_vel < 0:
-                player.ext_x_vel += player.EXT_DEC
-                if player.ext_x_vel > 0:
-                    player.ext_x_vel = 0
-
-            elif player.ext_x_vel > 0:
-                player.ext_x_vel -= player.EXT_DEC
-                if player.ext_x_vel < 0:
-                    player.ext_x_vel = 0
-
-    elif player.dead and player.grounded:
-        player.x_vel = 0
-        player.ext_x_vel = 0
-        if player.facing == const.LEFT:
-            player.sprite.set_anim(player.DEAD_GROUNDED_LEFT_ID)
-        elif player.facing == const.RIGHT:
-            player.sprite.set_anim(player.DEAD_GROUNDED_RIGHT_ID)
-
-    elif player.dead:
-        if player.facing == const.LEFT:
-            player.sprite.set_anim(player.DEAD_FALL_LEFT_ID)
-        else:
-            player.sprite.set_anim(player.DEAD_FALL_RIGHT_ID)
-
-        if player.y_vel < -player.JUMP_SPEED + 2.5:
-            player.sprite.frame = 0
-        elif player.y_vel < -player.JUMP_SPEED + 5:
-            player.sprite.frame = 1
-        elif player.y_vel < -player.JUMP_SPEED + 7.5:
-            player.sprite.frame = 2
-        elif player.y_vel < 0:
-            player.sprite.frame = 3
-        elif player.y_vel < 2.5:
-            player.sprite.frame = 4
-        else:
-            player.sprite.frame_delay += 1
-            if player.sprite.frame_delay > 1:
-                player.sprite.frame_delay = 0
-
-                if player.sprite.frame == 5:
-                    player.sprite.frame = 6
-                else:
-                    player.sprite.frame = 5
-
-    # Resetting level
-    if events.keys.pressed_key == pygame.K_r:
-        if first_revive:
-            first_revive = False
-            sound.play_music()
-            for sprite in player.heart_sprites:
-                sprite.frame = 0
-                sprite.frame_delay = 22
-        player.REVIVE_SOUNDS.play_random(0.15)
-        player.set_health(player.MAX_HEALTH)
-        player.tumble = False
-        player.goto(player.respawn_x, player.respawn_y)
-        player.stop_x()
-        player.stop_y()
-
-    player.move(not player.dead)
-    punchers.update()
+def game_update():
+    if not sequence.transitioning:
+        entity_handler.update_all()
+        punchers.update()
 
     main_cam.update()
-    # Resets the camera in case it decenters
-    if main_cam.last_slide_frame:
-        main_cam.base_x = level.active_column * grid.Room.PIXEL_W
-        main_cam.base_y = level.active_row * grid.Room.PIXEL_H
 
-    if player.offscreen_direction != 0:
-        # Warp back to start at end of game
-        if level.active_column == START_COL + 2 and level.active_row == START_ROW + 12:
-            player.goto(player.x - (grid.Room.PIXEL_W * 2), player.y - (grid.Room.PIXEL_H * 12))
+    if player.hard_respawn_key.is_pressed:
+        hard_reset()
 
-            main_cam.base_x -= grid.Room.PIXEL_W * 2
-            main_cam.base_y -= grid.Room.PIXEL_H * 12
-            main_cam.x = main_cam.base_x
-            main_cam.y = main_cam.base_y
-
-            level.active_column = START_COL
-            level.active_row = START_ROW
-            level.previous_column = START_COL
-            level.previous_row = START_ROW - 1
-
-            sound.stop_music()
-
-            first_revive = True
-            beat_once = True
-
-        main_cam.slide(player.offscreen_direction)
-        level.change_room(player.offscreen_direction)
-
-        player.set_checkpoint()
-        # player.ROOM_CHANGE_SOUNDS.play_random(0.15)
-
-    player.update_hearts()
-
-    if player.dead or current_room_is_silent():
+    if player.dead:
         sound.set_music_volume(0.0)
     else:
         sound.set_music_volume(sound.MUSIC_VOLUME)
 
-    # Drawing everything
-    draw_background(post_surf, main_cam)
-    punchers.draw(post_surf, main_cam)
-    level.draw(post_surf, main_cam)
+    if sequence.transitioning:
+        sequence.update()
+    if sequence.done_transitioning:
+        end_transition()
+    elif player.touching_goal:
+        if level_beat_mode == SWAP_TO_EDITOR:
+            swap_to_editor()
+        elif level_beat_mode == NEXT_LEVEL:
+            if sequence.level_num == len(level_names) - 1:
+                sequence.start_credits = True
+                save_level = 80
+            else:
+                next_level()
+                save_level = len(level_names) - sequence.level_num - 1
+            with open(os.path.join("data", "save.txt"), "w") as file:
+                file.write(str(save_level))
 
-    # Fixes the Secret Ceiling not drawing due to camera sliding two rooms at once
-    # (also fixes Left Down Town for the same bug)
-    if main_cam.sliding:
-        if level.active_column == START_COL + 1 and level.active_row == START_ROW + 8:
-            level.room_grid[START_COL][START_ROW + 7].draw(post_surf, main_cam)
-        elif level.active_column == START_COL + 2 and level.active_row == START_ROW + 10:
-            level.room_grid[START_COL + 3][START_ROW + 9].draw(post_surf, main_cam)
-    player.draw(post_surf, main_cam)
+    # if sequence.transitioning and sequence.frame < flicker.START_DELAY:
+    #     hum.set_volume(max(0, hum.get_volume() - 0.05))
+    # else:
+    #     hum.set_volume(min(MAX_HUM_VOLUME, hum.get_volume() + 0.02))
+    sequence.current.update_goal_sound(player, sequence.transitioning)
 
-    if ((level.active_column == START_COL and level.active_row == START_ROW + 3) or
-            (level.previous_column == START_COL and level.previous_row == START_ROW + 3)):
-        y = (START_ROW + 3) * grid.Room.PIXEL_H - main_cam.y + 180
-        if beat_once:
-            x = START_COL * grid.Room.PIXEL_W - main_cam.x
-            x += (const.SCRN_W - CREDITS_TEXT.get_width()) // 2 - 2
-            post_surf.blit(CREDITS_TEXT, (x, y))
+
+def draw_level():
+    if sequence.transitioning:
+        if sequence.frame >= flicker.STOP_FLICKERING_FRAME:
+            if sequence.frame == flicker.STOP_FLICKERING_FRAME:
+                static_level_surf.fill(const.BLACK)
+                sequence.next.draw_flicker_glow(static_level_surf, 1000)
+                sequence.next.draw_silhouette(static_level_surf)
+                sequence.next.draw_flicker_tiles(static_level_surf, main_cam, 1000)
+            main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+
+            flicker.mute_sounds()
+
+        elif sequence.frame >= flicker.START_DELAY:
+            frame = sequence.frame - flicker.START_DELAY
+            sequence.next.draw_flicker_glow(main_surf, frame)
+
+            main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+
+            sequence.next.draw_flicker_tiles(main_surf, main_cam, frame)
+
+            adjust_flicker_volumes(frame)
+
+        sequence.draw_flicker_ui(main_surf, main_cam)
+    else:
+        if player.checkpoint_swapped:
+            if player.checkpoint:
+                sequence.current.draw_checkpoint_and_ray(static_level_surf, player.checkpoint)
+            if player.prev_frame_checkpoint:
+                sequence.current.draw_checkpoint_and_ray(static_level_surf, player.prev_frame_checkpoint)
+
+        if player.just_respawned or player.just_died:
+            sequence.current.draw_deathlock(static_level_surf, camera.zero_camera, player.dead)
+
+        main_surf.blit(static_level_surf, (int(-main_cam.x), int(-main_cam.y)))
+        punchers.draw(main_surf, main_cam)
+        sequence.current.draw_dynamic(main_surf, main_cam,
+                                      player.dead, player.checkpoint is None)
+
+        x = grid.x_of(sequence.current.player_goal.col) - grid.TILE_W * 2 - main_cam.x
+        y = grid.y_of(sequence.current.player_goal.row) - grid.TILE_H * 2 - main_cam.y
+        main_surf.blit(grid.player_goal_glow, (x, y), special_flags=pygame.BLEND_ADD)
+
+        glow_x = int(player.center_x - player_glow.get_width() / 2) - main_cam.x
+        glow_y = int(player.center_y - player_glow.get_height() / 2) - main_cam.y
+
+        main_surf.blit(player_glow, (glow_x, glow_y), special_flags=pygame.BLEND_ADD)
+
+        sequence.draw_ui(main_surf, main_cam, player)
+
+    handle_music_fade()
+
+
+def handle_music_fade():
+    if sequence.level_num >= sequences.music_changes[6]:
+        sound.lower_volume(music[6], 0.005)
+
+    for i in range(len(music) - 1):
+        if sequence.level_num >= sequences.music_changes[i]:
+            sound.lower_volume(music[i], 0.005)
+            if sequence.level_num < sequences.music_changes[i + 1]:
+                sound.raise_volume(music[i + 1], 0.02)
+
+    if sequence.level_num < sequences.TUTORIAL_TEXT_LEVEL:
+        sound.raise_volume(music[0], 0.02)
+
+    # Plays the first song after the first level flickers in
+    if sequence.intro_transition_flag and not sequence.transitioning:
+        sequence.intro_transition_flag = False
+        for m in music:
+            m.play(-1)
+
+
+def adjust_flicker_volumes(frame):
+    flickers = sequence.next.unique_flickers[:flicker.SOUND_COUNT - 1]
+    flickers.insert(0, sequence.level_name_flicker)
+    for i, flicker_sequence in enumerate(flickers):
+        # Level name flicker is loud
+        if i == 0:
+            volume_mult = 0.7
+        # Player spawn flicker is loud, but less so
+        elif i == 1:
+            volume_mult = 0.4
         else:
-            x = START_COL * grid.Room.PIXEL_W - main_cam.x
-            x += (const.SCRN_W - CREDITS_TEXT.get_width()) // 2 - 2
-            post_surf.blit(TUTORIAL_TEXT, (x, y))
+            volume_mult = 0.56 / len(sequence.next.unique_flickers) + 0.2
+        brightness = flicker_sequence.brightness(frame)
+        flicker.set_sound_volume(i, brightness, volume_mult)
 
-    # Deathlock border
-    if not player.dead:
-        pygame.draw.rect(post_surf, const.RED, (0, 0, const.SCRN_W, const.SCRN_H), 5)
 
-    player.draw_hearts(post_surf)
+def game_draw():
+    draw_level()
+
+    entity_handler.draw_all(main_surf, main_cam)
+
+
+def editor_update():
+    editor.update()
+
+
+def editor_draw():
+    draw_background(main_surf)
+    sequence.current.draw_tiles(main_surf, main_cam)
+    sequence.current.draw_dynamic(main_surf, main_cam,
+                                  player.dead, player.checkpoint is None)
+    editor.draw(main_surf)
+    sequence.draw_ui(main_surf, main_cam, player)
+
+
+def swap_to_editor():
+    global state
+    state = EDITOR
+    sequence.current.unemit()
+
+
+def swap_to_game():
+    global state
+    state = GAME
+    player.hard_respawn()
+    sequence.current.emit()
+    draw_background(static_level_surf)
+    sequence.current.draw_static(static_level_surf, main_cam)
+
+
+def next_level():
+    sequence.current.unemit()
+    sequence.start_transition(static_level_surf)
+    player.hidden = True
+    player.health = player.MAX_HEALTH  # Turns on music again
+    player.checkpoint = None
+    punchers.punchers = []
+    flicker.play_sounds()
+
+
+def end_transition():
+    sequence.done_transitioning = False
+    draw_background(static_level_surf)
+    sequence.current.draw_static(static_level_surf, main_cam)
+    player.level = sequence.current
+    player.hidden = False
+    player.hard_respawn(False)
+    goal_light_activate.play_random()
+
+
+while True:
+    events.update()
+
+    # if editor_key.is_pressed:
+    #     if state == GAME:
+    #         swap_to_editor()
+    #     elif state == EDITOR:
+    #         swap_to_game()
+
+    if state == SPLASH_SCREEN:
+        splash_screen.update()
+        splash_screen.draw(main_surf)
+        if splash_screen.done:
+            splash_screen.done = False
+            state = MENU
+
+    elif state == MENU:
+        main_menu.update()
+
+        if main_menu.switch_to_game:
+            main_menu.switch_to_game = False
+            state = GAME
+            next_level()
+        else:
+            main_menu.draw(main_surf)
+
+    elif state == CREDITS:
+        credits_screen.update()
+        credits_screen.draw(main_surf)
+
+    elif state == PAUSE:
+        pause_menu.update()
+        pause_menu.draw(main_surf)
+
+        if pause_menu.switch_to_game:
+            state = GAME
+            pause_menu.switch_to_game = False
+            menus.select_sound.play(0)
+
+    elif state == GAME:
+        game_update()
+        game_draw()
+
+        if player.pause_key.is_pressed:
+            state = PAUSE
+            pause_menu.initialize(main_surf)
+            menus.select_sound.play_random()
+
+        elif sequence.start_credits:
+            state = CREDITS
+            grid.Room.goal_sound.stop()
+
+    elif state == EDITOR:
+        editor_update()
+        editor_draw()
 
     # debug.debug(clock.get_fps())
+    # debug.debug(sequence.current.name)
     # debug.debug(main_cam.sliding, main_cam.last_slide_frame)
     # debug.debug(main_cam.slide_x_frame, main_cam.slide_y_frame, main_cam.SLIDE_LENGTH)
     # debug.debug(level.active_column, level.active_row)
@@ -817,14 +394,14 @@ while True:
     # debug.debug(float(player.x_vel), float(player.ext_x_vel))
     # debug.debug(player.health, player.dead)
 
-    # debug.draw(post_surf)
+    debug.draw(main_surf)
 
-    if pygame.K_f in events.keys.held_keys:
-        screen_update(2)
-    else:
-        screen_update(60)
+    # if pygame.K_f in events.keys.held_keys:
+    #     screen_update(2)
+    # else:
+    screen_update(60)
 
-    if events.quit_program:
+    if events.quit_program or credits_screen.done:
         break
 
 pygame.quit()

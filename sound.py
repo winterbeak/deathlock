@@ -7,7 +7,7 @@ import os
 music_muted = False
 sfx_muted = False
 
-CHANNEL_COUNT = 16
+CHANNEL_COUNT = 32
 pygame.mixer.init(22050, -16, CHANNEL_COUNT, 64)
 pygame.mixer.set_num_channels(CHANNEL_COUNT)
 pygame.init()
@@ -47,7 +47,7 @@ def set_music_volume(volume):
 
 
 def pathify(string):
-    return os.path.join("sounds", string + ".wav")
+    return os.path.join("sounds", string + ".ogg")
 
 
 def load(string):
@@ -173,7 +173,26 @@ class SoundSet:
         self.sound_duration = sounds_length
 
 
-MUSIC_VOLUME = 0.3
+def raise_volume(sound, amount):
+    sound.set_volume(min(1.0, sound.get_volume() + amount))
 
-load_music("deathlocked")
-set_music_volume(MUSIC_VOLUME)
+
+def lower_volume(sound, amount):
+    sound.set_volume(max(0.0, sound.get_volume() - amount))
+
+
+def fade_to(sound, target, amount):
+    volume = sound.get_volume()
+    if volume < target:
+        if volume + amount > target:
+            sound.set_volume(target)
+        else:
+            sound.set_volume(volume + amount)
+    elif volume > target:
+        if volume - amount < target:
+            sound.set_volume(target)
+        else:
+            sound.set_volume(volume - amount)
+
+
+MUSIC_VOLUME = 1.0
