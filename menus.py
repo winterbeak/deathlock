@@ -216,7 +216,7 @@ class PauseMenu(MainMenu):
 class Credits:
     TEXT = [
         ("",),
-        ("TESTING", "ThatOneGuy", "timurichk"),
+        ("TESTING", "ThatOneGuy", "timurichk", "Horiph"),
         ("FONTS", "m3x6 and m5x7", "by Daniel Linssen"),
         ("SOUNDS",
          "Electricity 4 by PureAudioNinja",
