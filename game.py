@@ -330,11 +330,11 @@ def end_transition():
 while True:
     events.update()
 
-    if editor_key.is_pressed:
-        if state == GAME:
-            swap_to_editor()
-        elif state == EDITOR:
-            swap_to_game()
+    # if editor_key.is_pressed:
+    #     if state == GAME:
+    #         swap_to_editor()
+    #     elif state == EDITOR:
+    #         swap_to_game()
 
     if state == SPLASH_SCREEN:
         splash_screen.update()
