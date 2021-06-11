@@ -395,10 +395,10 @@ while True:
 
     debug.draw(main_surf)
 
-    if pygame.K_f in events.keys.held_keys:
-        screen_update(2)
-    else:
-        screen_update(60)
+    # if pygame.K_f in events.keys.held_keys:
+    #     screen_update(2)
+    # else:
+    screen_update(60)
 
     if events.quit_program or credits_screen.done:
         break
