@@ -249,7 +249,7 @@ class Credits:
     def update(self):
         self._frame += 1
         if self._frame == self.START_DELAY:
-            pygame.mixer.music.load(os.path.join("sounds", "credits.wav"))
+            pygame.mixer.music.load(os.path.join("sounds", "credits.ogg"))
             pygame.mixer.music.play()
         if self._frame > self.START_DELAY:
             if not pygame.mixer.music.get_busy():
