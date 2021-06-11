@@ -139,7 +139,7 @@ class MainMenu:
             brightness = self._start_prompt_flicker.brightness(self._flicker_frame)
             render_menu_text(surf, start_string, self.START_TEXT_Y, brightness)
 
-            rebind_string = "Press %s to bind keys" % pygame.key.name(rebind_key.list[0])
+            rebind_string = "Press %s to edit controls" % pygame.key.name(rebind_key.list[0])
             brightness = self._rebind_prompt_flicker.brightness(self._flicker_frame)
             render_menu_text(surf, rebind_string, self.REBIND_TEXT_Y, brightness)
 
